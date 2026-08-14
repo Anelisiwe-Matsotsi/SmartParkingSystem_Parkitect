@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { ScrollView, StyleSheet } from 'react-native';
-
+import React, {useState} from 'react';
+import AlertBanner from '@/components/notifications/AlertBanner' 
 
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -17,6 +18,7 @@ import ParkingLayout from '@/components/parking/ParkingLayout';
 
 
 export default function HomeScreen() {
+  const [showAlert, setShowAlert] = useState(true);
   return (
 <SafeAreaView style= {styles.container}>
   <ScrollView

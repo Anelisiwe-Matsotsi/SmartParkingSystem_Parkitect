@@ -1,5 +1,7 @@
 import React from "react";
 import { useRouter } from 'expo-router';
+import  {useState} from 'react';
+import AlertBanner from '@/components/notifications/AlertBanner'
 import {
   View,
   Text,
@@ -15,13 +17,14 @@ import SearchBar from "./SearchBar";
 export default function HomeHeader() {
   const router = useRouter();
   const availableSpaces = 3;
-
+  const [showAlert, setShowAlert] = useState(true);
   return (
     <SafeAreaView style={styles.wrapper}>
       <View style={styles.container}>
         
         {/* Top Row */}
 <View style={styles.topRow}>
+  
 
   {/* Center Location Pill */}
   <TouchableOpacity style={styles.locationBadge}>
@@ -67,6 +70,16 @@ export default function HomeHeader() {
         <View style={styles.search}>
           <SearchBar />
         </View>
+        {showAlert && 
+        (
+          <AlertBanner
+        title="LIMITED BAYS"
+        message="The campus parking only has 15 bays available"
+        icon="clock"
+        iconColor="#0B5D68"
+        onDismiss={() => setShowAlert(false)}
+        />
+        )}
 
       </View>
     </SafeAreaView>
@@ -161,9 +174,11 @@ const styles = StyleSheet.create({
     color: "#b11010",
     letterSpacing: -0.5,
     alignItems:'center',
+    marginLeft:100,
   },
 
   subtitle: {
+      marginLeft:90,
     fontSize: 12,
     fontWeight: "500",
     color: "#9cafa7",
