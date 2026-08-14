@@ -54,7 +54,7 @@ export default function Example() {
           <TouchableOpacity
             onPress={() => {
               // handle onPress
-                router.push('/(tabs)');
+                router.push('/findCar');
             }}>
             <FeatherIcon
               color="#000"

@@ -1,4 +1,5 @@
 import React from 'react';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import {
   StyleSheet,
   View,
@@ -26,47 +27,39 @@ const DIAGRAM_SIZE = width - 48;
 // ----------------------------------------------------
 
 function ParkingDiagram() {
+  const progress = 65;
+
   return (
-    <View
-      style={{
-        width: DIAGRAM_SIZE,
-        height: DIAGRAM_SIZE,
-        position: 'relative',
-        marginBottom:90,
-      }}
-    >
-
-      {/* -------------------------------------------- */}
-      {/* DASHED CIRCULAR RINGS */}
-      {/* -------------------------------------------- */}
-
-      <Svg
-        width={DIAGRAM_SIZE}
-        height={DIAGRAM_SIZE}
-        style={StyleSheet.absoluteFill}
+    <View style={styles.progressContainer}>
+      <AnimatedCircularProgress
+        size={DIAGRAM_SIZE}
+        width={18}
+        fill={progress}
+        tintColor="#8BEF00"
+        backgroundColor="#3f4a51"
+        rotation={90}
+        lineCap="round"
+        duration={1000}
       >
+        {() => (
+          <View style={styles.progressContent}>
+            <Text style={styles.distanceText}>50</Text>
 
-        {/* Outer dashed circle */}
-        <Circle
-          cx={DIAGRAM_SIZE / 2}
-          cy={DIAGRAM_SIZE / 2}
-          r={DIAGRAM_SIZE / 2 - 12}
-          stroke="#3f4a51"
-          strokeWidth={3}
-          strokeDasharray="16 16"
-          fill="none"
-        />
+            <Text style={styles.feetText}>meters</Text>
 
-      
+            <Text style={styles.accuracyText}>
+              Distance ±30 meters
+            </Text>
 
-      </Svg>
-
-
-      {/* -------------------------------------------- */}
-      {/* CIRCULAR CARS + ICONS */}
-      {/* -------------------------------------------- */}
-
-      
+            <FeatherIcon
+              name="navigation"
+              size={42}
+              color="#D9E1E8"
+              style={styles.navigationIcon}
+            />
+          </View>
+        )}
+      </AnimatedCircularProgress>
     </View>
   );
 }
@@ -169,7 +162,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#2A2A39',
     marginBottom: 12,
-    marginTop: 12,
+    marginTop: 28,
     paddingRight: 24,
   },
 
@@ -300,5 +293,40 @@ const styles = StyleSheet.create({
 
     color: '#2a4c16',
   },
+
+  progressContainer: {
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
+progressContent: {
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
+distanceText: {
+  fontSize: 58,
+  fontWeight: '700',
+  color: '#2A2A39',
+  lineHeight: 64,
+},
+
+feetText: {
+  fontSize: 22,
+  fontWeight: '500',
+  color: '#5F6168',
+  marginTop: -4,
+},
+
+accuracyText: {
+  fontSize: 15,
+  color: '#4C72C9',
+  marginTop: 10,
+},
+
+navigationIcon: {
+  marginTop: 20,
+  transform: [{ rotate: '45deg' }],
+},
 
 });
