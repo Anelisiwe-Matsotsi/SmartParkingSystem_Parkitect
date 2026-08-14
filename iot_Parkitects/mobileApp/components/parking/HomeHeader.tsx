@@ -33,8 +33,10 @@ export default function HomeHeader() {
   <View style={styles.rightButtons}>
 
     {/* Notifications */}
-    <TouchableOpacity style={styles.iconButton}>
+    <TouchableOpacity style={styles.iconButton}
+        onPress={() => router.push('/notifications')}>
       <Feather name="bell" size={18} color="#111827" />
+      
     </TouchableOpacity>
 
     {/* User Initials */}

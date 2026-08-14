@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   formFooter: {
+     marginBottom: 24,
     paddingVertical: 24,
     fontSize: 15,
     fontWeight: '600',

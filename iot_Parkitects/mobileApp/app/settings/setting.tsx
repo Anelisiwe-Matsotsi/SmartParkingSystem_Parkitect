@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'expo-router';
 import {
   StyleSheet,
   SafeAreaView,
@@ -12,6 +13,7 @@ import {
 import FeatherIcon from '@expo/vector-icons/Feather';
 
 export default function Example() {
+   const router = useRouter();
   const [form, setForm] = useState({
     emailNotifications: true,
     pushNotifications: false,
@@ -24,6 +26,7 @@ export default function Example() {
           <TouchableOpacity
             onPress={() => {
               // handle onPress
+                router.push('/(tabs)');
             }}>
             <FeatherIcon
               color="#000"
@@ -57,6 +60,7 @@ export default function Example() {
             <TouchableOpacity
               onPress={() => {
                 // handle onPress
+                router.push('/settings/profie');
               }}
               style={styles.profile}>
              
@@ -83,6 +87,7 @@ export default function Example() {
               <TouchableOpacity
                 onPress={() => {
                   // handle onPress
+                
                 }}
                 style={styles.row}>
                 <Text style={styles.rowLabel}>Language</Text>
@@ -102,6 +107,7 @@ export default function Example() {
               <TouchableOpacity
                 onPress={() => {
                   // handle onPress
+                   
                 }}
                 style={styles.row}>
                 <Text style={styles.rowLabel}>Location</Text>
@@ -157,9 +163,10 @@ export default function Example() {
               <TouchableOpacity
                 onPress={() => {
                   // handle onPress
+                   router.push('/settings/preferences');
                 }}
                 style={styles.row}>
-                <Text style={styles.rowLabel}>Contact Us</Text>
+                <Text style={styles.rowLabel}>Accessibility</Text>
 
                 <View style={styles.rowSpacer} />
 
@@ -210,7 +217,7 @@ export default function Example() {
                   // handle onPress
                 }}
                 style={styles.row}>
-                <Text style={styles.rowLabel}>Terms and Privacy</Text>
+                <Text style={styles.rowLabel}>Campus Parking Rules</Text>
 
                 <View style={styles.rowSpacer} />
 
@@ -259,12 +266,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     paddingHorizontal: 16,
+     marginTop: 20,
+     
   },
   headerAction: {
     width: 40,
     height: 40,
     alignItems: 'flex-start',
     justifyContent: 'center',
+    marginTop: 60,
   },
   headerTitle: {
     fontSize: 19,

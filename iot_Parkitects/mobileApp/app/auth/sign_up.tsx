@@ -165,6 +165,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#454545',
     textAlign: 'center',
+   
   },
   formSpacer: {
     marginTop: 40,

@@ -1,188 +1,274 @@
 import React, { useState } from 'react';
+import { useRouter } from 'expo-router';
 import {
   StyleSheet,
   SafeAreaView,
   View,
-  Text,
-  Switch,
   TouchableOpacity,
+  Text,
+  ScrollView,
+  Switch,
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import FeatherIcon from '@expo/vector-icons/Feather';
-import { useRouter } from 'expo-router';
-
-const INPUT_OFFSET = 160;
 
 export default function Example() {
-    const router = useRouter();
+   const router = useRouter();
   const [form, setForm] = useState({
-    location: false,
-    photos: false,
+    customReminders: true,
+    motivationalMessages: true,
+    progressUpdates: true,
     notifications: false,
+    microphone: false,
   });
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
-        <View style={styles.headerAction}>
+        <View style={styles.headerActions}>
           <TouchableOpacity
             onPress={() => {
               // handle onPress
-            }}>
+               router.push('/auth/sign_in');
+            }}
+            style={styles.headerAction}>
             <FeatherIcon
-              color="#000"
+              color="#e2f1f3"
               name="arrow-left"
               size={24} />
           </TouchableOpacity>
-        </View>
 
-        <Text numberOfLines={1} style={styles.headerTitle}>
-          Allow access
-        </Text>
-
-        <View style={[styles.headerAction, { alignItems: 'flex-end' }]}>
           <TouchableOpacity
             onPress={() => {
               // handle onPress
-            }}>
-            <FeatherIcon
-              color="#000"
-              name="more-vertical"
-              size={24} />
+              router.push('/auth/sign_in');
+            }}
+            style={styles.header}>
+          
           </TouchableOpacity>
         </View>
+
+        <Text style={styles.title}>Permissions</Text>
+
+        <Text style={styles.subtitle}>Stay on track with Parkitech</Text>
       </View>
 
-      <KeyboardAwareScrollView>
-        <View style={styles.formHeader}>
-          <Text style={styles.formHeaderText}>
-            To continue using the app, you have to allow access to your location
-            and Blutooth.
+      <ScrollView>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Permissions</Text>
+
+          <View style={styles.sectionItem}>
+            <View style={styles.sectionInfo}>
+              <Text style={styles.sectionName}>Push Notifications (optional)</Text>
+
+              <Text style={styles.sectionDescription}>
+                Allow notifications for reminders and updates
+              </Text>
+            </View>
+
+            <Switch
+              onValueChange={notifications =>
+                setForm({ ...form, notifications })
+              }
+              trackColor={{ false: '#757575', true: '#107c84' }}
+              value={form.notifications} />
+          </View>
+
+          <View style={styles.sectionItem}>
+            <View style={styles.sectionInfo}>
+              <Text style={styles.sectionName}>Bluetooth </Text>
+
+              <Text style={styles.sectionDescription}>
+                Switch on to use app efficiently
+              </Text>
+            </View>
+
+            <Switch
+              onValueChange={microphone => setForm({ ...form, microphone })}
+              trackColor={{ false: '#757575', true: '#107c84' }}
+              value={form.microphone} />
+          </View>
+
+          <Text style={styles.sectionFooter}>
+            These permissions help us provide a better parking experience
           </Text>
         </View>
 
-        <View style={styles.formToggle}>
-          <View style={styles.formLabel}>
-            <Text style={styles.formLabelText}>Blutooth</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Additional Settings (optional)</Text>
 
-            <Text style={styles.formLabelSubtext}>Required to use the app</Text>
-          </View>
+          <View style={styles.sectionItem}>
+            <View style={styles.sectionInfo}>
+              <Text style={styles.sectionName}>Location</Text>
 
-          <Switch
-            onValueChange={photos => setForm({ ...form, photos })}
-            trackColor={{ true: '#4C164C' }}
-            value={form.photos} />
-        </View>
-
-        <View style={styles.formToggle}>
-          <View style={styles.formLabel}>
-            <Text style={styles.formLabelText}>Location</Text>
-
-            <Text style={styles.formLabelSubtext}>(Optional)</Text>
-          </View>
-
-          <Switch
-            onValueChange={location => setForm({ ...form, location })}
-            trackColor={{ true: '#4C164C' }}
-            value={form.location} />
-        </View>
-
-
-        <View style={styles.formAction}>
-          <TouchableOpacity
-            onPress={() => {
-              // handle onPress
-              router.push('/(tabs)');
-            }}>
-            <View style={styles.btn}>
-              <Text style={styles.btnText}>Continue</Text>
+              <Text style={styles.sectionDescription}>
+                Set your own reminder schedule
+              </Text>
             </View>
-          </TouchableOpacity>
-        </View>
 
-        <Text style={styles.formFooter}>
-          You can adjust these permissions later.
-        </Text>
-      </KeyboardAwareScrollView>
+            <Switch
+              onValueChange={customReminders =>
+                setForm({ ...form, customReminders })
+              }
+              trackColor={{ false: '#757575', true: '#107c84' }}
+              value={form.customReminders} />
+          </View>
+
+          <View style={styles.sectionItem}>
+            <View style={styles.sectionInfo}>
+              <Text style={styles.sectionName}>Motivational Messages</Text>
+
+              <Text style={styles.sectionDescription}>
+                Receive daily motivation
+              </Text>
+            </View>
+
+            <Switch
+              onValueChange={motivationalMessages =>
+                setForm({ ...form, motivationalMessages })
+              }
+              trackColor={{ false: '#757575', true: '#107c84' }}
+              value={form.motivationalMessages} />
+          </View>
+
+          <View style={styles.sectionItem}>
+            <View style={styles.sectionInfo}>
+              <Text style={styles.sectionName}>Progress Updates</Text>
+
+              <Text style={styles.sectionDescription}>
+                Weekly learning progress summary
+              </Text>
+            </View>
+
+            <Switch
+              onValueChange={progressUpdates =>
+                setForm({ ...form, progressUpdates })
+              }
+              trackColor={{ false: '#757575', true: '#107c84' }}
+              value={form.progressUpdates} />
+          </View>
+
+          <Text style={styles.sectionFooter}>
+            You can always change these notification settings later in your
+            profile
+          </Text>
+        </View>
+      </ScrollView>
+
+      <View style={styles.formFooter}>
+        <TouchableOpacity
+          onPress={() => {
+            // handle onPress
+router.push('/(tabs)');
+          }}>
+          <View style={styles.btn}>
+            <Text style={styles.btnText}>Confirm</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  title: {
+    fontSize: 34,
+    fontWeight: 'bold',
+    color: '#181818',
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '500',
+    color: '#889797',
+  },
+  formFooter: {
+    marginTop: 12,
+    marginBottom: 24,
+    paddingHorizontal: 24,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '400',
+    color: '#9fa5af',
+    textAlign: 'center',
+  },
   /** Header */
   header: {
+    paddingHorizontal: 24,
+    marginBottom: 28,
+     marginTop: 28,
+  },
+  headerActions: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderColor: '#f2f2f2',
-    backgroundColor: '#fff',
-    marginTop:32,
+    alignItems: 'center',
   },
   headerAction: {
     width: 40,
     height: 40,
-    alignItems: 'flex-start',
+    borderRadius: 9999,
+    alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#146564',
+    marginBottom: 16,
+      marginTop: 16,
   },
-  headerTitle: {
-    fontSize: 19,
-    fontWeight: '600',
-    color: '#000',
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
-    textAlign: 'center',
-  },
-  formHeader: {
-    backgroundColor: '#E8E8E8',
-    padding: 16,
-    marginBottom: 8,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#CFCFCF',
-  },
-  formHeaderText: {
-    fontSize: 14,
+  headerSkipText: {
+    fontSize: 15,
     fontWeight: '500',
-    color: '#54565f',
+    color: '#096c31',
+    textDecorationLine: 'underline',
+    textDecorationColor: '#08e8f8',
+    textDecorationStyle: 'solid',
   },
-  formToggle: {
-    height: 60,
-    paddingHorizontal: 16,
+  /** Section */
+  section: {
+    paddingVertical: 0,
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#889797',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.19,
+  },
+  sectionItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    padding: 16,
+    marginBottom: 12,
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderColor: '#f2f2f2',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
   },
-  formLabel: {
-    width: INPUT_OFFSET,
-    justifyContent: 'center',
+  sectionInfo: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    marginRight: 16,
   },
-  formLabelText: {
-    fontSize: 13,
+  sectionName: {
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: '600',
-    color: '#54565f',
-    textTransform: 'uppercase',
+    color: '#1d2a32',
     marginBottom: 4,
   },
-  formLabelSubtext: {
+  sectionDescription: {
     fontSize: 13,
-    color: '#6b7280',
+    lineHeight: 18,
+    color: '#889797',
   },
-  formAction: {
-    marginTop: 24,
-    paddingHorizontal: 16,
-  },
-  formFooter: {
-    paddingHorizontal: 16,
-    marginTop: 16,
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#44465a',
+  sectionFooter: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#889797',
+    marginTop: 4,
   },
   /** Button */
   btn: {
@@ -190,17 +276,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
     borderWidth: 1,
-    backgroundColor: '#163c4c',
-    borderColor: '#4C164C',
+    backgroundColor: '#075d5f',
+    borderColor: '#0868f8',
+    marginBottom: 24,
   },
   btnText: {
-    fontSize: 16,
-    lineHeight: 26,
-    fontWeight: '600',
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: 'bold',
     color: '#fff',
-    letterSpacing: 0.133,
   },
 });

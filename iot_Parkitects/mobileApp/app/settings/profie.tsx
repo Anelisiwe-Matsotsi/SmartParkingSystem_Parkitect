@@ -11,6 +11,7 @@ import FeatherIcon from '@expo/vector-icons/Feather';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 export default function Example() {
+ 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f6f6f6' }}>
       <TouchableOpacity
@@ -40,7 +41,7 @@ export default function Example() {
 
                 <View style={styles.rowSpacer} />
 
-                <Text style={styles.rowValue}>@johndoe</Text>
+                <Text style={styles.rowValue}>ST1026609</Text>
               </View>
             </View>
 
@@ -63,62 +64,10 @@ export default function Example() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.rowWrapper}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}>
-                <Text style={styles.rowLabel}>Phone</Text>
+          
 
-                <View style={styles.rowSpacer} />
-
-                <Text style={styles.rowValue}>(123) 456-7890</Text>
-
-                <FeatherIcon
-                  color="#C6C6C6"
-                  name="chevron-right"
-                  size={20} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.rowWrapper}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}>
-                <Text style={styles.rowLabel}>Birthday</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <Text style={styles.rowValue}>May 4th, 1996</Text>
-
-                <FeatherIcon
-                  color="#C6C6C6"
-                  name="chevron-right"
-                  size={20} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.rowWrapper}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}>
-                <Text style={styles.rowLabel}>Country</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <Text style={styles.rowValue}>United States</Text>
-
-                <FeatherIcon
-                  color="#C6C6C6"
-                  name="chevron-right"
-                  size={20} />
-              </TouchableOpacity>
-            </View>
+          
+           
           </View>
         </View>
 
@@ -164,66 +113,9 @@ export default function Example() {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Social Accounts</Text>
-
-          <View style={styles.sectionBody}>
-            <View style={[styles.rowWrapper, styles.rowFirst]}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}>
-                <View style={[styles.rowIcon, { backgroundColor: '#000' }]}>
-                  <MaterialCommunityIcons
-                    color="#fff"
-                    name="apple"
-                    size={20} />
-                </View>
-
-                <Text style={styles.rowLabel}>Apple</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <Text style={[styles.rowValue, styles.rowValueSuccess]}>
-                  Connected
-                </Text>
-
-                <FeatherIcon color="#35C759" name="x" size={20} />
-              </TouchableOpacity>
-            </View>
-
-           
-
-            <View style={styles.rowWrapper}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}>
-                <View style={[styles.rowIcon, { backgroundColor: '#000' }]}>
-                  <MaterialCommunityIcons
-                    color="#fff"
-                    name="facebook"
-                    size={20} />
-                </View>
-
-                <Text style={styles.rowLabel}>Facebook</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <Text style={[styles.rowValue, styles.rowValueWarning]}>
-                  Needs Verification
-                </Text>
-
-                <FeatherIcon
-                  color="#C6C6C6"
-                  name="chevron-right"
-                  size={20} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+        
+         
+      
       </ScrollView>
     </SafeAreaView>
   );
@@ -233,12 +125,13 @@ const styles = StyleSheet.create({
   /** Header */
   header: {
     paddingHorizontal: 24,
-    marginBottom: 12,
+    marginBottom: 15,
+      marginTop: 6,
   },
   headerBack: {
     alignSelf: 'flex-start',
     paddingHorizontal: 20,
-    marginTop: 6,
+    marginTop: 60,
     marginBottom: 16,
   },
   headerTitle: {
