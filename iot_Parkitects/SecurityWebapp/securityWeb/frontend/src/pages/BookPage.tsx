@@ -119,19 +119,7 @@ export const BookPage: React.FC = () => {
   const [selectedBay, setSelectedBay] = useState<string | null>(null);
   // where return starts = the actual HTML/display area
   return (
-  <div className="app-shell">
 
- 
-
-
-    {/* MAIN WORKSPACE */}
-    <div className="workspace">
-
-     
-
-
-      {/* PAGE */}
-      <main className="page-wrap">
 
         <section
           className="page is-active"
@@ -651,10 +639,6 @@ export const BookPage: React.FC = () => {
 
         </section>
 
-      </main>
 
-    </div>
-
-  </div>
 );
 };

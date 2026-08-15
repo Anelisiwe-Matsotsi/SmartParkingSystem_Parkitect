@@ -546,3 +546,7 @@ export const AnalyticsPage: React.FC = () => {
 };
 
 export default AnalyticsPage;
+/**
+ * References
+ * https://mui.com/material-ui/react-table/
+ */

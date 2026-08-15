@@ -20,7 +20,7 @@ export const App: React.FC = () => {
 
           <TopBar />
 
-      <main className="app-container">
+        <main className="page-wrap">
         <Routes>
 
           
