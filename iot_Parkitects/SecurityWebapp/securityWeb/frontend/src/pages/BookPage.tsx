@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import parkingMap from "../assets/parking-map.svg";
 import type { Book } from "../models/book.ts";
 import {
   getBooks,
@@ -115,166 +116,691 @@ export const BookPage: React.FC = () => {
     const data = await getBook(id);
     setEditingBook(data);
   };
+  const [selectedBay, setSelectedBay] = useState<string | null>(null);
   // where return starts = the actual HTML/display area
   return (
-    <div className='bento-grid'>
-      {/* the below div will hold the main card, which will hold our other controls */}
-      <div className='bento-card bento-col-8 teal-header'>
-        <h3 className='card-title'>
-          <span>{editingID ? "Edit Book" : "Add New Book"}</span>
-          {editingID && (
-            <button className='btn btn-outline btn-sm' onClick={resetForm}>
-              Cancel Edit
-            </button>
-          )}
-        </h3>
-        {/* below the heading - we have the input form for editing/adding a new book */}
-        <form onSubmit={handleSubmit}>
-          <div className='form-row'>
-            <div className='form-group'>
-              <label>Title:</label>
-              <input
-                type='text'
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-            </div>
-            <div className='form-group'>
-              <label>Author:</label>
-              <input
-                type='text'
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-          <div className='form-row'>
-            <div className='form-group'>
-              <label>ISBN:</label>
-              <input
-                type='text'
-                value={isbn}
-                onChange={(e) => setIsbn(e.target.value)}
-                required
-              />
-            </div>
-            <div className='form-group'>
-              <label>Published Year:</label>
-              <input
-                type='number'
-                value={publishedYear}
-                onChange={(e) => setPublishedYear(e.target.value)}
-              />
-            </div>
-            <div className='form-group'>
-              <label>Genre:</label>
-              {/* select = dropdownlist in web */}
-              <select
-                value={genre}
-                onChange={(e) => setGenre(e.target.value as any)}
-              >
-                <option value={"Fiction"}>Fiction</option>
-                <option value={"Non-Fiction"}>Non-Fiction</option>
-                <option value={"Textbook"}>Textbook</option>
-              </select>
-            </div>
-          </div>
-          {/* after the inputs, we need the buttons to save */}
-          <div className='btn-group' style={{ marginTop: "10px" }}>
-            <button type='submit' className='btn btn-teal'>
-              {editingID ? "Replace Book" : "Add Book"}{" "}
-              {/* if editing: put else post */}
-            </button>
-            <button className='btn btn-teal' onClick={handlePatch}>
-              Update Book
-            </button>
-          </div>
-        </form>
-      </div>{" "}
-      {/* end of the first card */}
-      {/* the next card holds stats */}
-      <div
-        className='bento-card bento-col-4'
-        style={{ borderLeft: "5px solid #0d9448" }}
-      >
-        <h3 className='card-title'>Stats</h3>
-        <div style={{ marginTop: "15px" }}>
-          <div className='stats-num'>{books.length}</div>
-          <div className='stats-label'>Total Books</div>
-        </div>
+  <div className="app-shell">
+
+    {/* SIDEBAR */}
+    <aside className="sidebar">
+
+      <button className="sidebar-toggle" type="button" aria-label="Collapse sidebar">
+        <i className="fa-solid fa-chevron-left" aria-hidden="true"></i>
+      </button>
+
+      <div className="brand">
+        <span className="brand-mark">P</span>
+        <span className="brand-copy">
+          <strong>Parkitects</strong>
+          <small>Smart Parking</small>
+        </span>
       </div>
-      {/* book details card */}
-      {editingBook && (
-        <div
-          className='bento-card bento-col-12'
-          style={{ borderLeft: "5px solid #0d9448" }}
+
+      <nav className="primary-nav" aria-label="Primary navigation">
+
+        <button
+          className="nav-item is-active"
+          type="button"
         >
-          <h3 className='card-title'>
-            Book Details
-            <button
-              className='btn btn-outline btn-sm'
-              onClick={() => setEditingBook(null)}
-            >
-              Close Pane
-            </button>
-          </h3>
-          <p>ID: {editingBook._id}</p>
-          <p>Title: {editingBook.title}</p>
-          <p>Author: {editingBook.author}</p>
-          <p>ISBN: {editingBook.isbn}</p>
-          <p>Genre: {editingBook.genre}</p>
-          {editingBook && <p>Year: {editingBook.publishedYear}</p>}
+          <i className="nav-icon fa-solid fa-table-columns" aria-hidden="true"></i>
+          <span className="nav-label">Dashboard</span>
+        </button>
+
+        <button className="nav-item" type="button">
+          <i className="nav-icon fa-solid fa-ticket" aria-hidden="true"></i>
+          <span className="nav-label">Tickets</span>
+        </button>
+
+        <button className="nav-item" type="button">
+          <i className="nav-icon fa-solid fa-square-parking" aria-hidden="true"></i>
+          <span className="nav-label">Parking</span>
+        </button>
+
+        <button className="nav-item" type="button">
+          <i className="nav-icon fa-solid fa-chart-line" aria-hidden="true"></i>
+          <span className="nav-label">Analytics</span>
+        </button>
+
+        <button className="nav-item" type="button">
+          <i className="nav-icon fa-solid fa-gear" aria-hidden="true"></i>
+          <span className="nav-label">Settings</span>
+        </button>
+
+      </nav>
+
+      <div className="sidebar-footer">
+
+        <div className="plan-card">
+          <div className="plan-row">
+            <span>Parking status</span>
+            <strong>Live</strong>
+          </div>
+
+          <div className="progress-track">
+            <span style={{ width: "72%" }}></span>
+          </div>
+
+          <small>Campus parking activity</small>
         </div>
-      )}
-      {/* list of all books card */}
-      <div className='bento-card bento-col-12 teal-header'>
-        <h3 className='card-title'>
-          <span>Book List</span>
-          <button className='btn btn-outline btn-sm' onClick={loadBooks}>
-            Refresh
-          </button>
-        </h3>
-        {/* we hide this if there are no books */}
-        {books.length === 0 ? (
-          <p style={{ color: "#64748b" }}>No books available.</p>
-        ) : (
-          books.map((book) => (
-            <div key={book._id || book.isbn} className='book-item'>
-              <div className='book-info'>
-                <h4>
-                  {book.title}{" "}
-                  <span className='badge badge-teal'>{book.genre}</span>
-                </h4>
-                <p>
-                  By {book.author} | ISBN: {book.isbn}{" "}
-                  {book.publishedYear && `| Year: ${book.publishedYear}`}
-                </p>
-              </div>
-              {/* these buttons will appear next to each item in the list */}
-              <div className='btn-group'>
-                {book._id && (
-                  <button
-                    className='btn btn-outline btn-sm'
-                    onClick={() => handleInspect(book._id!)}
-                  >
-                    Inspect Book
-                  </button>
-                )}
-                {book._id && (
-                  <button
-                    className='btn btn-outline btn-sm'
-                    onClick={() => handleDelete(book._id!)}
-                  >
-                    Delete Book
-                  </button>
-                )}
-              </div>
-            </div>
-          ))
-        )}
+
+        <button className="sidebar-user" type="button">
+          <span className="avatar">P</span>
+
+          <span className="user-copy">
+            <strong>Parkitects</strong>
+            <small>Administrator</small>
+          </span>
+
+          <i
+            className="more-mark fa-solid fa-ellipsis"
+            aria-hidden="true"
+          ></i>
+        </button>
+
       </div>
+    </aside>
+
+
+    {/* MAIN WORKSPACE */}
+    <div className="workspace">
+
+      {/* TOP BAR */}
+      <header className="topbar">
+
+        <div className="mobile-brand">
+          <span className="brand-mark">P</span>
+          <strong>Parkitects</strong>
+        </div>
+
+        <label className="search-box">
+
+          <i
+            className="fa-solid fa-magnifying-glass"
+            aria-hidden="true"
+          ></i>
+
+          <input
+            type="search"
+            placeholder="Search this view"
+            autoComplete="off"
+          />
+
+          <kbd>⌘ K</kbd>
+
+        </label>
+
+        <div className="topbar-actions">
+
+          <button
+            className="icon-button"
+            type="button"
+            aria-label="Switch theme"
+          >
+            <i
+              className="fa-solid fa-moon"
+              aria-hidden="true"
+            ></i>
+          </button>
+
+          <button
+            className="icon-button notification-button"
+            type="button"
+            aria-label="Notifications"
+          >
+            <i
+              className="fa-solid fa-bell"
+              aria-hidden="true"
+            ></i>
+
+            <span className="notification-dot"></span>
+          </button>
+
+          <button
+            className="profile-button"
+            type="button"
+          >
+            <span className="avatar">P</span>
+
+            <span className="profile-name">
+              Parkitects
+            </span>
+
+            <i
+              className="fa-solid fa-chevron-down"
+              aria-hidden="true"
+            ></i>
+          </button>
+
+        </div>
+
+      </header>
+
+
+      {/* PAGE */}
+      <main className="page-wrap">
+
+        <section
+          className="page is-active"
+          data-page-panel="dashboard"
+          aria-labelledby="dashboardTitle"
+        >
+
+          {/* PAGE HEADING */}
+          <div className="page-heading">
+
+            <div>
+
+              <p className="eyebrow">
+                Campus parking
+              </p>
+
+              <h1 id="dashboardTitle">
+                Good morning
+              </h1>
+
+              <p>
+                Here's a clear look at what's happening across campus parking.
+              </p>
+
+            </div>
+
+            <div className="heading-actions">
+
+              <button
+                className="button secondary"
+                type="button"
+              >
+                View tickets
+              </button>
+
+              <button
+                className="button primary"
+                type="button"
+              >
+                Parking map
+              </button>
+
+            </div>
+
+          </div>
+
+
+          {/* STAT CARDS */}
+          <div className="stat-list">
+
+            <article
+              className="stat-card searchable"
+              data-search="parking bays total spaces"
+            >
+
+              <div className="stat-top">
+
+                <span className="stat-icon violet">
+                  <i
+                    className="fa-solid fa-square-parking"
+                    aria-hidden="true"
+                  ></i>
+                </span>
+
+              </div>
+
+              <p>Total parking bays</p>
+
+              <strong className="stat-value">
+                14
+              </strong>
+
+              <small>
+                Campus parking capacity
+              </small>
+
+            </article>
+
+
+            <article
+              className="stat-card searchable"
+              data-search="occupied parking spaces"
+            >
+
+              <div className="stat-top">
+
+                <span className="stat-icon blue">
+                  <i
+                    className="fa-solid fa-car"
+                    aria-hidden="true"
+                  ></i>
+                </span>
+
+              </div>
+
+              <p>Currently occupied</p>
+
+              <strong className="stat-value">
+                6
+              </strong>
+
+              <small>
+                Live occupancy
+              </small>
+
+            </article>
+
+
+            <article
+              className="stat-card searchable"
+              data-search="available parking spaces"
+            >
+
+              <div className="stat-top">
+
+                <span className="stat-icon green">
+                  <i
+                    className="fa-solid fa-circle-check"
+                    aria-hidden="true"
+                  ></i>
+                </span>
+
+              </div>
+
+              <p>Available spaces</p>
+
+              <strong className="stat-value">
+                8
+              </strong>
+
+              <small>
+                Spaces currently available
+              </small>
+
+            </article>
+
+
+            <article
+              className="stat-card searchable"
+              data-search="tickets parking complaints"
+            >
+
+              <div className="stat-top">
+
+                <span className="stat-icon orange">
+                  <i
+                    className="fa-solid fa-ticket"
+                    aria-hidden="true"
+                  ></i>
+                </span>
+
+              </div>
+
+              <p>Tickets today</p>
+
+              <strong className="stat-value">
+                0
+              </strong>
+
+              <small>
+                Parking issues reported today
+              </small>
+
+            </article>
+
+          </div>
+
+
+          {/* MAP + OVERVIEW */}
+          <div className="dashboard-row">
+
+            {/* MAP */}
+            <article
+              className="panel performance-panel searchable"
+              data-search="parking map campus parking bays"
+            >
+
+              <div className="panel-heading">
+
+                <div>
+
+                  <p className="panel-kicker">
+                    Live updates
+                  </p>
+
+                  <h2>
+                    Parking map
+                  </h2>
+
+                </div>
+
+                <div className="range-control">
+                  <button
+                    type="button"
+                    className="is-active"
+                  >
+                    Live
+                  </button>
+                </div>
+
+              </div>
+
+
+              <div className="chart-summary">
+
+                <strong>
+                  Campus parking
+                </strong>
+
+                <span>
+                  <i></i>
+                  Live availability
+                </span>
+
+              </div>
+
+
+              {/* THIS REPLACES THE CODEPEN GRAPH */}
+              <div
+                className="chart-box"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: "500px",
+                }}
+              >
+
+                <img
+                  src={parkingMap}
+                  alt="Campus parking map"
+                  style={{
+                    width: "100%",
+                    height: "500px",
+                    objectFit: "contain",
+                  }}
+                />
+
+              </div>
+
+            </article>
+
+
+            {/* PARKING OVERVIEW */}
+            <article
+              className="panel conversion-panel searchable"
+              data-search="parking overview availability occupancy"
+            >
+
+              <div className="panel-heading">
+
+                <div>
+
+                  <p className="panel-kicker">
+                    Availability
+                  </p>
+
+                  <h2>
+                    Parking overview
+                  </h2>
+
+                </div>
+
+              </div>
+
+
+              <div className="donut-wrap">
+
+                <div
+                  className="donut"
+                  role="img"
+                  aria-label="43 percent of parking bays occupied"
+                >
+
+                  <span>
+
+                    <strong>
+                      43%
+                    </strong>
+
+                    <small>
+                      Occupied
+                    </small>
+
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <ul className="channel-list">
+
+                <li>
+                  <span>
+                    <i className="violet-dot"></i>
+                    Total bays
+                  </span>
+
+                  <strong>
+                    14
+                  </strong>
+                </li>
+
+                <li>
+                  <span>
+                    <i className="blue-dot"></i>
+                    Occupied
+                  </span>
+
+                  <strong>
+                    6
+                  </strong>
+                </li>
+
+                <li>
+                  <span>
+                    <i className="green-dot"></i>
+                    Available
+                  </span>
+
+                  <strong>
+                    8
+                  </strong>
+                </li>
+
+              </ul>
+
+            </article>
+
+          </div>
+
+
+          {/* LOWER ROW */}
+          <div className="dashboard-row lower-row">
+
+            {/* PARKING BAY */}
+            <article
+              className="panel activity-panel searchable"
+              data-search="parking bay selected bay information"
+            >
+
+              <div className="panel-heading">
+
+                <div>
+
+                  <p className="panel-kicker">
+                    Parking selection
+                  </p>
+
+                  <h2>
+                    Parking bay
+                  </h2>
+
+                </div>
+
+                <button
+                  className="text-button"
+                  type="button"
+                  onClick={() => setSelectedBay(null)}
+                >
+                  Clear
+                </button>
+
+              </div>
+
+
+              <div className="table-wrap">
+
+                {selectedBay ? (
+
+                  <div>
+
+                    <p>
+                      Selected parking bay
+                    </p>
+
+                    <h2>
+                      {selectedBay}
+                    </h2>
+
+                    <p>
+                      Parking bay information will appear here.
+                    </p>
+
+                    <span className="status success">
+                      Available
+                    </span>
+
+                  </div>
+
+                ) : (
+
+                  <div>
+
+                    <p>
+                      Select a parking bay on the map to view its information.
+                    </p>
+
+                    <span className="status pending">
+                      No bay selected
+                    </span>
+
+                  </div>
+
+                )}
+
+              </div>
+
+            </article>
+
+
+            {/* LIVE PARKING ACTIVITY */}
+            <article
+              className="panel team-panel searchable"
+              data-search="parking activity live updates"
+            >
+
+              <div className="panel-heading">
+
+                <div>
+
+                  <p className="panel-kicker">
+                    Live updates
+                  </p>
+
+                  <h2>
+                    Parking activity
+                  </h2>
+
+                </div>
+
+                <span className="team-score">
+                  Live
+                </span>
+
+              </div>
+
+
+              <div className="goal-list">
+
+                <div>
+
+                  <span>
+
+                    <strong>
+                      Available spaces
+                    </strong>
+
+                    <small>
+                      8 of 14 spaces available
+                    </small>
+
+                  </span>
+
+                  <span className="goal-bar">
+                    <i style={{ width: "57%" }}></i>
+                  </span>
+
+                </div>
+
+
+                <div>
+
+                  <span>
+
+                    <strong>
+                      Occupied spaces
+                    </strong>
+
+                    <small>
+                      6 of 14 spaces occupied
+                    </small>
+
+                  </span>
+
+                  <span className="goal-bar">
+                    <i style={{ width: "43%" }}></i>
+                  </span>
+
+                </div>
+
+
+                <div>
+
+                  <span>
+
+                    <strong>
+                      Parking status
+                    </strong>
+
+                    <small>
+                      Sensors reporting normally
+                    </small>
+
+                  </span>
+
+                  <span className="goal-bar">
+                    <i style={{ width: "100%" }}></i>
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <button
+                className="button soft full-button"
+                type="button"
+              >
+                View parking details
+              </button>
+
+            </article>
+
+          </div>
+
+        </section>
+
+      </main>
+
     </div>
-  );
+
+  </div>
+);
 };
