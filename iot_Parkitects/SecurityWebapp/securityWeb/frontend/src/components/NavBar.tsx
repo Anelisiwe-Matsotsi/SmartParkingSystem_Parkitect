@@ -3,30 +3,55 @@ import { NavLink } from "react-router-dom";
 
 export const NavBar: React.FC = () => {
   return (
-    /* the <nav> container holds all the navigation objects for our navbar */
-    <nav className='navbar'>
-      {/* a <div> is just a container that holds multiple objects */}
-      <div className='nav-brand'>
-        <span>Public Library App Thing</span>
+    <nav className="navbar">
+      <div className="nav-brand">
+        <span>Parkitects</span>
       </div>
 
-      <div className='nav-links'>
-        {/* the styling for the navlinks is conditional, the style will change based on which link is active */}
+      <div className="nav-links">
         <NavLink
-          to='/'
+          to="/dashboard"
           className={({ isActive }) =>
             isActive ? "nav-link-active" : "nav-link"
           }
         >
-          Book Management Page
+          Dashboard
         </NavLink>
+
         <NavLink
-          to='/health'
+          to="/tickets"
           className={({ isActive }) =>
             isActive ? "nav-link-active" : "nav-link"
           }
         >
-          Backend Status
+          Tickets
+        </NavLink>
+
+        <NavLink
+          to="/parking"
+          className={({ isActive }) =>
+            isActive ? "nav-link-active" : "nav-link"
+          }
+        >
+          Parking
+        </NavLink>
+
+        <NavLink
+          to="/analytics"
+          className={({ isActive }) =>
+            isActive ? "nav-link-active" : "nav-link"
+          }
+        >
+          Analytics
+        </NavLink>
+
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            isActive ? "nav-link-active" : "nav-link"
+          }
+        >
+          Settings
         </NavLink>
       </div>
     </nav>
