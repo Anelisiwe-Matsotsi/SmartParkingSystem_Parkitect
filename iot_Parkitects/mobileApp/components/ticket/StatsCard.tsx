@@ -19,15 +19,6 @@ export default function StatsCard() {
           </Text>
         </View>
 
-
-      
-
-     
-     
-
-    
-    
-  
   );
 }
 

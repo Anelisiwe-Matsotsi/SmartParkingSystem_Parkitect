@@ -1,4 +1,5 @@
 import React from "react";
+import parkitechlogo from "../assets/parkitechlogo";
 import { NavLink } from "react-router-dom";
 
 export const SideBar: React.FC = () => {

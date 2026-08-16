@@ -2,12 +2,14 @@
     --bg: #F7FAFB;
     --surface: #ffffff;
     --surface-soft: #f8f9fc;
+    --surfacebg: #064f62;
     --text: #172033;
     --muted: #6e778b;
+    --mutedsb: #cad1df;
     --line: #e7eaf1;
     --primary: #0B5D6B;
     --primary-dark: #083F4A;
-    --primary-soft: #ebfeff;
+    --primary-soft: #a5c886;
     --blue: #3784e6;
     --green: #2aa876;
     --orange: #e99a3c;
@@ -80,7 +82,7 @@ a:focus-visible {
     display: flex;
     flex-direction: column;
     padding: 28px 18px 20px;
-    background: var(--surface);
+    background: var(--surfacebg);
     border-right: 1px solid var(--line);
     transition: width .25s ease, flex-basis .25s ease, padding .25s ease;
 }
@@ -164,7 +166,7 @@ a:focus-visible {
     gap: 11px;
     min-height: 42px;
     padding: 0 10px;
-    color: var(--text);
+    color: #a8ddd4;
     text-decoration: none;
 }
 
@@ -200,7 +202,7 @@ a:focus-visible {
 .user-copy small,
 .profile-summary small {
     margin-top: 4px;
-    color: var(--muted);
+    color: var(--mutedsb);
     font-size: 11px;
 }
 
@@ -219,7 +221,7 @@ a:focus-visible {
     align-items: center;
     gap: 12px;
     padding: 7px 10px;
-    color: var(--muted);
+    color: var(--mutedsb);
     background: transparent;
     border: 0;
     border-radius: 12px;
@@ -362,6 +364,7 @@ a:focus-visible {
     font-size: 12px;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: #a8ddd4;
 }
 
 .more-mark {
