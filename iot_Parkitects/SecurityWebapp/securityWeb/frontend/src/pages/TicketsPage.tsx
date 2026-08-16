@@ -1,6 +1,42 @@
-import React from "react";
+import React, { useState} from "react";
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import FormControl from "@mui/material/FormControl";
+import NativeSelect from "@mui/material/NativeSelect";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormLabel from "@mui/material/FormLabel";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { styled } from "@mui/material/styles";
+
+const VisuallyHiddenInput = styled("input")({
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
+  height: 1,
+  overflow: "hidden",
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  whiteSpace: "nowrap",
+  width: 1,
+});
 
 export const TicketsPage: React.FC = () => {
+     const [open, setOpen] = useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
   return (
     <section className="page is-active" aria-labelledby="ticketsTitle">
 
@@ -16,7 +52,8 @@ export const TicketsPage: React.FC = () => {
           </p>
         </div>
 
-        <button className="button primary" type="button">
+        <button className="button primary" type="button"
+        onClick={handleClickOpen}>
           Issue ticket
         </button>
       </div>
@@ -27,7 +64,7 @@ export const TicketsPage: React.FC = () => {
         {/* TICKET 1 */}
         <article
           className="project-card searchable"
-          data-search="parking ticket A01 student unpaid"
+          data-search="parking ticket A01 car parked skew"
         >
           <div className="project-card-top">
             <span className="project-icon violet">
@@ -46,13 +83,13 @@ export const TicketsPage: React.FC = () => {
           </div>
 
           <span className="status pending">
-            Unpaid
+            Waiting for Approval
           </span>
 
           <h2>Parking Bay A01</h2>
 
           <p>
-            Vehicle parked in a restricted parking bay.
+            Vehicle parked skew.
           </p>
 
           <div className="project-meta">
@@ -72,11 +109,11 @@ export const TicketsPage: React.FC = () => {
               <i>SG</i>
             </div>
 
-            <strong>R500</strong>
+            <strong>5 Aug 2026</strong>
           </div>
 
           <div className="progress-track">
-            <span style={{ width: "35%" }}></span>
+            <span style={{ width: "0%" }}></span>
           </div>
         </article>
 
@@ -84,10 +121,10 @@ export const TicketsPage: React.FC = () => {
         {/* TICKET 2 */}
         <article
           className="project-card searchable"
-          data-search="parking ticket B14 lecturer paid"
+          data-search="parking ticket B14 lecturer moved"
         >
           <div className="project-card-top">
-            <span className="project-icon blue">
+            <span className="project-icon green">
               <i
                 className="fa-solid fa-ticket"
                 aria-hidden="true"
@@ -102,14 +139,14 @@ export const TicketsPage: React.FC = () => {
             </button>
           </div>
 
-          <span className="status success">
-            Paid
+          <span className="status review">
+            Notified
           </span>
 
           <h2>Parking Bay B14</h2>
 
           <p>
-            Parking violation resolved and payment received.
+             Vehicle parked in a restricted parking bay.
           </p>
 
           <div className="project-meta">
@@ -129,11 +166,11 @@ export const TicketsPage: React.FC = () => {
               <i>SG</i>
             </div>
 
-            <strong>R300</strong>
+            <strong>5 Aug 2026</strong>
           </div>
 
           <div className="progress-track">
-            <span style={{ width: "100%" }}></span>
+            <span style={{ width: "50%" }}></span>
           </div>
         </article>
 
@@ -141,7 +178,7 @@ export const TicketsPage: React.FC = () => {
         {/* TICKET 3 */}
         <article
           className="project-card searchable"
-          data-search="parking ticket C07 student review"
+          data-search="parking ticket C07  vehicle lights are on"
         >
           <div className="project-card-top">
             <span className="project-icon green">
@@ -162,11 +199,15 @@ export const TicketsPage: React.FC = () => {
           <span className="status review">
             Under review
           </span>
+        
 
           <h2>Parking Bay C07</h2>
 
           <p>
-            Ticket has been disputed and is awaiting review.
+           Vehicle lights are on
+          </p>
+          <p>
+          <span className="status review">Description:</span> They have been flashing for the past hour!
           </p>
 
           <div className="project-meta">
@@ -186,7 +227,7 @@ export const TicketsPage: React.FC = () => {
               <i>SG</i>
             </div>
 
-            <strong>R500</strong>
+            <strong>5 Aug 2026</strong>
           </div>
 
           <div className="progress-track">
@@ -198,10 +239,10 @@ export const TicketsPage: React.FC = () => {
         {/* TICKET 4 */}
         <article
           className="project-card searchable"
-          data-search="parking ticket D22 visitor unpaid"
+          data-search="vehicle not fully in bay "
         >
           <div className="project-card-top">
-            <span className="project-icon orange">
+            <span className="project-icon blue">
               <i
                 className="fa-solid fa-ticket"
                 aria-hidden="true"
@@ -216,14 +257,14 @@ export const TicketsPage: React.FC = () => {
             </button>
           </div>
 
-          <span className="status pending">
-            Unpaid
+          <span className="status success">
+            Resolved
           </span>
 
           <h2>Parking Bay D22</h2>
 
           <p>
-            Vehicle exceeded the permitted parking time.
+           Vehicle is too far out of the bay
           </p>
 
           <div className="project-meta">
@@ -234,7 +275,7 @@ export const TicketsPage: React.FC = () => {
 
             <span>
               <small>Issued</small>
-              <strong>Yesterday</strong>
+              <strong>1:35pm</strong>
             </span>
           </div>
 
@@ -243,17 +284,159 @@ export const TicketsPage: React.FC = () => {
               <i>SG</i>
             </div>
 
-            <strong>R400</strong>
+            <strong>5 Aug 2026</strong>
           </div>
 
           <div className="progress-track">
-            <span style={{ width: "20%" }}></span>
+            <span style={{ width: "100%" }}></span>
           </div>
         </article>
 
       </div>
+      <Dialog
+  open={open}
+  onClose={handleClose}
+  fullWidth
+  maxWidth="sm"
+>
+  <DialogTitle>
+    Create Ticket
+  </DialogTitle>
+
+  <DialogContent>
+
+    {/* PARKING BAY */}
+   <FormControl fullWidth margin="normal">
+  <FormLabel sx={{ mb: 1 }}>
+    Parking Bay
+  </FormLabel>
+
+  <NativeSelect
+    defaultValue=""
+    inputProps={{
+      name: "parkingBay",
+      id: "parking-bay-select",
+    }}
+  >
+    <option value="" disabled>
+      Select a parking bay
+    </option>
+
+    <option value="A01">A01</option>
+    <option value="A02">A02</option>
+    <option value="A03">A03</option>
+
+    <option value="B01">B01</option>
+    <option value="B04">B04</option>
+    <option value="B07">B07</option>
+    <option value="B14">B14</option>
+
+    <option value="C02">C02</option>
+    <option value="C07">C07</option>
+
+    <option value="D01">D01</option>
+    <option value="D05">D05</option>
+    <option value="D22">D22</option>
+  </NativeSelect>
+</FormControl>
+
+
+    {/* VIOLATION */}
+    <FormControl margin="dense">
+      <FormLabel id="violation-label">
+        Violation
+      </FormLabel>
+
+      <RadioGroup
+        aria-labelledby="violation-label"
+        name="violation"
+      >
+        <FormControlLabel
+          value="Restricted parking"
+          control={<Radio />}
+          label="Restricted parking"
+        />
+
+        <FormControlLabel
+          value="Incorrect bay"
+          control={<Radio />}
+          label="Incorrect bay"
+        />
+
+        <FormControlLabel
+          value="Vehicle outside bay"
+          control={<Radio />}
+          label="Vehicle outside bay"
+        />
+
+        <FormControlLabel
+          value="Other"
+          control={<Radio />}
+          label="Other"
+        />
+      </RadioGroup>
+    </FormControl>
+
+
+    {/* DESCRIPTION */}
+    <TextField
+      margin="dense"
+      id="description"
+      name="description"
+      label="Description (optional)"
+      multiline
+      rows={4}
+      fullWidth
+      placeholder="Add any additional information about the violation..."
+    />
+
+
+    {/* IMAGE UPLOAD */}
+    <Button
+      component="label"
+      variant="outlined"
+      tabIndex={-1}
+      startIcon={<CloudUploadIcon />}
+      sx={{ mt: 2 }}
+    >
+      Upload image (optional)
+
+      <VisuallyHiddenInput
+        type="file"
+        accept="image/*"
+        onChange={(event) => {
+          console.log(event.target.files);
+        }}
+      />
+    </Button>
+
+  </DialogContent>
+
+
+  <DialogActions>
+
+    <Button onClick={handleClose}>
+      Cancel
+    </Button>
+
+    <Button
+      variant="contained"
+      onClick={handleClose}
+    >
+      Issue Ticket
+    </Button>
+
+  </DialogActions>
+
+</Dialog>
+      
     </section>
   );
 };
 
 export default TicketsPage;
+
+/**
+ * References
+ * https://mui.com/material-ui/react-dialog/#scrolling-long-content
+ */

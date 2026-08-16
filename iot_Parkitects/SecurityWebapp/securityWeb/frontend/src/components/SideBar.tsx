@@ -1,5 +1,5 @@
 import React from "react";
-import parkitechlogo from "../assets/parkitechlogo";
+import parkitechlogo from "../assets/parkitechlogo.png";
 import { NavLink } from "react-router-dom";
 
 export const SideBar: React.FC = () => {
@@ -20,7 +20,9 @@ export const SideBar: React.FC = () => {
 
       {/* Brand */}
       <div className="brand">
-        <span className="brand-mark">P</span>
+        <span className="brand-mark">
+            <img src={parkitechlogo} alt="Parkitech"/>
+        </span>
 
         <span className="brand-copy">
           <strong>Parkitects</strong>
