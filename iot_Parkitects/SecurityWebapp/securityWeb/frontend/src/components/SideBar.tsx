@@ -2,7 +2,15 @@ import React from "react";
 import parkitechlogo from "../assets/parkitechlogo.png";
 import { NavLink } from "react-router-dom";
 
-export const SideBar: React.FC = () => {
+interface SideBarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+export const SideBar: React.FC<SideBarProps> = ({
+  collapsed,
+  onToggle,
+}) => {
   return (
     <aside className="sidebar">
 
@@ -10,7 +18,8 @@ export const SideBar: React.FC = () => {
       <button
         className="sidebar-toggle"
         type="button"
-        aria-label="Collapse sidebar"
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        onClick={onToggle}
       >
         <i
           className="fa-solid fa-chevron-left"
@@ -34,7 +43,7 @@ export const SideBar: React.FC = () => {
       <nav className="primary-nav" aria-label="Primary navigation">
 
         <NavLink
-          to="/"
+          to="/dashboard"
           className={({ isActive }) =>
             `nav-item ${isActive ? "is-active" : ""}`
           }

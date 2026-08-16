@@ -28,6 +28,7 @@ const VisuallyHiddenInput = styled("input")({
 
 export const TicketsPage: React.FC = () => {
      const [open, setOpen] = useState(false);
+     const [activeTicket, setActiveTicket] = useState<string | null>(null);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -74,14 +75,35 @@ export const TicketsPage: React.FC = () => {
               ></i>
             </span>
 
-            <button type="button" aria-label="More options">
-              <i
-                className="fa-solid fa-ellipsis"
-                aria-hidden="true"
-              ></i>
-            </button>
-          </div>
+     <div className="ticket-menu">
+  <button
+    type="button"
+    aria-label="More options"
+    onClick={() =>
+      setActiveTicket(
+        activeTicket === "PT-1048" ? null : "PT-1048"
+      )
+    }
+  >
+    <i
+      className="fa-solid fa-ellipsis"
+      aria-hidden="true"
+    ></i>
+  </button>
 
+  {activeTicket === "PT-1048" && (
+    <div className="ticket-actions">
+      <button type="button" className="approve">
+        Approve
+      </button>
+
+      <button type="button" className="reject">
+        Reject
+      </button>
+    </div>
+  )}
+</div>
+</div>
           <span className="status pending">
             Waiting for Approval
           </span>
@@ -415,11 +437,15 @@ export const TicketsPage: React.FC = () => {
 
   <DialogActions>
 
-    <Button onClick={handleClose}>
+    <Button
+     className="login-button"
+            type="button" onClick={handleClose}>
       Cancel
     </Button>
 
     <Button
+     className="login-button"
+            type="button"
       variant="contained"
       onClick={handleClose}
     >

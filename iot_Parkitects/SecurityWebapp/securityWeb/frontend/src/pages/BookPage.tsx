@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import parkingMap from "../assets/parking-map.svg";
+import ParkingLayout from "../components/ParkingLayout.tsx";
 import type { Book } from "../models/book.ts";
+import { useNavigate } from "react-router-dom";
 import {
   getBooks,
   getBook,
@@ -117,6 +119,7 @@ export const BookPage: React.FC = () => {
     setEditingBook(data);
   };
   const [selectedBay, setSelectedBay] = useState<string | null>(null);
+  const navigate = useNavigate();
   // where return starts = the actual HTML/display area
   return (
 
@@ -151,6 +154,7 @@ export const BookPage: React.FC = () => {
               <button
                 className="button secondary"
                 type="button"
+                onClick={()=> navigate("/tickets")}
               >
                 View tickets
               </button>
@@ -337,7 +341,7 @@ export const BookPage: React.FC = () => {
               </div>
 
 
-              {/* THIS REPLACES THE CODEPEN GRAPH */}
+              
               <div
                 className="chart-box"
                 style={{
@@ -348,7 +352,7 @@ export const BookPage: React.FC = () => {
                 }}
               >
 
-                <img
+             {/*  <img
                   src={parkingMap}
                   alt="Campus parking map"
                   style={{
@@ -356,6 +360,9 @@ export const BookPage: React.FC = () => {
                     height: "500px",
                     objectFit: "contain",
                   }}
+                /> */}
+                <ParkingLayout
+                onBayClick={(bayId) => setSelectedBay(bayId)}
                 />
 
               </div>
@@ -502,12 +509,24 @@ export const BookPage: React.FC = () => {
                     </h2>
 
                     <p>
-                      Parking bay information will appear here.
+                      <span className="status success">
+                      Sensor Status: Online
+                      
+                    </span>
                     </p>
 
-                    <span className="status success">
-                      Available
+                    <span className="status pending">
+                      Occupied by:  ST10266906
+                      
                     </span>
+
+                  
+                    <p>
+                       <span className="status pending">
+                      Since: 8:00am
+                      
+                    </span>
+                    </p>
 
                   </div>
 

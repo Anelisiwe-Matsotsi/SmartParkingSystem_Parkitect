@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 export const TopBar: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -19,6 +19,7 @@ export const TopBar: React.FC = () => {
     setShowNotifications(false);
   };
 
+  const navigate = useNavigate();
   return (
     <header className={`topbar ${darkMode ? "dark-mode" : ""}`}>
 
@@ -101,7 +102,8 @@ export const TopBar: React.FC = () => {
                   <small>3 unread updates</small>
                 </div>
 
-                <button type="button">
+                <button type="button"
+                onClick={()=> navigate("/dashboard")}>
                   Mark all read
                 </button>
 
@@ -175,6 +177,7 @@ export const TopBar: React.FC = () => {
               <button
                 className="popover-footer"
                 type="button"
+                onClick={()=> navigate("/ticketsresponse")}
               >
                 View notification center
               </button>
@@ -227,7 +230,9 @@ export const TopBar: React.FC = () => {
               </div>
 
 
-              <button type="button">
+              <button type="button"
+              onClick={()=> navigate("/settings")}
+              >
                 Account settings
               </button>
 
@@ -238,7 +243,8 @@ export const TopBar: React.FC = () => {
                 Appearance
               </button>
 
-              <button type="button">
+              <button type="button"
+              onClick={()=> navigate("/login")}>
                 Sign out
               </button>
 

@@ -1,6 +1,7 @@
 import React from "react";
-
+import { useNavigate } from "react-router-dom";
 export const TicketResponsesPage: React.FC = () => {
+    const navigate = useNavigate();
   return (
       <div className="app-shell">
 
@@ -210,6 +211,7 @@ export const TicketResponsesPage: React.FC = () => {
             <button
               className="button secondary"
               type="button"
+              onClick={()=> navigate("/tickets")}
             >
               Reject Response
             </button>
@@ -217,6 +219,7 @@ export const TicketResponsesPage: React.FC = () => {
             <button
               className="button primary"
               type="button"
+              onClick={()=> navigate("/tickets")}
             >
               Mark Ticket as Done
             </button>
