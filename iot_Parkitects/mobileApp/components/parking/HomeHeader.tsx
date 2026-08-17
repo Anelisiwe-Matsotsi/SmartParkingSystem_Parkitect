@@ -70,16 +70,7 @@ export default function HomeHeader() {
         <View style={styles.search}>
           <SearchBar />
         </View>
-        {showAlert && 
-        (
-          <AlertBanner
-        title="LIMITED BAYS"
-        message="The campus parking only has 15 bays available"
-        icon="clock"
-        iconColor="#0B5D68"
-        onDismiss={() => setShowAlert(false)}
-        />
-        )}
+       
 
       </View>
     </SafeAreaView>

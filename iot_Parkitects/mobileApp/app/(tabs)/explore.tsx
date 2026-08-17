@@ -13,6 +13,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import StatsCard from '@/components/ticket/StatsCard';
+import { useRouter } from 'expo-router';
 
 
 const cancellationReasons = [
@@ -60,20 +61,11 @@ const theme = Colors[colorScheme ?? 'light']
     image: null,
   
   });
-
+  const router = useRouter();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => {
-            // handle onPress
-          }}
-          style={styles.headerAction}>
-          <FeatherIcon
-            color="#081e17"
-            name="arrow-left"
-            size={24} />
-        </TouchableOpacity>
+      
 
         <Text style={[styles.title, { color: theme.text}]} >Create a Ticket</Text>
 
@@ -169,6 +161,7 @@ const theme = Colors[colorScheme ?? 'light']
           <TouchableOpacity
             onPress={() => {
               // handle onPress
+               router.push('/success')
             }}>
             <View style={styles.btn}>
               <Text style={styles.btnText}>Submit</Text>
@@ -203,6 +196,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 24,
     marginBottom: 28,
+     marginTop: 50,
   },
   headerAction: {
     width: 40,
@@ -290,8 +284,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderWidth: 1,
-    backgroundColor:"#0c4b64",
-    borderColor: '#08f894',
+    backgroundColor:"#0c5464",
+    borderColor: '#1c895c',
   },
   btnText: {
     fontSize: 17,

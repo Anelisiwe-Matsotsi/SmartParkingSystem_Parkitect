@@ -7,136 +7,150 @@ import {
 } from 'react-native';
 import FeatherIcon from '@expo/vector-icons/Feather';
 
+type AlertType = 'info' | 'warning' | 'error' | 'success';
+
 type AlertBannerProps = {
   title: string;
   message: string;
+  type?: AlertType;
   icon?: keyof typeof FeatherIcon.glyphMap;
-  iconColor?: string;
   onDismiss: () => void;
 };
 
 export default function AlertBanner({
   title,
   message,
-  icon = 'bell',
-  iconColor = '#0B5D6B',
+  type = 'info',
+  icon,
   onDismiss,
 }: AlertBannerProps) {
+  const getTypeStyles = () => {
+    switch (type) {
+      case 'error':
+        return {
+          iconBg: '#FEE2E2',
+          iconColor: '#EF4444',
+          defaultIcon: 'alert-triangle' as const,
+        };
+      case 'warning':
+        return {
+          iconBg: '#FEF3C7',
+          iconColor: '#F59E0B',
+          defaultIcon: 'alert-circle' as const,
+        };
+      case 'success':
+        return {
+          iconBg: '#DCFCE7',
+          iconColor: '#16A34A',
+          defaultIcon: 'check-circle' as const,
+        };
+      default:
+        return {
+          iconBg: '#E0F2FE',
+          iconColor: '#0D5265',
+          defaultIcon: 'bell' as const,
+        };
+    }
+  };
+
+  const styleConfig = getTypeStyles();
+  const iconName = icon || styleConfig.defaultIcon;
+
   return (
     <View style={styles.alert}>
-
-      {/* ICON */}
-      <View
-        style={[
-          styles.alertIcon,
-          {
-            backgroundColor: iconColor,
-            borderColor: iconColor,
-          },
-        ]}
-      >
+      {/* ICON BADGE */}
+      <View style={[styles.alertIconBadge, { backgroundColor: styleConfig.iconBg }]}>
         <FeatherIcon
-          color="#fff"
-          name={icon}
-          size={30}
+          name={iconName}
+          size={18}
+          color={styleConfig.iconColor}
         />
       </View>
 
-      {/* TEXT */}
+      {/* TEXT CONTENT */}
       <View style={styles.alertBody}>
-        <Text style={styles.alertTitle}>
+        <Text style={styles.alertTitle} numberOfLines={1}>
           {title}
         </Text>
-
         <Text style={styles.alertMessage}>
           {message}
         </Text>
       </View>
 
-      {/* CLOSE BUTTON */}
-      <TouchableOpacity onPress={onDismiss}>
-        <View style={styles.alertClose}>
-          <FeatherIcon
-            color="#9a9a9a"
-            name="x"
-            size={24}
-          />
-        </View>
+      {/* DISMISS BUTTON */}
+      <TouchableOpacity
+        style={styles.closeButton}
+        onPress={onDismiss}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+      >
+        <FeatherIcon
+          name="x"
+          size={18}
+          color="#94A3B8"
+        />
       </TouchableOpacity>
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-alert: {
-  position: 'absolute',
+  alert: {
+    position: 'relative',
+    top: 1,
+    left: 40,
+    right: 16,
+     width:'80%',
+height:'10%',
+   
+     flexDirection: 'row',
+    
+    backgroundColor: '#FFFFFF',
 
-  top: 10,
-  left: 16,
-  right: 16,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
 
-  flexDirection: 'row',
-
-  backgroundColor: '#FFFFFF',
-
-  borderRadius: 14,
-
-  borderWidth: 1,
-  borderColor: '#D1D5DB',
-
-  overflow: 'hidden',
-
-  zIndex: 999,
-
-  elevation: 10,
-
-  shadowColor: '#000',
-  shadowOffset: {
-    width: 0,
-    height: 4,
+    shadowColor: '#0F172A',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  shadowOpacity: 0.15,
-  shadowRadius: 8,
-},
 
-alertIcon: {
-  width: 70,
+  alertIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
 
-  backgroundColor: '#116B73',
+  alertBody: {
+    flex: 1,
+    paddingRight: 8,
+    justifyContent: 'center',
+  },
 
-  alignItems: 'center',
-  justifyContent: 'center',
-},
+  alertTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0F172A',
+    marginBottom: 2,
+  },
 
-alertBody: {
-  flex: 1,
-  padding: 14,
-  paddingRight: 35,
-},
+  alertMessage: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#64748B',
+  },
 
-alertTitle: {
-  fontSize: 17,
-  fontWeight: '700',
-  color: '#1F2937',
-  marginBottom: 4,
-},
-
-alertMessage: {
-  fontSize: 14,
-  lineHeight: 20,
-  color: '#9CA3AF',
-},
-
-alertClose: {
-  position: 'absolute',
-  top: 10,
-  right: 10,
-
-  padding: 4,
-},
+  closeButton: {
+    padding: 2,
+    marginTop: 2,
+  },
 });
-/**
- * References
- * https://withfra.me/components/alert/alert-top-banner-with-dismiss-button
- */

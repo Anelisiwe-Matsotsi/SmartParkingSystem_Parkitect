@@ -25,7 +25,16 @@ export default function HomeScreen() {
   showsVerticalScrollIndicator={false}
   contentContainerStyle={styles.content}>
 <HomeHeader/>
-
+ {showAlert && 
+        (
+          <AlertBanner
+        title="LIMITED BAYS"
+        message="The campus parking only has 15 bays available"
+        icon="clock"
+        
+        onDismiss={() => setShowAlert(false)}
+        />
+        )}
  
   <SectionTabs/>
   <ParkingLayout/>

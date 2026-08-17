@@ -8,210 +8,177 @@ import {
   Text,
 } from 'react-native';
 import FeatherIcon from '@expo/vector-icons/Feather';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useRouter } from 'expo-router';
 
-export default function Example() {
- 
+export default function AccountScreen() {
+  const router = useRouter();
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f6f6f6' }}>
-      <TouchableOpacity
-        onPress={() => {
-          // handle onPress
-        }}
-        style={styles.headerBack}>
-        <FeatherIcon color="#1d1d1d" name="arrow-left" size={24} />
-      </TouchableOpacity>
+    <SafeAreaView style={styles.container}>
+      {/* Top Header */}
+      <View style={styles.topHeader}>
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <FeatherIcon color="#0F172A" name="arrow-left" size={22} />
+        </TouchableOpacity>
 
-      <View style={styles.header}>
         <Text style={styles.headerTitle}>Account</Text>
 
-        <Text style={styles.headerSubtitle}>
-          Manage your personal and login information here.
-        </Text>
+        <View style={styles.headerButton} />
       </View>
 
-      <ScrollView>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Subtitle */}
+        <Text style={styles.headerSubtitle}>
+          Manage your personal details and security preferences below.
+        </Text>
 
-          <View style={styles.sectionBody}>
-            <View style={[styles.rowWrapper, styles.rowFirst]}>
-              <View style={styles.row}>
-                <Text style={styles.rowLabel}>Username</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <Text style={styles.rowValue}>ST1026609</Text>
-              </View>
-            </View>
-
-            <View style={styles.rowWrapper}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}>
-                <Text style={styles.rowLabel}>Name</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <Text style={styles.rowValue}>John Doe</Text>
-
-                <FeatherIcon
-                  color="#C6C6C6"
-                  name="chevron-right"
-                  size={20} />
-              </TouchableOpacity>
-            </View>
-
-          
-
-          
-           
+        {/* PERSONAL INFORMATION SECTION */}
+        <Text style={styles.sectionHeader}>PERSONAL INFORMATION</Text>
+        <View style={styles.cardGroup}>
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>Username</Text>
+            <Text style={styles.rowValueStatic}>ST1026609</Text>
           </View>
+
+          <View style={styles.rowDivider} />
+
+          <TouchableOpacity style={styles.row} activeOpacity={0.7}>
+            <Text style={styles.rowLabel}>Name</Text>
+            <View style={styles.rowRight}>
+              <Text style={styles.rowValue}>John Doe</Text>
+              <FeatherIcon color="#C5C5C7" name="chevron-right" size={18} />
+            </View>
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Login Information</Text>
-
-          <View style={styles.sectionBody}>
-            <View style={[styles.rowWrapper, styles.rowFirst]}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}>
-                <Text style={styles.rowLabel}>Email</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <Text style={styles.rowValue}>john@example.com</Text>
-
-                <FeatherIcon
-                  color="#C6C6C6"
-                  name="chevron-right"
-                  size={20} />
-              </TouchableOpacity>
+        {/* LOGIN INFORMATION SECTION */}
+        <Text style={styles.sectionHeader}>LOGIN INFORMATION</Text>
+        <View style={styles.cardGroup}>
+          <TouchableOpacity style={styles.row} activeOpacity={0.7}>
+            <Text style={styles.rowLabel}>Email</Text>
+            <View style={styles.rowRight}>
+              <Text style={styles.rowValue}>john@example.com</Text>
+              <FeatherIcon color="#C5C5C7" name="chevron-right" size={18} />
             </View>
+          </TouchableOpacity>
 
-            <View style={styles.rowWrapper}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}>
-                <Text style={styles.rowLabel}>Update password</Text>
+          <View style={styles.rowDivider} />
 
-                <View style={styles.rowSpacer} />
-
-                <FeatherIcon
-                  color="#C6C6C6"
-                  name="chevron-right"
-                  size={20} />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <TouchableOpacity style={styles.row} activeOpacity={0.7}>
+            <Text style={styles.rowLabel}>Update password</Text>
+            <FeatherIcon color="#C5C5C7" name="chevron-right" size={18} />
+          </TouchableOpacity>
         </View>
-
-        
-         
-      
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  /** Header */
-  header: {
-    paddingHorizontal: 24,
-    marginBottom: 15,
-      marginTop: 6,
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f8f8',
   },
-  headerBack: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 20,
-    marginTop: 60,
-    marginBottom: 16,
+
+  /* Navigation Header */
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop:28,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#1d1d1d',
+    color: '#0F172A',
+
+  },
+
+  /* Scroll Content */
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 40,
   },
   headerSubtitle: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#929292',
-    marginTop: 6,
-  },
-  /** Section */
-  section: {
-    paddingTop: 12,
-  },
-  sectionTitle: {
-    marginVertical: 8,
-    marginHorizontal: 24,
     fontSize: 14,
+    color: '#64748B',
+    marginBottom: 12,
+    paddingLeft: 4,
+    lineHeight: 20,
+  },
+
+  /* Section Titles */
+  sectionHeader: {
+    fontSize: 12,
     fontWeight: '600',
-    color: '#a7a7a7',
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
+    color: '#94A3B8',
+    letterSpacing: 0.6,
+    marginTop: 18,
+    marginBottom: 8,
+    paddingLeft: 4,
   },
-  sectionBody: {
-    paddingLeft: 24,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#e3e3e3',
+
+  /* Card Containers */
+  cardGroup: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    overflow: 'hidden',
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  /** Row */
+
+  /* Row Styling */
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingRight: 16,
-    height: 50,
-  },
-  rowWrapper: {
-    borderTopWidth: 1,
-    borderColor: '#e3e3e3',
-  },
-  rowFirst: {
-    borderTopWidth: 0,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    height: 52,
   },
   rowLabel: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '500',
-    color: '#000',
+    color: '#0F172A',
   },
-  rowSpacer: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   rowValue: {
-    fontSize: 17,
+    fontSize: 14,
+    color: '#64748B',
+  },
+  rowValueStatic: {
+    fontSize: 14,
+    color: '#94A3B8',
     fontWeight: '500',
-    color: '#8B8B8B',
-    marginRight: 4,
   },
-  rowIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  rowValueSuccess: {
-    fontWeight: '600',
-    color: '#35C759',
-    marginRight: 8,
-  },
-  rowValueWarning: {
-    fontWeight: '600',
-    color: '#007AFF',
-    marginRight: 8,
+  rowDivider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginLeft: 16,
   },
 });

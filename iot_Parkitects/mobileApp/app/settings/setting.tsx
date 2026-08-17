@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import {
   StyleSheet,
@@ -8,348 +8,311 @@ import {
   Text,
   TouchableOpacity,
   Switch,
-  Image,
 } from 'react-native';
 import FeatherIcon from '@expo/vector-icons/Feather';
+import RBSheet from 'react-native-raw-bottom-sheet';
 
-export default function Example() {
-   const router = useRouter();
+const options = [
+  { name: 'Terrible', icon: '😩' },
+  { name: 'Bad', icon: '🙁' },
+  { name: 'OK', icon: '😐' },
+  { name: 'Good', icon: '🙂' },
+  { name: 'Great', icon: '😃' },
+];
+
+const OPTION_SIZE = 52;
+
+export default function SettingsScreen() {
+  const [value, setValue] = useState(4);
+  const sheet = useRef<any>(null);
+  const router = useRouter();
+
   const [form, setForm] = useState({
     emailNotifications: true,
     pushNotifications: false,
   });
 
+  const handleOpenSheet = () => {
+    sheet.current?.open();
+  };
+
+  const handleCloseSheet = () => {
+    sheet.current?.close();
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f8f8' }}>
+      {/* Top Header */}
       <View style={styles.header}>
-        <View style={styles.headerAction}>
-          <TouchableOpacity
-            onPress={() => {
-              // handle onPress
-                router.push('/(tabs)');
-            }}>
-            <FeatherIcon
-              color="#000"
-              name="arrow-left"
-              size={24} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.headerAction}
+          onPress={() => router.push('/(tabs)')}
+        >
+          <FeatherIcon color="#0F172A" name="arrow-left" size={22} />
+        </TouchableOpacity>
 
         <Text numberOfLines={1} style={styles.headerTitle}>
           Settings
         </Text>
 
-        <View style={[styles.headerAction, { alignItems: 'flex-end' }]}>
-          <TouchableOpacity
-            onPress={() => {
-              // handle onPress
-            }}>
-            <FeatherIcon
-              color="#000"
-              name="more-vertical"
-              size={24} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.headerAction}>
+          <FeatherIcon color="#0F172A" name="more-vertical" size={22} />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={[styles.section, { paddingTop: 4 }]}>
-          <Text style={styles.sectionTitle}>Account</Text>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.headerSubtitle}>
+          Manage your personal details and security preferences below.
+        </Text>
 
+        {/* ACCOUNT SECTION */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ACCOUNT</Text>
           <View style={styles.sectionBody}>
             <TouchableOpacity
-              onPress={() => {
-                // handle onPress
-                router.push('/settings/profie');
-              }}
-              style={styles.profile}>
-             
-
+              onPress={() => router.push('/settings/profie')}
+              style={styles.profile}
+              activeOpacity={0.7}
+            >
               <View style={styles.profileBody}>
                 <Text style={styles.profileName}>Marcus Aimes</Text>
-
                 <Text style={styles.profileHandle}>ST1289066</Text>
               </View>
-
-              <FeatherIcon
-                color="#bcbcbc"
-                name="chevron-right"
-                size={22} />
+              <FeatherIcon color="#94A3B8" name="chevron-right" size={20} />
             </TouchableOpacity>
           </View>
         </View>
 
+        {/* PREFERENCES SECTION */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>
-
           <View style={styles.sectionBody}>
             <View style={[styles.rowWrapper, styles.rowFirst]}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                
-                }}
-                style={styles.row}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7}>
                 <Text style={styles.rowLabel}>Language</Text>
-
                 <View style={styles.rowSpacer} />
-
                 <Text style={styles.rowValue}>English</Text>
-
-                <FeatherIcon
-                  color="#bcbcbc"
-                  name="chevron-right"
-                  size={19} />
+                <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.rowWrapper}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                   
-                }}
-                style={styles.row}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7}>
                 <Text style={styles.rowLabel}>Location</Text>
-
                 <View style={styles.rowSpacer} />
-
                 <Text style={styles.rowValue}>Los Angeles, CA</Text>
-
-                <FeatherIcon
-                  color="#bcbcbc"
-                  name="chevron-right"
-                  size={19} />
+                <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.rowWrapper}>
               <View style={styles.row}>
                 <Text style={styles.rowLabel}>Email Notifications</Text>
-
                 <View style={styles.rowSpacer} />
-
                 <Switch
-                  onValueChange={emailNotifications =>
+                  onValueChange={(emailNotifications) =>
                     setForm({ ...form, emailNotifications })
                   }
-                  style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
-                  value={form.emailNotifications} />
+                  trackColor={{ false: '#E2E8F0', true: '#0D5265' }}
+                  value={form.emailNotifications}
+                />
               </View>
             </View>
 
             <View style={[styles.rowWrapper, styles.rowLast]}>
               <View style={styles.row}>
                 <Text style={styles.rowLabel}>Push Notifications</Text>
-
                 <View style={styles.rowSpacer} />
-
                 <Switch
-                  onValueChange={pushNotifications =>
+                  onValueChange={(pushNotifications) =>
                     setForm({ ...form, pushNotifications })
                   }
-                  style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
-                  value={form.pushNotifications} />
+                  trackColor={{ false: '#E2E8F0', true: '#0D5265' }}
+                  value={form.pushNotifications}
+                />
               </View>
             </View>
           </View>
         </View>
 
+        {/* RESOURCES SECTION */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Resources</Text>
-
           <View style={styles.sectionBody}>
             <View style={[styles.rowWrapper, styles.rowFirst]}>
               <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                   router.push('/settings/preferences');
-                }}
-                style={styles.row}>
+                onPress={() => router.push('/settings/preferences')}
+                style={styles.row}
+                activeOpacity={0.7}
+              >
                 <Text style={styles.rowLabel}>Accessibility</Text>
-
                 <View style={styles.rowSpacer} />
-
-                <FeatherIcon
-                  color="#bcbcbc"
-                  name="chevron-right"
-                  size={19} />
+                <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.rowWrapper}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7}>
                 <Text style={styles.rowLabel}>Report Bug</Text>
-
                 <View style={styles.rowSpacer} />
-
-                <FeatherIcon
-                  color="#bcbcbc"
-                  name="chevron-right"
-                  size={19} />
+                <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
 
+            {/* RATE APP TRIGGER */}
             <View style={styles.rowWrapper}>
               <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}>
-                <Text style={styles.rowLabel}>Rate in App Store</Text>
-
+                onPress={handleOpenSheet}
+                style={styles.row}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.rowLabel}>Rate Parkitech</Text>
                 <View style={styles.rowSpacer} />
-
-                <FeatherIcon
-                  color="#bcbcbc"
-                  name="chevron-right"
-                  size={19} />
+                <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
 
             <View style={[styles.rowWrapper, styles.rowLast]}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7}>
                 <Text style={styles.rowLabel}>Campus Parking Rules</Text>
-
                 <View style={styles.rowSpacer} />
-
-                <FeatherIcon
-                  color="#bcbcbc"
-                  name="chevron-right"
-                  size={19} />
+                <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
           </View>
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionBody}>
-            <View
-              style={[
-                styles.rowWrapper,
-                styles.rowFirst,
-                styles.rowLast,
-                { alignItems: 'center' },
-              ]}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}>
-                <Text style={[styles.rowLabel, styles.rowLabelLogout]}>
-                  Log Out
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        <Text style={styles.contentFooter}>App Version 2.24 #50491</Text>
+        {/* LOGOUT */}
+        <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.8}>
+          <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
       </ScrollView>
+
+      {/* BOTTOM SHEET */}
+      <RBSheet
+        ref={sheet}
+        height={380}
+        openDuration={250}
+        customStyles={{
+          container: styles.sheetContainer,
+          wrapper: { backgroundColor: 'rgba(15, 23, 42, 0.4)' },
+        }}
+      >
+        <View style={styles.sheetHeader}>
+          <Text style={styles.sheetHeaderTitle}>Rate Your Experience</Text>
+          <Text style={styles.sheetHeaderSubtitle}>
+            How is your experience using Parkitech?
+          </Text>
+        </View>
+
+        <View style={styles.sheetBody}>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{options[value].name}</Text>
+          </View>
+
+          <View style={styles.options}>
+            {options.map((item, index) => {
+              const isActive = value === index;
+              return (
+                <TouchableOpacity
+                  key={item.name}
+                  style={[
+                    styles.option,
+                    isActive && styles.optionActive,
+                  ]}
+                  onPress={() => setValue(index)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.optionText}>{item.icon}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <TouchableOpacity
+            style={styles.btn}
+            onPress={handleCloseSheet}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.btnText}>Submit Rating</Text>
+          </TouchableOpacity>
+        </View>
+      </RBSheet>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  /** Header */
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: '100%',
     paddingHorizontal: 16,
-     marginTop: 20,
-     
+    paddingVertical: 12,
+    marginTop: 50,
   },
   headerAction: {
     width: 40,
     height: 40,
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 60,
   },
   headerTitle: {
-    fontSize: 19,
-    fontWeight: '600',
-    color: '#000',
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
-    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
   },
-  /** Content */
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+
   content: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
   },
-  contentFooter: {
-    marginTop: 24,
-    fontSize: 13,
-    fontWeight: '500',
-    textAlign: 'center',
-    color: '#a69f9f',
-  },
-  /** Section */
+
   section: {
-    paddingVertical: 12,
+    paddingTop: 16,
   },
   sectionTitle: {
-    margin: 8,
-    marginLeft: 12,
-    fontSize: 13,
-    letterSpacing: 0.33,
-    fontWeight: '500',
-    color: '#a69f9f',
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#94A3B8',
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
+    marginBottom: 8,
+    paddingLeft: 4,
   },
   sectionBody: {
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
   },
-  /** Profile */
+
   profile: {
-    padding: 12,
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  profileAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 9999,
-    marginRight: 12,
+    justifyContent: 'space-between',
   },
   profileBody: {
-    marginRight: 'auto',
+    gap: 2,
   },
   profileName: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#292929',
+    fontWeight: '700',
+    color: '#0F172A',
   },
   profileHandle: {
-    marginTop: 2,
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#858585',
+    fontSize: 14,
+    color: '#94A3B8',
   },
-  /** Row */
+
   row: {
     height: 44,
     width: '100%',
@@ -388,10 +351,98 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
   },
-  rowLabelLogout: {
-    width: '100%',
-    textAlign: 'center',
+
+  logoutBtn: {
+    marginTop: 24,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoutText: {
+    fontSize: 15,
     fontWeight: '600',
-    color: '#dc2626',
+    color: '#EF4444',
+  },
+
+  /* RBSheet Styling */
+  sheetContainer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+  },
+  sheetHeader: {
+    paddingTop: 24,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  sheetHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 4,
+  },
+  sheetHeaderSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+  },
+  sheetBody: {
+    padding: 24,
+  },
+
+  badge: {
+    alignSelf: 'center',
+    backgroundColor: '#E0F2FE',
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  badgeText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0D5265',
+    textTransform: 'uppercase',
+  },
+
+  options: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    marginBottom: 28,
+  },
+  option: {
+    width: OPTION_SIZE,
+    height: OPTION_SIZE,
+    borderRadius: OPTION_SIZE / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F1F5F9',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  optionActive: {
+    borderColor: '#0D5265',
+    backgroundColor: '#E0F2FE',
+  },
+  optionText: {
+    fontSize: 26,
+  },
+
+  btn: {
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#0D5265',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
