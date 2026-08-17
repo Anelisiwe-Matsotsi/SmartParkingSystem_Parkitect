@@ -1,3 +1,4 @@
+//(Withfra.me, 2022)
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
     textDecorationColor: '#08e8f8',
     textDecorationStyle: 'solid',
   },
-  /** Section */
+  
   section: {
     paddingVertical: 0,
     paddingHorizontal: 24,
@@ -277,3 +278,8 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
+
+/**
+ * References
+ * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
+ */

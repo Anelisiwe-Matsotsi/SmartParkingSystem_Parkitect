@@ -1,3 +1,4 @@
+//(Withfra.me, 2022)
 import React from 'react';
 import {
   StyleSheet,
@@ -102,7 +103,7 @@ function ParkingDiagram() {
 
 
       {/* -------------------------------------------- */}
-      {/* CIRCULAR CARS + ICONS */}
+      {/* cars and icons*/}
       {/* -------------------------------------------- */}
 
       {elements.map(
@@ -138,13 +139,13 @@ function ParkingDiagram() {
             >
 
               {/* Car image */}
-             {image ? (
-     <Image
-    style={styles.elementImage}
-    source={image}
-    resizeMode="contain"
-  />
-) : (
+              {image ? (
+                <Image
+                  style={styles.elementImage}
+                  source={image}
+                  resizeMode="contain"
+                />
+              ) : (
 
                 /* Icon */
                 <FeatherIcon
@@ -180,18 +181,13 @@ export default function LandingScreen() {
 
         <View style={styles.container}>
 
-          {/* ---------------------------------------- */}
-          {/* HEADING */}
-          {/* ---------------------------------------- */}
+
 
           <Text style={styles.title}>
             Find Your Parking
           </Text>
 
 
-          {/* ---------------------------------------- */}
-          {/* SUBTITLE */}
-          {/* ---------------------------------------- */}
 
           <Text style={styles.subtitle}>
             Find available parking, know what's
@@ -200,9 +196,7 @@ export default function LandingScreen() {
           </Text>
 
 
-          {/* ---------------------------------------- */}
-          {/* PARKING DIAGRAM */}
-          {/* ---------------------------------------- */}
+
 
           <View style={styles.diagram}>
             <ParkingDiagram />
@@ -210,12 +204,12 @@ export default function LandingScreen() {
 
 
           {/* ---------------------------------------- */}
-          {/* BUTTONS */}
+          {/* Buttons */}
           {/* ---------------------------------------- */}
 
           <View style={styles.diagramFooter}>
 
-            {/* LOG IN */}
+            {/* sign in */}
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => router.push('/auth/sign_in')}
@@ -228,7 +222,7 @@ export default function LandingScreen() {
             </TouchableOpacity>
 
 
-            {/* SIGN UP */}
+            {/* sign up */}
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => router.push('/auth/sign_up')}
@@ -251,9 +245,6 @@ export default function LandingScreen() {
 }
 
 
-// ----------------------------------------------------
-// STYLES
-// ----------------------------------------------------
 
 const styles = StyleSheet.create({
 
@@ -272,9 +263,6 @@ const styles = StyleSheet.create({
   },
 
 
-  // ----------------------------------------------
-  // TITLE
-  // ----------------------------------------------
 
   title: {
     fontSize: 31,
@@ -287,9 +275,6 @@ const styles = StyleSheet.create({
   },
 
 
-  // ----------------------------------------------
-  // SUBTITLE
-  // ----------------------------------------------
 
   subtitle: {
     fontSize: 17,
@@ -298,10 +283,7 @@ const styles = StyleSheet.create({
   },
 
 
-  // ----------------------------------------------
-  // CIRCULAR ELEMENTS
-  // ----------------------------------------------
-
+  //circle elements
   element: {
     position: 'absolute',
 
@@ -325,7 +307,7 @@ const styles = StyleSheet.create({
   },
 
 
- 
+
   // DIAGRAM
 
   diagram: {
@@ -339,17 +321,14 @@ const styles = StyleSheet.create({
 
 
 
-  // BUTTON AREA
+  //footer
 
   diagramFooter: {
     paddingVertical: 12,
   },
 
 
-  // ----------------------------------------------
-  // SIGN UP BUTTON
-  // ----------------------------------------------
-
+  //sign up button
   btn: {
     flexDirection: 'row',
 
@@ -380,10 +359,7 @@ const styles = StyleSheet.create({
   },
 
 
-  // ----------------------------------------------
-  // LOG IN BUTTON
-  // ----------------------------------------------
-
+  //login button 
   btnSecondary: {
     flexDirection: 'row',
 

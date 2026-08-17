@@ -1,3 +1,4 @@
+//(Withfra.me, 2022)
 import React from 'react';
 import {
   StyleSheet,
@@ -80,12 +81,10 @@ export default function FindCarScreen() {
             </Text>
           </View>
 
-          {/* Circular Indicator Centerpiece */}
           <View style={styles.diagramContainer}>
             <ParkingDiagram />
           </View>
 
-          {/* Footer Controls */}
           <View style={styles.footer}>
             <View style={styles.locationCard}>
               <View style={styles.locationInfo}>
@@ -119,7 +118,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
 
-  /* Header */
+  
   header: {
     paddingTop: 12,
     height: 48,
@@ -136,7 +135,7 @@ const styles = StyleSheet.create({
  
   },
 
-  /* Title */
+
   titleSection: {
     marginTop: 16,
   },
@@ -236,3 +235,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
+
+/**
+ * References
+ * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
+ */

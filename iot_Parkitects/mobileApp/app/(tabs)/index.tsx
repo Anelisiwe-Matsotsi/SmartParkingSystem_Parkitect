@@ -1,3 +1,4 @@
+//(Expo Documentation.2024)
 import { Image } from 'expo-image';
 import { ScrollView, StyleSheet } from 'react-native';
 import React, {useState} from 'react';

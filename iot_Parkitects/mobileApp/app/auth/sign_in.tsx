@@ -1,3 +1,4 @@
+//(Withfra.me, 2022)
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#929292',
   },
-  /** Header */
+
   header: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -168,7 +169,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.15,
   },
-  /** Input */
+ 
   input: {
     marginBottom: 16,
   },
@@ -190,7 +191,7 @@ const styles = StyleSheet.create({
     borderColor: '#C9D3DB',
     borderStyle: 'solid',
   },
-  /** Button */
+
   btn: {
     flexDirection: 'row',
     alignItems: 'center',

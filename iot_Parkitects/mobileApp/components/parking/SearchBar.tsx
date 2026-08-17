@@ -75,3 +75,7 @@ import { Spacing } from
     alignItems: 'center',
   },
 });
+/**
+ * References
+ * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
+ */

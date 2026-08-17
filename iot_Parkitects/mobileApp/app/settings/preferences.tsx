@@ -1,3 +1,4 @@
+//(Withfra.me, 2022)
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
@@ -402,6 +403,10 @@ const styles = StyleSheet.create({
   },
 });
 
-/*References
-https://withfra.me/components/radio-groups/multi-section-radio-group-with-accessbility-options
-*/
+
+/**
+ * References
+ * Withfra.me. 2022. Multi-Section Radio Group with Accessbility Options . (Version 2.0) [Source code] Available at:<https://withfra.me/components/radio-groups/multi-section-radio-group-with-accessbility-options> [Accessed 17 Aug. 2026].
+
+ */
+

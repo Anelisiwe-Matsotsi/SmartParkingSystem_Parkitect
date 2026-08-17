@@ -1,3 +1,4 @@
+//(Expo Documentation.2024)
 // This is the entry point for the tab layout of the app. 
 // It defines the structure and behavior of the bottom tab 
 // navigation using Expo Router's Tabs component.
@@ -49,3 +50,8 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+{/**
+  References
+  Expo Documentation.2024.Create a project. [online]  Available at: <https://docs.expo.dev/get-started/create-a-project/ > [Accessed 17 Aug. 2026].
+  
+  */}

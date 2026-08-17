@@ -22,17 +22,17 @@ export default function HomeHeader() {
     <SafeAreaView style={styles.wrapper}>
       <View style={styles.container}>
         
-        {/* Top Row */}
+   {/** * Header (Withfra.me, 2022) */}     
 <View style={styles.topRow}>
   
 
-  {/* Center Location Pill */}
+ 
   <TouchableOpacity style={styles.locationBadge}>
     <View style={styles.locationDot} />
     <Text style={styles.locationText}>LIVE</Text>
   </TouchableOpacity>
 
-  {/* Right Buttons */}
+
   <View style={styles.rightButtons}>
 
     {/* Notifications */}
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   locationBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFBEB", // Soft yellow tinted pill similar to target
+    backgroundColor: "#FFFBEB", 
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -226,3 +226,7 @@ avatarText: {
       marginLeft:135,
   },
 });
+/**
+ * References
+ * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
+ */
