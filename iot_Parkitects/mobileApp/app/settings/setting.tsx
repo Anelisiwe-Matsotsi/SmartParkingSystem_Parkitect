@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     color: '#EF4444',
   },
 
-  /* RBSheet Styling */
+  /* RBSheet css*/
   sheetContainer: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -447,3 +447,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 });
+/**
+ * References
+ * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
+ */
