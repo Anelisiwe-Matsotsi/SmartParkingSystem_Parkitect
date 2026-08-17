@@ -1,3 +1,4 @@
+//(Expo Documentation.2024)
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import ParkingBay from "./ParkingBay";
@@ -7,7 +8,8 @@ export default function ParkingLayout() {
     <View style={styles.container}>
 
      
-
+{/* (Racisz,  2020) */}
+{/*Layout (Yilmaz,2018) */}
       <View style={styles.map}>
 
         <View>
@@ -92,3 +94,9 @@ const styles = StyleSheet.create({
   },
 
 });
+/**
+ * References
+ *  Expo Documentation.2024.Create a project. [online]  Available at: <https://docs.expo.dev/get-started/create-a-project/ > [Accessed 17 Aug. 2026].
+  Racisz, T. 2020. Creating an interactive map with React and Firebase. (Version 2.0) [Source code] .Available at: <https://medium.com/@travisracisz/creating-an-interactive-map-with-react-and-firebase-fa183cef15c9 > [Accessed 5 Aug. 2026].
+  Yilmaz.2018. car park. (Version 2.0) [Source code] Available at: <https://codepen.io/tenkyu/pen/zaJwaR> [Accessed 17 Aug. 2026].
+  */

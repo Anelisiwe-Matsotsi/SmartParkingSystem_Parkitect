@@ -18,7 +18,7 @@ const DIAGRAM_SIZE = width - 80;
 
 function ParkingDiagram() {
   const progress = 65;
-
+//Progress Bar (npm, 2024)
   return (
     <View style={styles.progressContainer}>
       <AnimatedCircularProgress
@@ -239,4 +239,5 @@ const styles = StyleSheet.create({
 /**
  * References
  * Withfra.me. 2022. Social Media Landing Page. (Version 2.0) [Source code] Available at:<https://withfra.me/components/landing/static-welcome-page-with-customizable-photos-and-icons > [Accessed 17 Aug. 2026].
- */
+npm. 2024. react-native-circular-progress. (Version 2.0) [Source code] Available at: <https://www.npmjs.com/package/react-native-circular-progress?activeTab=readme > [Accessed 17 Aug. 2026].
+*/
