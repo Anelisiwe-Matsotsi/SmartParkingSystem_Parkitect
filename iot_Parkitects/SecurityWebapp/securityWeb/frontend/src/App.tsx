@@ -32,7 +32,7 @@ const AppContent: React.FC = () => {
       }
     >
 
-      {/* Only show Sidebar when NOT on login */}
+      {/* dont show sidebar when on login */}
       {!isLoginPage && <SideBar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -40,7 +40,7 @@ const AppContent: React.FC = () => {
 
       <div className={isLoginPage ? "" : "workspace"}>
 
-        {/* Only show TopBar when NOT on login */}
+          {/* dont show topbar when on login */}
         {!isLoginPage && <TopBar />}
 
         <main className={isLoginPage ? "" : "page-wrap"}>
@@ -58,7 +58,7 @@ const AppContent: React.FC = () => {
               element={<BookPage />}
             />
 
-            {/* Other Parkitects pages */}
+           
             <Route
               path="/tickets"
               element={<TicketsPage />}
@@ -114,3 +114,7 @@ export const App: React.FC = () => {
 };
 
 export default App;
+{/*
+  References
+  rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
+           */}

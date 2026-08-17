@@ -1,3 +1,5 @@
+ {/* Material UI,2026*/}
+ //(rudderz243,2026)
 import React, { useState} from "react";
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -41,7 +43,7 @@ export const TicketsPage: React.FC = () => {
   return (
     <section className="page is-active" aria-labelledby="ticketsTitle">
 
-      {/* PAGE HEADING */}
+     
       <div className="page-heading">
         <div>
           <p className="eyebrow">Parking management</p>
@@ -59,7 +61,7 @@ export const TicketsPage: React.FC = () => {
         </button>
       </div>
 
-      {/* TICKET CARDS */}
+     
       <div className="project-grid">
 
         {/* TICKET 1 */}
@@ -315,6 +317,7 @@ export const TicketsPage: React.FC = () => {
         </article>
 
       </div>
+      {/* Material UI,2026*/}
       <Dialog
   open={open}
   onClose={handleClose}
@@ -462,7 +465,10 @@ export const TicketsPage: React.FC = () => {
 
 export default TicketsPage;
 
-/**
- * References
- * https://mui.com/material-ui/react-dialog/#scrolling-long-content
- */
+
+  {/*References
+           realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
+            Material UI.2026.Dialog. (Version 2.0) [Source code] . Available at: < https://mui.com/material-ui/react-dialog/#scrolling-long-content> [Accessed 12 Aug. 2026]. 
+  rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
+           */}
+ 

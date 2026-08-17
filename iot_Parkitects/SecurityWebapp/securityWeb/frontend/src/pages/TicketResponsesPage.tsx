@@ -1,3 +1,4 @@
+//(rudderz243,2026)
 import React from "react";
 import { useNavigate } from "react-router-dom";
 export const TicketResponsesPage: React.FC = () => {
@@ -5,10 +6,7 @@ export const TicketResponsesPage: React.FC = () => {
   return (
       <div className="app-shell">
 
- 
-
-
-    {/* MAIN WORKSPACE */}
+    
     <div className="workspace">
     <section
       className="page is-active"
@@ -236,3 +234,9 @@ export const TicketResponsesPage: React.FC = () => {
 };
 
 export default TicketResponsesPage;
+
+{/*References
+ realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
+          rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
+           */}       
+ 

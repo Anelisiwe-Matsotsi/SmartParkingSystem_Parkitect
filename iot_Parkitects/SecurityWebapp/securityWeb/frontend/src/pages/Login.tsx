@@ -1,3 +1,5 @@
+//(rudderz243,2026)
+//(Vincent,2016)
 import React, { useState } from "react";
 import parkitechlogo from "../assets/parkitechlogo.png";
 import { useNavigate } from "react-router-dom";
@@ -119,3 +121,6 @@ const navigate = useNavigate();
 };
 
 export default Login;
+{/* References
+  Vincent,M. 2016. login / sign up - React - Daily UI #001. (Version 2.0) [Source code] Available at: < https://codepen.io/matthewvincent/pen/JXOKbY > [Accessed 12 Aug. 2026]. 
+  */}

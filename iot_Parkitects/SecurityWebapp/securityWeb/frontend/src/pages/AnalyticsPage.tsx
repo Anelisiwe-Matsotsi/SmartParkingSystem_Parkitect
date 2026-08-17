@@ -1,3 +1,4 @@
+//(rudderz243,2026)
 import React from "react";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
@@ -400,7 +401,7 @@ export const AnalyticsPage: React.FC = () => {
         </div>
 
 
-        {/* MUI TABLE */}
+        {/* parking data table (Material UI,2026) */}
         <Paper
           sx={{
             width: "100%",
@@ -546,7 +547,9 @@ export const AnalyticsPage: React.FC = () => {
 };
 
 export default AnalyticsPage;
-/**
- * References
- * https://mui.com/material-ui/react-table/
- */
+
+{/*References
+        Material UI.2026. Table. (Version 2.0) [Source code] . Available at: <https://mui.com/material-ui/react-table/ > [Accessed 12 Aug. 2026]. 
+    realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026].        
+        rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
+           */}

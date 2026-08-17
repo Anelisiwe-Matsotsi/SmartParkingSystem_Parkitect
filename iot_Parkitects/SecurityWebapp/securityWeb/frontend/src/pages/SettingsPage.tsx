@@ -1,3 +1,4 @@
+//(rudderz243,2026)
 import React, { useState } from "react";
 
 export const SettingsPage: React.FC = () => {
@@ -15,7 +16,7 @@ export const SettingsPage: React.FC = () => {
   });
 
   const handleSave = () => {
-    // Later this can save the settings to your backend.
+    
     alert("Settings saved successfully.");
   };
 
@@ -48,11 +49,8 @@ export const SettingsPage: React.FC = () => {
         </button>
       </div>
 
-
-      {/* SETTINGS LAYOUT */}
       <div className="settings-layout">
 
-        {/* SETTINGS NAVIGATION */}
         <nav
           className="settings-nav"
           aria-label="Settings sections"
@@ -384,3 +382,8 @@ export const SettingsPage: React.FC = () => {
 };
 
 export default SettingsPage;
+{/*References
+           realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026].        
+  rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
+           */}
+       

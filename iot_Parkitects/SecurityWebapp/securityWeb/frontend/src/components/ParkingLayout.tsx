@@ -1,4 +1,3 @@
-import React from "react";
 import ParkingBay from "../components/ParkingBay";
 
 type ParkingLayoutProps = {
@@ -46,3 +45,7 @@ export default function ParkingLayout({onBayClick}: ParkingLayoutProps) {
     </div>
   );
 }
+{/*
+  References
+ Yilmaz.2018. car park. (Version 2.0) [Source code] Available at: <https://codepen.io/tenkyu/pen/zaJwaR> [Accessed 17 Aug. 2026].
+  */}

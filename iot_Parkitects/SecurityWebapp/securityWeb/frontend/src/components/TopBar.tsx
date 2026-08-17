@@ -260,3 +260,7 @@ export const TopBar: React.FC = () => {
 };
 
 export default TopBar;
+{/*References
+ realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
+               
+ */}

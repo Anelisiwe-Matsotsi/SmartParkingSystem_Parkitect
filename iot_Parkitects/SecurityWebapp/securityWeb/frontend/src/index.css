@@ -1,3 +1,6 @@
+
+
+/*(realCAiN,2024)*/
 :root {
     --bg: #F7FAFB;
     --surface: #ffffff;
@@ -1806,15 +1809,10 @@ tbody tr:last-child td {
         transition-duration: .01ms !important;
     }
 }
-/*References
-  https://codepen.io/realCaiN/pen/yLdEzwv
-  */
 
 
-  /* =========================================================
-   PARKITECTS LOGIN
-   Based on the Matthew Vincent CodePen layout
-   ========================================================= */
+
+  /*Login (Vincent, 2016)*/
 
 .login-page {
     min-height: 100vh;
@@ -2293,3 +2291,7 @@ tbody tr:last-child td {
     font-size: 11px;
     font-weight: 600;
 }
+/*References
+  realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
+  Vincent,M. 2016. login / sign up - React - Daily UI #001. (Version 2.0) [Source code] Available at: < https://codepen.io/matthewvincent/pen/JXOKbY > [Accessed 12 Aug. 2026].          
+ */
