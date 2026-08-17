@@ -22,7 +22,7 @@ export default function Example() {
   });
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F7FAFB' }}>
       <View style={styles.header}>
         <View style={styles.headerActions}>
           <TouchableOpacity
@@ -101,7 +101,7 @@ export default function Example() {
               <Text style={styles.sectionName}>Location</Text>
 
               <Text style={styles.sectionDescription}>
-                Set your own reminder schedule
+                Location helps us makes yor experience better
               </Text>
             </View>
 
@@ -115,10 +115,10 @@ export default function Example() {
 
           <View style={styles.sectionItem}>
             <View style={styles.sectionInfo}>
-              <Text style={styles.sectionName}>Motivational Messages</Text>
+              <Text style={styles.sectionName}>Rule Alerts</Text>
 
               <Text style={styles.sectionDescription}>
-                Receive daily motivation
+                Receive daily Parking Rules
               </Text>
             </View>
 
@@ -130,22 +130,9 @@ export default function Example() {
               value={form.motivationalMessages} />
           </View>
 
-          <View style={styles.sectionItem}>
-            <View style={styles.sectionInfo}>
-              <Text style={styles.sectionName}>Progress Updates</Text>
+          
 
-              <Text style={styles.sectionDescription}>
-                Weekly learning progress summary
-              </Text>
-            </View>
-
-            <Switch
-              onValueChange={progressUpdates =>
-                setForm({ ...form, progressUpdates })
-              }
-              trackColor={{ false: '#757575', true: '#107c84' }}
-              value={form.progressUpdates} />
-          </View>
+           
 
           <Text style={styles.sectionFooter}>
             You can always change these notification settings later in your

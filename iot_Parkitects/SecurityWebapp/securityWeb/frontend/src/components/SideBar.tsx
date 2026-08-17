@@ -34,7 +34,7 @@ export const SideBar: React.FC<SideBarProps> = ({
         </span>
 
         <span className="brand-copy">
-          <strong>Parkitects</strong>
+          <strong>Parkitech</strong>
           <small>Smart Parking</small>
         </span>
       </div>
@@ -137,7 +137,7 @@ export const SideBar: React.FC<SideBarProps> = ({
           <span className="avatar">P</span>
 
           <span className="user-copy">
-            <strong>Parkitects</strong>
+            <strong>Parkitech</strong>
             <small>Administrator</small>
           </span>
 

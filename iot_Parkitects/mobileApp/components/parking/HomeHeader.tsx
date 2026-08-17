@@ -65,7 +65,17 @@ export default function HomeHeader() {
         <Text style={styles.subtitle}>
           Go to Moffet and main
         </Text>
-
+   <TouchableOpacity
+            onPress={() => {
+              // handle onPress
+               router.push('/auth/sign_in');
+            }}
+            style={styles.headerAction}>
+            <Feather
+              color="#e2f1f3"
+              name="arrow-right"
+              size={24} />
+          </TouchableOpacity>
         {/* Search Bar Container */}
         <View style={styles.search}>
           <SearchBar />
@@ -203,4 +213,16 @@ avatarText: {
   fontWeight: "700",
   color: "#13384B",
 },
+
+ headerAction: {
+    width: 40,
+    height: 40,
+    borderRadius: 9999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#146564',
+    marginBottom: 16,
+      marginTop: 1,
+      marginLeft:135,
+  },
 });

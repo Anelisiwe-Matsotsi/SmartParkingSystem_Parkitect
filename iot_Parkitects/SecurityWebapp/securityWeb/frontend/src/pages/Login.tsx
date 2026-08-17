@@ -31,11 +31,11 @@ const navigate = useNavigate();
         {/* Logo */}
         <div className="login-brand">
           <div className="login-brand-mark">
-            <img src={parkitechlogo} alt="Parkitects" />
+            <img src={parkitechlogo} alt="Parkitech" />
           </div>
 
           <div>
-            <strong>Parkitects</strong>
+            <strong>Parkitech</strong>
             <span>Security Dashboard</span>
           </div>
         </div>
@@ -110,7 +110,7 @@ const navigate = useNavigate();
         </form>
 
         <p className="login-footer">
-          Parkitects Security System
+          Parkitech Security System
         </p>
 
       </div>

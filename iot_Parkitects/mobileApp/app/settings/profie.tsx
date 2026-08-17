@@ -84,7 +84,7 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#F7FAFB',
   },
 
   /* Navigation Header */
