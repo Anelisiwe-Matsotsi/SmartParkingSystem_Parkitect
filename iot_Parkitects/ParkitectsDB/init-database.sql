@@ -1,101 +1,138 @@
- USE master;
+USE master;
 GO
--- Create the Medic database only if it does not already exist
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'Medic')
+
+-- Create the ParkitectDB database only if it does not already exist
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'ParkitectDB')
 BEGIN
-    CREATE DATABASE Medic;
+    CREATE DATABASE ParkitectDB;
 END
 GO
--- Switch to the Medic database
-USE Medic;
-GO
--- Create Client Table
-CREATE TABLE Client (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Name NVARCHAR(100) NOT NULL,
-    ContactDetails NVARCHAR(255),
-    Region NVARCHAR(100)
-);
- -- Create Account Table
-CREATE TABLE Accounts (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Email NVARCHAR(255) NOT NULL UNIQUE,
-    Password NVARCHAR(255) NOT NULL,
-    Role NVARCHAR(50) NOT NULL,
-    ClientId INT NULL,
-    CONSTRAINT FK_Accounts_Client FOREIGN KEY (ClientId)
-        REFERENCES Client(Id) ON DELETE SET NULL
-);
 
--- Create Contract Table
-CREATE TABLE Contract (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    ContractName NVARCHAR(100) NOT NULL,
-    ClientId INT NOT NULL,
-    StartDate DATETIME NOT NULL,
-    EndDate DATETIME NOT NULL,
-    Status NVARCHAR(50) DEFAULT 'Draft', --[DRAFT/ACTIVE/EXPIRED]
-    ServiceLevel NVARCHAR(50),
-    SignedConsentPath NVARCHAR(MAX),
-    CONSTRAINT FK_Contract_Client FOREIGN KEY (ClientId) 
-        REFERENCES Client(Id) ON DELETE CASCADE
-);
-
--- Create ServiceRequest Table
-CREATE TABLE ServiceRequests (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    ContractId INT NOT NULL,
-    Description NVARCHAR(MAX),
-    CurrencyFrom NVARCHAR(3) NOT NULL,
-    Amount DECIMAL(18, 2) NOT NULL,
-    Cost DECIMAL(18, 2) NOT NULL,
-    PackageSize NVARCHAR (50),
-    Condition NVARCHAR (50),
-    Speed NVARCHAR (50),
-    AssignedVehicleType NVARCHAR (50),
-    Status NVARCHAR(50),
-    CONSTRAINT FK_ServiceRequests_Contracts FOREIGN KEY (ContractId) 
-        REFERENCES Contract(Id) ON DELETE CASCADE
-);
+-- Switch to the ParkitectDB database
+USE ParkitectDB;
 GO
 
--- Insert Dummy Clients
-    INSERT INTO Client (Name, ContactDetails , Region)
-    VALUES 
-('John Smith', 'john.smith@email.com',  'Gauteng'),
-('Thabo Mokoena', 'thabo.m@provider.co.za',  'KwaZulu-Natal');
--- Insert Dummy Accounts
-INSERT INTO Accounts (Email, Password, Role, ClientId)
-VALUES 
-('john.smith@email.com', 'Password@124', 'Client',1),
-('sarah.connor@email.com', 'Password@124', 'Admin',0),
-('thabo.mokoena@email.com', 'Password@124', 'Client',2);
--- Insert Dummy Contracts
-INSERT INTO Contract ( ClientId, ContractName, StartDate, EndDate, Status, ServiceLevel)
-VALUES 
-( 1, 'Contract', '2025-01-01', '2026-01-01', 'Active', 'Premium'),
-(2, 'ContractThree', '2025-03-15', '2026-03-15', 'Active', 'Premium'),
-( 2, 'ContractFour', '2025-01-01', '2025-12-31', 'Active', 'Basic');
--- Insert Dummy ServiceRequest
-INSERT INTO ServiceRequests (ContractId, Description, CurrencyFrom, Amount, Cost, PackageSize, Condition, Speed, AssignedVehicleType, Status)
-VALUES 
-(1, 'Gallons of blood','USD', 1200.00, 1200.00,'Large','Cold-Chain','Express', 'Express Vehicle', 'Completed'),
-(2, 'Blood Work - Routine Check', 'JPY', 450.50, 450.50, 'Large','Cold-Chain','Express', 'Express Vehicle',  'Pending'),
-(1, 'Dental Wisdom Tooth Extraction', 'USD', 3500.00, 3500.00, 'Large','Cold-Chain','Standard', 'Heavy Cargo Van',  'Confirmed');
+-- Create the ParkingLot table
+CREATE TABLE Parking (
+    parkingID INT PRIMARY KEY IDENTITY(1,1),
+    lotName NVARCHAR(255) NOT NULL,
+    campusLocation NVARCHAR(255) NOT NULL,
+    totalCapacity INT NOT NULL
+);
+
+-- Create the ParkingLayout table
+CREATE TABLE ParkingLayout (
+    layoutID INT PRIMARY KEY IDENTITY(1,1), 
+    parkingID INT NOT NULL,
+    sectionName NVARCHAR(255) NOT NULL,
+    CONSTRAINT FK_ParkingLayout_Parking FOREIGN KEY (parkingID) REFERENCES Parking(parkingID) ON DELETE CASCADE
+);
+
+-- Create the ParkingBay table
+CREATE TABLE ParkingBay (
+    bayID INT PRIMARY KEY IDENTITY(1,1),
+    sectionID INT NOT NULL,
+    userID INT NOT NULL,
+    bayNumber NVARCHAR(255) NOT NULL,
+    isOccupied BIT NOT NULL,
+    CONSTRAINT FK_ParkingBay_ParkingSection FOREIGN KEY (sectionID) REFERENCES ParkingSection(sectionID) ON DELETE CASCADE,
+    CONSTRAINT FK_ParkingBay_User FOREIGN KEY (userID) REFERENCES User(userID) ON DELETE CASCADE
+);
+
+-- Part of analytics
+-- Create the ParkingSession table
+CREATE TABLE ParkingSession (
+    sessionID INT PRIMARY KEY IDENTITY(1,1),
+    bayID INT NOT NULL,
+    startDate DATETIME NOT NULL,
+    endDate DATETIME NOT NULL,
+    CONSTRAINT FK_ParkingSession_ParkingBay FOREIGN KEY (bayID) REFERENCES ParkingSession(bayID) ON DELETE CASCADE
+);
+
+-- Part of analytics
+-- Create the Sensor table
+CREATE TABLE Sensor (
+    sensorID INT PRIMARY KEY IDENTITY(1,1),
+    bayID INT NOT NULL,
+    distanceReadingCm INT NOT NULL,
+    hardwareModel NVARCHAR(255) NOT NULL,
+    location POINT NOT NULL,
+    CONSTRAINT FK_Sensor_ParkingBay FOREIGN KEY (bayID) REFERENCES ParkingBay(bayID) ON DELETE CASCADE
+);
+
+-- Create the User table
+CREATE TABLE User (
+    userID INT PRIMARY KEY IDENTITY(1,1),
+    bayID INT NOT NULL,
+    username NVARCHAR(255) NOT NULL,
+    email NVARCHAR(255) NOT NULL,
+    passwordHash NVARCHAR(255) NOT NULL,
+    userRole NVARCHAR(255) NOT NULL,
+    googleToken NVARCHAR(255),
+    isParked BIT NOT NULL,
+    CONSTRAINT FK_User_ParkingBay FOREIGN KEY (bayID) REFERENCES ParkingBay(bayID) ON DELETE CASCADE
+);
+
+-- Create the FindMyCar table
+CREATE TABLE FindMyCar (
+    findMyCarID INT PRIMARY KEY IDENTITY(1,1),
+    userLocation POINT NOT NULL,
+    sensorLocation POINT NOT NULL,
+    distance FLOAT NOT NULL,
+    direction NVARCHAR(255) NOT NULL
+);
+
+-- Create the Permissions table
+CREATE TABLE Permissions (
+    permissionsID INT PRIMARY KEY IDENTITY(1,1),
+    userID INT NOT NULL,
+    bluetooth BIT NOT NULL,
+    notifications BIT NOT NULL,
+    location BIT NOT NULL,
+    ruleAlerts BIT NOT NULL,
+    emailNotifications BIT NOT NULL
+);
+
+-- Create the Preferences table
+CREATE TABLE Preferences (
+    preferenceID INT PRIMARY KEY IDENTITY(1,1),
+    userID INT NOT NULL,
+    textSize FLOAT,
+    colorMode NVARCHAR(255),
+    screenReader BIT NOT NULL,
+    hapticFeedback BIT NOT NULL,
+    language NVARCHAR(255)
+);
+
+
+-- Create the Tickets table
+CREATE TABLE Tickets (
+    categoryID INT PRIMARY KEY IDENTITY(1,1),
+    userID INT NOT NULL,
+    bayID INT NOT NULL,
+    reason NVARCHAR(255) NOT NULL,
+    description NVARCHAR(255),
+    image NVARCHAR(255),
+    status NVARCHAR(255) NOT NULL,
+    response NVARCHAR(255),
+    CONSTRAINT FK_Ticket_User FOREIGN KEY (userID) REFERENCES User(userID) ON DELETE CASCADE,
+    CONSTRAINT FK_Ticket_ParkingBay FOREIGN KEY (bayID) REFERENCES ParkingBay(bayID) ON DELETE CASCADE
+);
+
+-- Create ChatBot table
+CREATE TABLE ChatBot (
+    chatID INT PRIMARY KEY IDENTITY(1,1),
+    question NVARCHAR(255),
+    selected INT,
+    answer NVARCHAR(255)
+);
+
+-- Create Notification table
+CREATE TABLE Notification (
+    notificationID INT PRIMARY KEY IDENTITY(1,1),
+    notificationType NVARCHAR(255) NOT NULL,
+    title NVARCHAR(255) NOT NULL,
+    description NVARCHAR(255) NOT NULL,
+    time DATETIME NOT NULL
+);
 GO
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
-
-
-
-
