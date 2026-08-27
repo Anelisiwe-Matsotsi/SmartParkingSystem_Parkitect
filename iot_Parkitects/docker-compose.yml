@@ -1,5 +1,5 @@
 services:
-  db-service:
+  parkitects-db-service:
     build:
       context: .
       dockerfile: ./ParkitectsDB/Dockerfile
@@ -19,7 +19,7 @@ services:
   frontend-service:
       build:
         context: .
-        dockerfile: ./SecurityWebapp/securityWeb/frontend            
+        dockerfile: ./SecurityWebapp/securityWeb/frontend/Dockerfile           
       container_name: parkitects-frontend
       ports:
         - "8081:8080"                             # <-- Droplet port 80 routes to container 8080
