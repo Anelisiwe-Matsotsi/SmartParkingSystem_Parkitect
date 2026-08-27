@@ -12,20 +12,20 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["GLMS_BACKEND_API/GLMS_BACKEND_API.csproj", "GLMS_BACKEND_API/"]
-RUN dotnet restore "./GLMS_BACKEND_API/GLMS_BACKEND_API.csproj"
+COPY ["backend/backend.csproj", "backend/"]
+RUN dotnet restore "./backend/backend.csproj"
 COPY . .
-WORKDIR "/src/GLMS_BACKEND_API"
-RUN dotnet build "./GLMS_BACKEND_API.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/backend"
+RUN dotnet build "./backend.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./GLMS_BACKEND_API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./backend.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 RUN mkdir -p wwwroot/uploads
-ENTRYPOINT ["dotnet", "GLMS_BACKEND_API.dll"]
+ENTRYPOINT ["dotnet", "backend.dll"]
