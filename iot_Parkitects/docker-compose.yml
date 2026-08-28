@@ -29,13 +29,13 @@ services:
       networks:
         - parkitects-network 
 
-  backend-service:
+  backend2-service:
     build:
       context: .
       dockerfile: ./backend2/Dockerfile
     container_name: parkitects-backend2
     environment:
-      - SQL_CONNECTION_STRING=Server=parkitects-db;Database=DB;Trusted_Connection=false;MultipleActiveResultSets=true;Encrypt=false;user id=sa;password=Password1!
+      - SQL_CONNECTION_STRING=Server=parkitects-db;Database=ParkitectsDB;Trusted_Connection=false;MultipleActiveResultSets=true;Encrypt=false;user id=sa;password=Password1!
       - ASPNETCORE_URLS=http://0.0.0.0:8080  # <-- FORCES C# TO LISTEN ON 8080 INTERNALLY
       - ASPNETCORE_ENVIRONMENT=Development
     ports:

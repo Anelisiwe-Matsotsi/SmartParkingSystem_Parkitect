@@ -20,6 +20,19 @@ CREATE TABLE Parking (
     totalCapacity INT NOT NULL
 );
 
+
+-- Create the User table
+CREATE TABLE [User] (
+    userID INT PRIMARY KEY IDENTITY(1,1),
+    username NVARCHAR(255) NOT NULL,
+    email NVARCHAR(255) NOT NULL,
+    passwordHash NVARCHAR(255),
+    userRole NVARCHAR(255) NOT NULL,
+    googleToken NVARCHAR(255),
+    isParked BIT NOT NULL DEFAULT 0
+);
+
+
 -- Create the ParkingLayout table
 CREATE TABLE ParkingLayout (
     layoutID INT PRIMARY KEY IDENTITY(1,1), 
@@ -34,8 +47,9 @@ CREATE TABLE ParkingBay (
     layoutID INT NOT NULL,
     bayNumber NVARCHAR(255) NOT NULL,
     isOccupied BIT NOT NULL,
-    CONSTRAINT FK_ParkingBay_ParkingLayout FOREIGN KEY (parkingID) REFERENCES ParkingLayout(lanyoutID) ON DELETE CASCADE,
+    CONSTRAINT FK_ParkingBay_ParkingLayout FOREIGN KEY (layoutID) REFERENCES ParkingLayout(layoutID) ON DELETE CASCADE
 );
+
 
 -- Part of analytics
 -- Create the ParkingSession table
@@ -59,22 +73,11 @@ CREATE TABLE Sensor (
     CONSTRAINT FK_Sensor_ParkingBay FOREIGN KEY (bayID) REFERENCES ParkingBay(bayID) ON DELETE CASCADE
 );
 
--- Create the User table
-CREATE TABLE [User] (
-    userID INT PRIMARY KEY IDENTITY(1,1),
-    username NVARCHAR(255) NOT NULL,
-    email NVARCHAR(255) NOT NULL,
-    passwordHash NVARCHAR(255),
-    userRole NVARCHAR(255) NOT NULL,
-    googleToken NVARCHAR(255),
-    isParked BIT NOT NULL DEFAULT 0,
-);
-
 -- Create the FindMyCar table
 CREATE TABLE FindMyCar (
     findMyCarID INT PRIMARY KEY IDENTITY(1,1),
-    userLocation POINT NOT NULL,
-    sensorLocation POINT NOT NULL,
+    userLocation GEOGRAPHY NOT NULL,
+    sensorLocation GEOGRAPHY NOT NULL,
     distance FLOAT NOT NULL,
     direction NVARCHAR(255) NOT NULL
 );

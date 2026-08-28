@@ -4,7 +4,7 @@ FROM mcr.microsoft.com/mssql/server:2022-latest
 # Set environment variables
 ENV ACCEPT_EULA=Y 
 ENV MSSQL_PID=Express 
-ENV MSSQL_SA_PASSWORD=Password@1!
+ENV MSSQL_SA_PASSWORD=Password1!
 
 # Switch to root to ensure we can create directories
 USER root
