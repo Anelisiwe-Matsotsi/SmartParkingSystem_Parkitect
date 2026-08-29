@@ -6,20 +6,20 @@ namespace backend2.Models
     public class Ticket
     {
         [Key]
-        public int ticketId { get; set; }
-        public int userId { get; set; }
+        public int ticketID { get; set; }
+        public int userID { get; set; }
 
         [Required]
-        public string bayId { get; set; }
+        public string bayID { get; set; } = string.Empty;
 
         [Required]
-        public string bayNumber { get; set; }
+        public string bayNumber { get; set; } = string.Empty;
 
         [Required]
-        public string sectionId { get; set; }
+        public string sectionID { get; set; }= string.Empty;
 
-        [Required]
-        public string reason { get; set; }
+       [Required]
+        public string reason { get; set; } = string.Empty;
 
         public string? description { get; set; } // question mark because it is optional
 
