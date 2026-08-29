@@ -12,20 +12,20 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["backend/backend.csproj", "backend/"]
-RUN dotnet restore "./backend/backend.csproj"
+COPY ["backend2/backend2.csproj", "backend2/"]
+RUN dotnet restore "./backend2/backend2.csproj"
 COPY . .
-WORKDIR "/src/backend"
-RUN dotnet build "./backend.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/backend2"
+RUN dotnet build "./backend2.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./backend.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./backend2.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 RUN mkdir -p wwwroot/uploads
-ENTRYPOINT ["dotnet", "backend.dll"]
+ENTRYPOINT ["dotnet", "backend2.dll"]
