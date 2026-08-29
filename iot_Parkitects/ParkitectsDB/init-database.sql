@@ -110,16 +110,19 @@ CREATE TABLE Preferences (
 
 -- Create the Tickets table
 CREATE TABLE Tickets (
-    categoryID INT PRIMARY KEY IDENTITY(1,1),
+    ticketID INT PRIMARY KEY IDENTITY(1,1),
     userID INT NOT NULL,
-    bayID INT NOT NULL,
-    reason NVARCHAR(255) NOT NULL,
-    description NVARCHAR(255),
-    image NVARCHAR(255),
-    status NVARCHAR(255) NOT NULL,
-    response NVARCHAR(255),
-    CONSTRAINT FK_Ticket_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE,
-    CONSTRAINT FK_Ticket_ParkingBay FOREIGN KEY (bayID) REFERENCES ParkingBay(bayID) ON DELETE CASCADE
+    bayID NVARCHAR(50) NOT NULL,
+    bayNumber NVARCHAR(50) NOT NULL,
+    sectionID NVARCHAR(50) NOT NULL,
+    reason NVARCHAR(100) NOT NULL,
+    description NVARCHAR(MAX) NULL,
+    imageURL NVARCHAR(500) NULL,
+    status NVARCHAR(50) NOT NULL DEFAULT 'Pending',
+    createdAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+    updatedAt DATETIME2 NULL,
+    response NVARCHAR(MAX) NULL,
+    CONSTRAINT FK_Ticket_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
 );
 
 -- Create ChatBot table

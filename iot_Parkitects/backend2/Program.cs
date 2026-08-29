@@ -1,4 +1,5 @@
-
+using Microsoft.EntityFrameworkCore;
+using backend2.Data;
 namespace backend2
 {
 
@@ -12,6 +13,11 @@ namespace backend2
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            //Chandra, S 2026.
+            // Add services to the container.
+
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+               options.UseSqlServer(Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING")));
 
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
