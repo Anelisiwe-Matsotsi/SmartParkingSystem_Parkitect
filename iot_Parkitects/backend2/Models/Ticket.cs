@@ -1,26 +1,40 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace backend2.Models{
-    
-public class Ticket
+namespace backend2.Models
 {
-    public int Id { get; set; }
-    
-        [Display(Name ="Contract Name")]
-        public string ContractName {get; set; }
-    public int ClientId { get; set; }
-    public Client? Client { get; set; }
 
-    [DataType(DataType.Date)] public DateTime StartDate { get; set; }
+    public class Ticket
+    {
+        [Key]
+        public int ticketId { get; set; }
+        public int userId { get; set; }
 
-    [DataType(DataType.Date)] //This forces the data type to be a date 
-    public DateTime EndDate { get; set; }
+        [Required]
+        public string bayId { get; set; }
 
-    public string Status { get; set; } = "Draft"; //Default it will be drafted
-    public string ServiceLevel { get; set; } = "Basic"; //Default it will be basic
-    public string? SignedConsentPath { get; set; }
+        [Required]
+        public string bayNumber { get; set; }
+
+        [Required]
+        public string sectionId { get; set; }
+
+        [Required]
+        public string reason { get; set; }
+
+        public string? description { get; set; } // question mark because it is optional
+
+        public string? imageURL { get; set; }
+        public string status { get; set; } = "Pending"; //Default it will be pending
 
 
+        [DataType(DataType.Date)]
+        public DateTime createdAt { get; set; }
+
+        [DataType(DataType.Date)] //This forces the data type to be a date 
+        public DateTime? updatedAt { get; set; }
+
+        public string? response { get; set; }
+
+    }
 }
-}
-    
+
