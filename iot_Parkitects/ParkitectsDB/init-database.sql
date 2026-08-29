@@ -2,14 +2,14 @@ USE master;
 GO
 
 -- Create the ParkitectDB database only if it does not already exist
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'ParkitectDB')
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'ParkitectsDB')
 BEGIN
-    CREATE DATABASE ParkitectDB;
+    CREATE DATABASE ParkitectsDB;
 END
 GO
 
 -- Switch to the ParkitectDB database
-USE ParkitectDB;
+USE ParkitectsDB;
 GO
 
 -- Create the ParkingLot table
