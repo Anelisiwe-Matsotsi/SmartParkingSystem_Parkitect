@@ -1,6 +1,10 @@
 //(Withfra.me, 2022)
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
+
+// importing our custom auth setup
+import { auth } from '../../config/firebaseConfig'
 import {
   StyleSheet,
   SafeAreaView,
@@ -9,18 +13,77 @@ import {
   Text,
   ScrollView,
   Switch,
+  Alert,
 } from 'react-native';
 import FeatherIcon from '@expo/vector-icons/Feather';
 
+//THE API BASE URL- TO BE CHANGED (same as tickets one-natasha)
+const API_BASE_URL = 'http://92.168.0.183:8080';
+
+// export default function Example() {
+//    const router = useRouter();
+//   const [form, setForm] = useState({
+//     customReminders: true,
+//     motivationalMessages: true,
+//     progressUpdates: true,
+//     notifications: false,
+//     microphone: false,
+//   });
+
 export default function Example() {
-   const router = useRouter();
-  const [form, setForm] = useState({
-    customReminders: true,
-    motivationalMessages: true,
-    progressUpdates: true,
-    notifications: false,
-    microphone: false,
-  });
+    const router = useRouter();
+    const [form, setForm] = useState({
+        textSize: 'medium',
+        colorMode: 'default',
+        reduceMotion: false,
+        screenReader: false,
+        hapticFeedback: true,
+    });
+
+    //(Spencer, 2024)
+    useEffect(() => {
+        const userAccessibility = async () => {
+            const currentUser = auth.currentUser;
+            if (!currentUser) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`);
+                if (response.ok) {
+                    const accessibility = await response.json();
+                    setForm({
+                        textSize: accessibility.textSize,
+                        colorMode: accessibility.colorMode,
+                        reduceMotion: accessibility.reduceMotion,
+                        screenReader: accessibility.screenReader,
+                        hapticFeedback: accessibility.hapticFeedback,
+                    });
+                }
+            } catch (error) {
+                Alert.alert('Error','Failed to load accessibility settings');
+            }
+        };
+
+        userAccessibility();
+    }, []);
+
+    const saveAccessibility = async () => {
+        const currentUser = auth.currentUser;
+        if (!currentUser) return;
+
+        try {
+            const existingRes = await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`);
+            const existing = existingRes.ok ? await existingRes.json() : {};
+
+            await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...existing, ...form, userID: currentUser.uid }),
+            });
+        } catch (error) {
+            Alert.alert('Please try again','Error occured while saving accessibility settings');
+        }
+    };
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F7FAFB' }}>
@@ -144,13 +207,10 @@ export default function Example() {
 
       <View style={styles.formFooter}>
         <TouchableOpacity
-          onPress={() => {
-            // handle onPress
-router.push('/(tabs)');
-          }}>
-          <View style={styles.btn}>
-            <Text style={styles.btnText}>Confirm</Text>
-          </View>
+                  onPress={saveAccessibility}>
+                  <View style={styles.btn}>
+                      <Text style={styles.btnText}>Save Preferences</Text>
+                  </View>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -281,5 +341,7 @@ const styles = StyleSheet.create({
 
 /**
  * References
+ * 
+* Spencer,P., 2024. The Full stack (React & ASP.NET)- 12 - UseEffect.[video online] Available at: < https://youtu.be/tJxBtmg-92w?si=NYNfh-oL9nZO0EFb > [Accessed 30 August 2026]
  * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
  */

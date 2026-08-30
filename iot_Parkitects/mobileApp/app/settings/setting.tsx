@@ -1,6 +1,10 @@
 //(Withfra.me, 2022)
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
+
+// importing our custom auth setup
+import { auth } from '../../config/firebaseConfig';
 import {
   StyleSheet,
   SafeAreaView,
@@ -9,10 +13,13 @@ import {
   Text,
   TouchableOpacity,
   Switch,
+  Álert,
 } from 'react-native';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import RBSheet from 'react-native-raw-bottom-sheet';
 
+//THE API BASE URL- TO BE CHANGED (same as tickets one-natasha)
+const API_BASE_URL = 'http://92.168.0.183:8080';
 const options = [
   { name: 'Terrible', icon: '😩' },
   { name: 'Bad', icon: '🙁' },
@@ -33,11 +40,76 @@ export default function SettingsScreen() {
     pushNotifications: false,
   });
 
+    //loads default settings values
+//(Spencer,2024)
+    useEffect(() => {
+        const fetchSettings = async () => {
+            const currentUser = auth.currentUser //idntifies the user from firebase authentication
+            if (!currentUser) {
+                return;
+            }
+
+            try {
+
+                const response = await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch settings Screen');
+                }
+
+                const settings = await response.json();
+                setForm({
+                    emailNotifications: settings.emailNotification,
+                    pushNotifications: settings.pushNotification,
+                });
+            } catch (error) {
+                Alert.alert('Error', 'Error fetching your app settings preferences. Please try again.');
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    const savePreferences = async (updated: Partial<typeof form>) => {
+        const currentUser = auth.currentUser;
+        if (!currentUser) return;
+
+        const merged = { ...form, ...updated };
+        setForm(merged);
+
+        try {
+            const existingPreferences = await fetch(`${API_BASE_URL}/api/Preferences/user/${currentUser.uid}`);
+            const existing = existingPreferences.ok ? await existingPreferences.json() : {};
+
+            await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...existing, ...merged, userID: currentUser.uid }),
+            });
+        } catch (error) {
+            Alert.alert('Errór', 'Failed to save your preferences.Please try again');
+        }
+    };
+
   const handleOpenSheet = () => {
     sheet.current?.open();
   };
 
-  const handleCloseSheet = () => {
+    const handleCloseSheet = () => {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+            try {
+                await fetch(`${API_BASE_URL}/api/Ratings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userID: currentUser.uid,
+                        value,
+                        label: options[value].name,
+                    }),
+                });
+            } catch (error) {
+                Alert.alert('Error','Failed to submit rating. Please try again');
+            }
+        }
     sheet.current?.close();
   };
 
@@ -109,10 +181,11 @@ export default function SettingsScreen() {
             <View style={styles.rowWrapper}>
               <View style={styles.row}>
                 <Text style={styles.rowLabel}>Email Notifications</Text>
-                <View style={styles.rowSpacer} />
+                              <View style={styles.rowSpacer} />
+             {/* Notifications depends on savePreference method that user can change*/}
                 <Switch
                   onValueChange={(emailNotifications) =>
-                    setForm({ ...form, emailNotifications })
+                    savePreferences({emailNotifications })
                   }
                   trackColor={{ false: '#E2E8F0', true: '#0D5265' }}
                   value={form.emailNotifications}
@@ -123,10 +196,11 @@ export default function SettingsScreen() {
             <View style={[styles.rowWrapper, styles.rowLast]}>
               <View style={styles.row}>
                 <Text style={styles.rowLabel}>Push Notifications</Text>
-                <View style={styles.rowSpacer} />
+                              <View style={styles.rowSpacer} />
+           {/* Notifications depends on savePreference method that user can change*/}
                 <Switch
                   onValueChange={(pushNotifications) =>
-                    setForm({ ...form, pushNotifications })
+                    savePreferences({pushNotifications })
                   }
                   trackColor={{ false: '#E2E8F0', true: '#0D5265' }}
                   value={form.pushNotifications}
@@ -447,7 +521,10 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 });
-/**
- * References
+/*
+*
+* References
+* 
+* Spencer,P., 2024. The Full stack (React & ASP.NET)- 12 - UseEffect.[video online] Available at: < https://youtu.be/tJxBtmg-92w?si=NYNfh-oL9nZO0EFb > [Accessed 30 August 2026]
  * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
  */
