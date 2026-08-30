@@ -1,17 +1,28 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace backend2.Models
 {
     public class Settings
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        [Key]
+        public int settingsID { get; set; } //linked to preference table with settingsID
 
-        //need to tie this to the authentication code
-        public Guid userId { get; set; }
+        [Required]
+        public string userID { get; set; } = string.Empty;
 
         //(Noble, 2024)
         public string language { get; set; } = "English";
         public string? location { get; set; }
         public bool emailNotifications { get; set; } = false;
         public bool pushNotifications { get; set; } = true;
+        
+        //accessibility settings
+        public string textSize { get; set; } = "medium";
+        public string theme { get; set; } = "default";
+        public bool reduceMotion { get; set; } = false;
+        public bool screenReader { get; set; } = true;
+        public bool hapticFeedback { get; set; } = true;
+
 
     }
 }

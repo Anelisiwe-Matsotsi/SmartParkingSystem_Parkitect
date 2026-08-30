@@ -96,13 +96,18 @@ CREATE TABLE Permissions (
 
 -- Create the Preferences table
 CREATE TABLE Preferences (
-    preferenceID INT PRIMARY KEY IDENTITY(1,1),
-    userID INT NOT NULL,
+    settingsID INT PRIMARY KEY IDENTITY(1,1),
+    userID NVARCHAR(128) NOT NULL, --firebase user id is a string
     text FLOAT,
     colorMode NVARCHAR(255),
     screenReader BIT NOT NULL,
     hapticFeedback BIT NOT NULL,
     language NVARCHAR(255),
+    location NVARCHAR(255),
+    emailNotifications BIT NOT NULL,
+    pushNotifications BIT NOT NULL,
+    [textSize] NVARCHAR(10) NOT NULL,
+    reduceMotion BIT NOT NULL,
     CONSTRAINT FK_Preferences_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
 
 );
@@ -137,5 +142,15 @@ CREATE TABLE Notification (
     title NVARCHAR(255) NOT NULL,
     description NVARCHAR(255) NOT NULL,
     time DATETIME NOT NULL
+);
+
+--Create App Rating table (the popup)
+CREATE TABLE Ratings (
+    ratingID INT PRIMARY KEY IDENTITY(1,1),
+    userID NVARCHAR(128) NOT NULL,
+    value INT NOT NULL,
+    label NVARCHAR(20) NOT NULL,
+    submittedAt DATETIME NOT NULL,
+    CONSTRAINT FK_AppRating_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
 );
 GO

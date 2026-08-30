@@ -1,11 +1,14 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace backend2.Models
 {
     public class Rating
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        [Key]
+        public int ratingID { get; set; }
 
-        //need to tie this to the authentication code
-        public Guid userId { get; set; }
+        [Required]
+        public string userID { get; set; } = string.Empty;
 
         //(Noble, 2024)
         public string label { get; set; } = string.Empty; //terrible - great
