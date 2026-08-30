@@ -2,6 +2,7 @@ using backend2.Data;
 using backend2.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Azure.Storage.Blobs;
 
 //Emeris School of Computer Science, 2025
 namespace backend2.Controllers
@@ -11,10 +12,12 @@ namespace backend2.Controllers
     public class TicketsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public TicketsController(ApplicationDbContext context)
+        public TicketsController(ApplicationDbContext context, IConfiguration config)
         {
             _context = context;
+            _configuration = config;
         }
 
         // GET: api/Ticket
@@ -28,7 +31,7 @@ namespace backend2.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Ticket>> GetById(int id)
         {
-            var ticket = await _context.Tickets.FindAsync();
+            var ticket = await _context.Tickets.FindAsync(id);
 
             if (ticket == null)
             
@@ -40,22 +43,51 @@ namespace backend2.Controllers
 
         // POST: api/Tickets
         [HttpPost]
-        public async Task<ActionResult<Ticket>> Create(Ticket ticket)
+        public async Task<ActionResult<Ticket>> Create([FromBody] Ticket ticket)
         {
+            ticket.createdAt = DateTime.UtcNow;
+            ticket.status = "Pending";
+
             _context.Tickets.Add(ticket);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetById), new { id = ticket.ticketID }, ticket);
         }
-        //PUT: api/Contract/5
+
+//POST: api/ Tickets/upload-image
+[HttpPost("upload-image")]
+public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+               return BadRequest("No image provided");
+
+               string connectionString = _configuration.GetConnectionString("AzureBlobStorage");
+               string containerName = "complaint-image";
+
+               BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+               BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+               await containerClient.CreateIfNotExistsAsync(Azure.Storage.Blobs.Models.PublicAccessType.Blob);
+
+               string fileName = $"{Guid.NewGuid()}_{file.FileName}";
+               BlobClient blobClient =containerClient.GetBlobClient(fileName);
+
+               using (var stream = file.OpenReadStream())
+            {
+                await blobClient.UploadAsync(stream, true);
+            }
+
+            return Ok(new { imageUrl = blobClient.Uri.ToString() });
+        }
+
+        //PUT: api/Tickets/5 Update
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Ticket ticket)
+        public async Task<IActionResult> Update(int id,[FromBody] Ticket ticket)
         {
             if (id != ticket.ticketID)
             
                 return BadRequest();
             
-
+              ticket.updatedAt = DateTime.UtcNow; //time updated
             _context.Entry(ticket).State = EntityState.Modified;
 
             try

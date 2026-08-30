@@ -7,7 +7,7 @@ namespace backend2.Models
     {
         [Key]
         public int ticketID { get; set; }
-        public int userID { get; set; }
+        public string userID { get; set; }= string.Empty;
 
         [Required]
         public string bayID { get; set; } = string.Empty;

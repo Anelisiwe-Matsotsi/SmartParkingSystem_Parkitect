@@ -7,9 +7,13 @@ import {
   TouchableOpacity,
   Text,
   TextInput,
+  Alert,
+  Image,
+  ActivityIndicator
 } from 'react-native';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -52,17 +56,27 @@ const colorScheme =useColorScheme();
 const theme = Colors[colorScheme ?? 'light']
 
 
+ 
+  const router = useRouter();
+  const [loading, setLoading] =useState(false);
   const [form, setForm] = useState({
-    bio: '',
+    bio: "",
+    reasonId: 0,
     categoryId: 0,
-    parkingBay: '',
+    parkingBay: 'A0-1',
     description: '',
-      reasonId: 0,
-    comment: '',
-    image: null,
+    imageUri: null as string | null,
   
   });
-  const router = useRouter();
+
+  //Pick Image from Gallery or Camera
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (!permissionResult.granted) {
+      Alert.alert('Permission Denied', 'Permission to access media files is required')
+      return;
+    }
+  }
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={styles.header}>
