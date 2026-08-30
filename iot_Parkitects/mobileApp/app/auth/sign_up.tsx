@@ -30,22 +30,46 @@ export default function SignUp() {
 
   const handleRegister = async () => {
     // checks that they dont submit blank forms
-    if (!form.email || !form.password) {
-      Alert.alert('Hold up!', 'Please enter an email and password.');
+    if (!form.name ||!form.email || !form.password) {
+      Alert.alert('Hold up!', 'Please enter your name, email and password.');
       return;
     }
 
     try {
+      // Creates the secure account in Firebase
       // sends the email and password to firebase to create the account
       const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
+      const firebaseUid = userCredential.user.uid; // Grab the secure ID
+      
+      // Syncs the profile data to our .NET SQL Database
+      // Pulls the IP address from the local .env file (Expo, 2026)
+      const apiUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/User/sync`;
+
+      const backendResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firebaseUid: firebaseUid,
+          name: form.name,
+          email: form.email
+        })
+      });
+
+      if (!backendResponse.ok) 
+      {
+        const errorText = await backendResponse.text();
+        throw new Error(`Server returned error: ${errorText}`);
+      }
       
       Alert.alert('Success!', 'Your account has been created.');
       
       // takes them to the sign in page so they can log in
       router.push('/auth/sign_in');
-      
-      // we will add an API call here later to send `form.name` to your .NET UserController
-    } catch (error: any) {
+    } 
+    catch (error: any) 
+    {
       // if firebase complains about a weak password or existing email, this tells the user
       Alert.alert('Registration Failed', error.message);
     }
@@ -279,6 +303,7 @@ const styles = StyleSheet.create({
 });
 /**
  * References
+ * Expo, 2026. Environment variables in Expo. [online] Available at: <https://docs.expo.dev/guides/environment-variables/> [Accessed 30 August 2026].
  * Firebase, 2026. Password Authentication. [source code]. Available: <https://firebase.google.com/docs/auth/web/password-auth> [Accessed 28 August 2026].
  * React Native, 2026. Alert. [source code]. Available: <https://reactnative.dev/docs/alert> [Accessed 28 August 2026].
  * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
