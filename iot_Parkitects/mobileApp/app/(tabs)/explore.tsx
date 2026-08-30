@@ -19,6 +19,7 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import StatsCard from '@/components/ticket/StatsCard';
 import { useRouter } from 'expo-router';
+import { auth } from '../../config/firebaseConfig';
 
 
 const cancellationReasons = [
@@ -48,104 +49,191 @@ const cancellationReasons = [
     description: 'None of the above reasons apply',
   },
 ];
-const errors = { bio: '' };
+
 
 export default function Example() {
 
-const colorScheme =useColorScheme();
-const theme = Colors[colorScheme ?? 'light']
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light']
 
-
- 
   const router = useRouter();
-  const [loading, setLoading] =useState(false);
+  //Adeoye,2024
+  const [loading, setLoading] = useState(false);// updates the UI to show that the request is happening
   const [form, setForm] = useState({
     bio: "",
     reasonId: 0,
-    categoryId: 0,
     parkingBay: 'A0-1',
-    description: '',
+    bayId: 'A01',
+    sectionId: 'A-Block',
     imageUri: null as string | null,
-  
+
   });
 
-  //Pick Image from Gallery or Camera
+  /*Kindacode.com,2022
+  Pick Image from Gallery or Camera*/
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()// Get permission from user
     if (!permissionResult.granted) {
-      Alert.alert('Permission Denied', 'Permission to access media files is required')
+      Alert.alert('You have refused to allow this app to access your photos!', 'Permission to access media files is required')
       return;
     }
-  }
+    const result = await ImagePicker.launchImageLibraryAsync({ // user Explore the result
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+
+  // User cancelelled action
+    if (!result.canceled) {
+      setForm({ ...form, imageUri: result.assets[0].uri });
+    }
+  };
+  /*  Hiếu,2022 -Upload image to backend API (Azure blob via the asp.net core) */
+  const uploadImageToAzure = async (uri: string): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append('file', {
+      uri,
+      name: 'complaints-image.jpg',
+      type: 'image/jpeg',
+    } as any);
+
+    try {
+      // BASE API URL at the moment it is YOUR wifi network:8000
+      const response = await fetch('http://192.168.0.183:8080/api/Tickets/upload-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.imageUrl;
+      }
+    } catch (error) {
+      console.error('Image upload failed', error);
+    }
+    return null;
+  };
+
+
+  // Submit Ticket info to backend 
+  const handleSubmit = async () => {
+    // if user is not logged in they cannot submit a ticket
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      Alert.alert('Error', 'You must be logged in to submit a ticket.');
+      return;
+    }
+
+    if (form.reasonId === 0) {
+      Alert.alert('Selection Required', 'Please select a reason for reporting.');
+      return;
+    }
+
+    setLoading(true);
+
+    let uploadedImageUrl = null;
+    if (form.imageUri) {
+      uploadedImageUrl = await uploadImageToAzure(form.imageUri);
+    }
+
+    const selectedReason = cancellationReasons.find(r => r.id === form.reasonId);
+
+    const payload = {
+      userID: currentUser.uid, // Firebase String UID
+      bayID: form.bayId,
+      bayNumber: form.parkingBay,
+      sectionID: form.sectionId,
+      reason: selectedReason?.reason || 'Other',
+      description: form.bio,
+      imageURL: uploadedImageUrl,
+      status: 'Pending',
+    };
+
+    try {
+      //fetching network if network does not match network API it will give an error alert on the network
+      const response = await fetch('http://192.168.0.183:8080/api/Tickets',// BASE API URL at the moment it is YOUR wifi network:8000
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+      if (response.ok) {
+        router.push('/success');
+      } else {
+        Alert.alert('Error', 'Failed to create ticket. Please try again.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Network request failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //Sanja,2022
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={styles.header}>
-      
-
-        <Text style={[styles.title, { color: theme.text}]} >Create a Ticket</Text>
-
+        <Text style={[styles.title, { color: theme.text }]}>Create a Ticket</Text>
         <Text style={styles.subtitle}>Report Any parking violation</Text>
       </View>
 
-
-      
-
       <KeyboardAwareScrollView style={styles.form}>
-
-<Text style={styles.sectionSubtitle}>
-            Please select a reason for cancellation
-          </Text>
-          <View style={styles.cancelReasons}>
-            {cancellationReasons.map(item => {
-              const isActive = form.reasonId === item.id;
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  onPress={() => setForm({ ...form, reasonId: item.id })}
+        <Text style={styles.sectionSubtitle}>
+          Please select a reason for cancellation
+        </Text>
+        <View style={styles.cancelReasons}>
+          {cancellationReasons.map(item => {
+            const isActive = form.reasonId === item.id;
+            return (
+              <TouchableOpacity
+                key={item.id}
+                onPress={() => setForm({ ...form, reasonId: item.id })}
+                style={[
+                  styles.cancelReason,
+                  isActive && styles.cancelReasonActive,
+                ]}>
+                <View style={styles.cancelReasonContent}>
+                  <Text style={styles.cancelReasonTitle}>{item.reason}</Text>
+                  <Text style={styles.cancelReasonDescription}>
+                    {item.description}
+                  </Text>
+                </View>
+                <View
                   style={[
-                    styles.cancelReason,
-                    isActive && styles.cancelReasonActive,
-                  ]}>
-                  <View style={styles.cancelReasonContent}>
-                    <Text style={styles.cancelReasonTitle}>{item.reason}</Text>
-                    <Text style={styles.cancelReasonDescription}>
-                      {item.description}
-                    </Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.cancelReasonRadio,
-                      !!isActive && {
-                        borderColor: '#2C6479ff',
-                        borderWidth: 6,
-                        backgroundColor: '#fff',
-                      },
-                    ]} />
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-      
- <View style={styles.input}>
-            <Text style={styles.sectionSubtitle}>
+                    styles.cancelReasonRadio,
+                    !!isActive && {
+                      borderColor: '#2C6479ff',
+                      borderWidth: 6,
+                      backgroundColor: '#fff',
+                    },
+                  ]}
+                />
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Parking Bay Selector Trigger */}
+        <View style={styles.input}>
+          <Text style={styles.sectionSubtitle}>
             Please select the parking bay at fault
           </Text>
-            <TouchableOpacity
-              onPress={() => {
-                // handle onPress
-              }}
-              style={styles.inputSelect}>
-              <Text style={styles.inputSelectValue}>A0-1</Text>
-              <FeatherIcon
-                color="#1D2A32"
-                name="chevron-right"
-                size={19} />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={() => {
+              // Open modal, action sheet, or route to Bay Selection Screen
+            }}
+            style={styles.inputSelect}>
+            <Text style={styles.inputSelectValue}>{form.parkingBay}</Text>
+            <FeatherIcon color="#1D2A32" name="chevron-right" size={19} />
+          </TouchableOpacity>
+        </View>
 
-
-     <Text style={styles.sectionTitle}>Description (Optional)</Text>
-
+        <Text style={styles.sectionTitle}>Description (Optional)</Text>
         <View style={styles.formInput}>
           <TextInput
             clearButtonMode="while-editing"
@@ -154,32 +242,33 @@ const theme = Colors[colorScheme ?? 'light']
             placeholder="Describe parking violation..."
             placeholderTextColor="#6b7280"
             style={[styles.formInputControl, styles.formTextarea]}
-            value={form.bio} />
+            value={form.bio}
+          />
         </View>
 
         <Text style={styles.sectionTitle}>Add Image Evidence (Optional)</Text>
-<TouchableOpacity style={styles.cancelReason}>
-  <FeatherIcon
-  name="camera"
-  size={29}
-  color="#6b7280"
-  />
-       <Text style={styles.sectionSubtitle}>
-       Upload Image
-    </Text>
-</TouchableOpacity>
-      
+        <TouchableOpacity style={styles.cancelReason} onPress={pickImage}>
+          <FeatherIcon name="camera" size={29} color="#6b7280" />
+          <Text style={[styles.sectionSubtitle, { marginLeft: 12 }]}>
+            {form.imageUri ? 'Image Selected' : 'Upload Image'}
+          </Text>
+        </TouchableOpacity>
 
-       
+        {form.imageUri && (
+          <Image
+            source={{ uri: form.imageUri }}
+            style={{ width: 100, height: 100, borderRadius: 12, marginVertical: 8 }}
+          />
+        )}
 
         <View style={styles.formAction}>
-          <TouchableOpacity
-            onPress={() => {
-              // handle onPress
-               router.push('/success')
-            }}>
+          <TouchableOpacity onPress={handleSubmit} disabled={loading}>
             <View style={styles.btn}>
-              <Text style={styles.btnText}>Submit</Text>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.btnText}>Submit</Text>
+              )}
             </View>
           </TouchableOpacity>
         </View>
@@ -211,7 +300,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 24,
     marginBottom: 28,
-     marginTop: 50,
+    marginTop: 50,
   },
   headerAction: {
     width: 40,
@@ -299,7 +388,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderWidth: 1,
-    backgroundColor:"#0c5464",
+    backgroundColor: "#0c5464",
     borderColor: '#1c895c',
   },
   btnText: {
@@ -308,7 +397,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#d9ddeb',
   },
- cancelReasons: {
+  cancelReasons: {
     marginTop: 8,
   },
   cancelReason: {
@@ -349,7 +438,7 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
 
-   /** Input */
+  /** Input */
   input: {
     marginBottom: 16,
   },
@@ -382,5 +471,9 @@ const styles = StyleSheet.create({
 });
 /**
  * References
- * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
+ * Adeoye, T.2024. React Hooks: useState (With Practical Examples).(Version 8.0) [Source code]. Available at:< https://medium.com/@titoadeoye/react-hooks-usestate-with-practical-examples-64abd6df6471 > [Accessed 30 Aug. 2026].
+ * Hiếu, N.H.2022. react-native: upload image - DEV Community.(Version 8.0) [Source code] Available at:< https://dev.to/hieunh1801/react-native-upload-file-1860 > [Accessed 30 August 2026].
+ * Kindacode.com.2022. Using Image Picker and Camera in React Native (Expo) - KindaCode. (Version 8.0) [Source code] Available at:< https://www.kindacode.com/article/image-picker-in-react-native > [Accessed 30 Aug. 2026].
+ * Sanja.2022. How to upload a photo in React, create a FormData object (with the image file and string data types), send it to the NodeJS server, save it in MongoDB and fetch it from React and render it on a page. (Version 8.0) [Source code] Available at:< https://medium.com/@sanja1mandic/how-to-upload-a-photo-in-react-create-a-formdata-object-with-image-file-and-string-data-types-71e9e08fb53c > [Accessed 30 Aug. 2026].
+ * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 8.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 August 2026].
  */

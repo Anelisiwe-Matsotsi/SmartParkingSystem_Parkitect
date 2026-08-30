@@ -58,6 +58,7 @@ namespace backend2.Controllers
 [HttpPost("upload-image")]
 public async Task<IActionResult> UploadImage(IFormFile file)
         {
+            ////Emeris School of Computer Science, 2025b
             if (file == null || file.Length == 0)
                return BadRequest("No image provided");
 
@@ -132,5 +133,5 @@ Emeris School of Computer Science. 2025. PROG7311 Docker part 2- connecting betw
 Emeris School of Computer Science. 2025. PROG7311 Docker part 3- databases in docker. (Version 10.0) [Source Code]. Available at: <https://youtu.be/6tYEbngWY-E?si=10rSEEpfSNL5Kg8k> [Accessed 5 June 2026]
 Emeris School of Computer Science. 2025. PROG7311 Docker part 4- connecting to database from the API.(Version 10.0) [Source Code]. Available at: <https://youtu.be/_PwpPMoeqzw?si=Q0ELlPZdN42dFU9q> [Accessed 5 June 2026]
 Emeris School of Computer Science. 2025. PROG7311 Docker part 5- connecting them all together- DB -API -MVC. (Version 10.0) [Source Code]. Available at: <https://youtu.be/YlIajRMdLPk?si=D75XZKO-L6nQhR-3> [Accessed 5 June 2026]
-
+Emeris School of Computer Science. 2025b. All about the blob storage - CLDV6211. (Version 10.0) [Source Code] YouTube. Available at:< https://www.youtube.com/watch?v=tCROBkSoi3Y&list=PL480DYS-b_kevhFsiTpPIB2RzhKPig4iK&index=9>  [Accessed 30 Aug. 2026].
 */
