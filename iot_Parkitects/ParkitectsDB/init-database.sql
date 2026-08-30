@@ -24,12 +24,12 @@ CREATE TABLE Parking (
 -- Create the User table
 CREATE TABLE [User] (
     userID INT PRIMARY KEY IDENTITY(1,1),
-    username NVARCHAR(255) NOT NULL,
+    firebaseUid NVARCHAR(255) NOT NULL UNIQUE,
+    name NVARCHAR(255) NOT NULL,
     email NVARCHAR(255) NOT NULL,
-    passwordHash NVARCHAR(255),
-    userRole NVARCHAR(255) NOT NULL,
-    googleToken NVARCHAR(255),
-    isParked BIT NOT NULL DEFAULT 0
+    userRole NVARCHAR(255) NOT NULL DEFAULT 'User',
+    isParked BIT NOT NULL DEFAULT 0,
+    createdAt DATETIME NOT NULL DEFAULT GETUTCDATE()
 );
 
 
