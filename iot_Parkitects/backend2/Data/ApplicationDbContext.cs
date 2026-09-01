@@ -1,13 +1,28 @@
 using Microsoft.EntityFrameworkCore;
 using backend2.Models;
 
-namespace Backend2.Data
+namespace backend2.Data
 {
     public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
+        // Tells Entity Framework to create tables related to the application models (Microsoft, 2026)
+        public DbSet<Analytics> Analytics { get; set; }
+        public DbSet<Chatbot> Chatbot { get; set; }
+        public DbSet<FindMyCar> FindMyCar { get; set; }
+        public DbSet<Notifications> Notifications { get; set; }
+        public DbSet<Parking> Parking { get; set; }
         public DbSet<Settings> Settings { get; set; }
+        public DbSet<Tickets> Tickets { get; set; }
+        public DbSet<User> Users { get; set; }
         public DbSet<Rating> Rating { get; set; }
     }
 }
+
+/*
+Reference List:
+
+Microsoft, 2026. Entity Framework Core. [online] Available at: <https://learn.microsoft.com/en-us/ef/core/> [Accessed 30 August 2026].
+
+*/
