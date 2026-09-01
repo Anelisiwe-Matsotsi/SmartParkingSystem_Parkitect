@@ -1,5 +1,5 @@
 //(Withfra.me, 2022)
-import React, { useState } from 'react';
+import React, { useState} from 'react';
 import {
   StyleSheet,
   SafeAreaView,
@@ -20,6 +20,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import StatsCard from '@/components/ticket/StatsCard';
 import { useRouter } from 'expo-router';
 import { auth } from '../../config/firebaseConfig';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 
 const cancellationReasons = [
@@ -50,6 +51,68 @@ const cancellationReasons = [
   },
 ];
 
+// Jayasekara, 2025- Dropdown array
+const bayItemsList = [
+  // Block A
+  { label: 'Bay A01 (A-Block)', value: 'A01', section: 'A-Block', number: 'A0-1' },
+  { label: 'Bay A02 (A-Block)', value: 'A02', section: 'A-Block', number: 'A0-2' },
+  { label: 'Bay A03 (A-Block)', value: 'A03', section: 'A-Block', number: 'A0-3' },
+  { label: 'Bay A04 (A-Block)', value: 'A04', section: 'A-Block', number: 'A0-4' },
+  { label: 'Bay A05 (A-Block)', value: 'A05', section: 'A-Block', number: 'A0-5' },
+  { label: 'Bay A06 (A-Block)', value: 'A06', section: 'A-Block', number: 'A0-6' },
+  { label: 'Bay A07 (A-Block)', value: 'A07', section: 'A-Block', number: 'A0-7' },
+  { label: 'Bay A08 (A-Block)', value: 'A08', section: 'A-Block', number: 'A0-8' },
+  { label: 'Bay A09 (A-Block)', value: 'A09', section: 'A-Block', number: 'A0-9' },
+  { label: 'Bay A10 (A-Block)', value: 'A10', section: 'A-Block', number: 'A0-10' },
+
+  // Block B
+  { label: 'Bay B01 (B-Block)', value: 'B01', section: 'B-Block', number: 'B0-1' },
+  { label: 'Bay B02 (B-Block)', value: 'B02', section: 'B-Block', number: 'B0-2' },
+  { label: 'Bay B03 (B-Block)', value: 'B03', section: 'B-Block', number: 'B0-3' },
+  { label: 'Bay B04 (B-Block)', value: 'B04', section: 'B-Block', number: 'B0-4' },
+  { label: 'Bay B05 (B-Block)', value: 'B05', section: 'B-Block', number: 'B0-5' },
+  { label: 'Bay B06 (B-Block)', value: 'B06', section: 'B-Block', number: 'B0-6' },
+  { label: 'Bay B07 (B-Block)', value: 'B07', section: 'B-Block', number: 'B0-7' },
+  { label: 'Bay B08 (B-Block)', value: 'B08', section: 'B-Block', number: 'B0-8' },
+  { label: 'Bay B09 (B-Block)', value: 'B09', section: 'B-Block', number: 'B0-9' },
+  { label: 'Bay B10 (B-Block)', value: 'B10', section: 'B-Block', number: 'B0-10' },
+
+  // Block C
+  { label: 'Bay C01 (C-Block)', value: 'C01', section: 'C-Block', number: 'C0-1' },
+  { label: 'Bay C02 (C-Block)', value: 'C02', section: 'C-Block', number: 'C0-2' },
+  { label: 'Bay C03 (C-Block)', value: 'C03', section: 'C-Block', number: 'C0-3' },
+  { label: 'Bay C04 (C-Block)', value: 'C04', section: 'C-Block', number: 'C0-4' },
+  { label: 'Bay C05 (C-Block)', value: 'C05', section: 'C-Block', number: 'C0-5' },
+  { label: 'Bay C06 (C-Block)', value: 'C06', section: 'C-Block', number: 'C0-6' },
+  { label: 'Bay C07 (C-Block)', value: 'C07', section: 'C-Block', number: 'C0-7' },
+  { label: 'Bay C08 (C-Block)', value: 'C08', section: 'C-Block', number: 'C0-8' },
+  { label: 'Bay C09 (C-Block)', value: 'C09', section: 'C-Block', number: 'C0-9' },
+  { label: 'Bay C10 (C-Block)', value: 'C10', section: 'C-Block', number: 'C0-10' },
+
+  // Block D
+  { label: 'Bay D01 (D-Block)', value: 'D01', section: 'D-Block', number: 'D0-1' },
+  { label: 'Bay D02 (D-Block)', value: 'D02', section: 'D-Block', number: 'D0-2' },
+  { label: 'Bay D03 (D-Block)', value: 'D03', section: 'D-Block', number: 'D0-3' },
+  { label: 'Bay D04 (D-Block)', value: 'D04', section: 'D-Block', number: 'D0-4' },
+  { label: 'Bay D05 (D-Block)', value: 'D05', section: 'D-Block', number: 'D0-5' },
+  { label: 'Bay D06 (D-Block)', value: 'D06', section: 'D-Block', number: 'D0-6' },
+  { label: 'Bay D07 (D-Block)', value: 'D07', section: 'D-Block', number: 'D0-7' },
+  { label: 'Bay D08 (D-Block)', value: 'D08', section: 'D-Block', number: 'D0-8' },
+  { label: 'Bay D09 (D-Block)', value: 'D09', section: 'D-Block', number: 'D0-9' },
+  { label: 'Bay D10 (D-Block)', value: 'D10', section: 'D-Block', number: 'D0-10' },
+
+  // Block E
+  { label: 'Bay E01 (E-Block)', value: 'E01', section: 'E-Block', number: 'E0-1' },
+  { label: 'Bay E02 (E-Block)', value: 'E02', section: 'E-Block', number: 'E0-2' },
+  { label: 'Bay E03 (E-Block)', value: 'E03', section: 'E-Block', number: 'E0-3' },
+  { label: 'Bay E04 (E-Block)', value: 'E04', section: 'E-Block', number: 'E0-4' },
+  { label: 'Bay E05 (E-Block)', value: 'E05', section: 'E-Block', number: 'E0-5' },
+  { label: 'Bay E06 (E-Block)', value: 'E06', section: 'E-Block', number: 'E0-6' },
+  { label: 'Bay E07 (E-Block)', value: 'E07', section: 'E-Block', number: 'E0-7' },
+  { label: 'Bay E08 (E-Block)', value: 'E08', section: 'E-Block', number: 'E0-8' },
+  { label: 'Bay E09 (E-Block)', value: 'E09', section: 'E-Block', number: 'E0-9' },
+  { label: 'Bay E10 (E-Block)', value: 'E10', section: 'E-Block', number: 'E0-10' },
+];
 
 export default function Example() {
 
@@ -57,6 +120,13 @@ export default function Example() {
   const theme = Colors[colorScheme ?? 'light']
 
   const router = useRouter();
+//
+
+
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState('A01');
+  const [items, setItems] = useState(bayItemsList);
+
   //Adeoye,2024
   const [loading, setLoading] = useState(false);// updates the UI to show that the request is happening
   const [form, setForm] = useState({
@@ -68,6 +138,23 @@ export default function Example() {
     imageUri: null as string | null,
 
   });
+
+// Jayasekara, 2025 - handler keeping the form synced on value change
+  const handleBayChange = (val: any) => {
+    const selectedValue = typeof val === 'function' ? val(value) : val;
+    setValue(selectedValue);
+
+    const selected = items.find(b => b.value === selectedValue);
+    if (selected) {
+      setForm(prev => ({
+        ...prev,
+        bayId: selected.value,
+        parkingBay: selected.number,
+        sectionId: selected.section,
+      }));
+    }
+  };
+
 
   /*Kindacode.com,2022
   Pick Image from Gallery or Camera*/
@@ -218,21 +305,24 @@ export default function Example() {
           })}
         </View>
 
-        {/* Parking Bay Selector Trigger */}
-        <View style={styles.input}>
+        {/* Jayasekara, 2025 - Dropdown to select parking bay */}
+       <View style={[styles.input, { zIndex: 1000 }]}>
           <Text style={styles.sectionSubtitle}>
             Please select the parking bay at fault
           </Text>
-          <TouchableOpacity
-            onPress={() => {
-              // Open modal, action sheet, or route to Bay Selection Screen
-            }}
-            style={styles.inputSelect}>
-            <Text style={styles.inputSelectValue}>{form.parkingBay}</Text>
-            <FeatherIcon color="#1D2A32" name="chevron-right" size={19} />
-          </TouchableOpacity>
+          <DropDownPicker
+            open={open}
+            value={value}
+            items={items}
+            setOpen={setOpen}
+            setValue={handleBayChange}
+            setItems={setItems}
+            placeholder="Select a parking bay"
+            listMode="MODAL"
+            style={styles.dropdown}
+            dropDownContainerStyle={styles.dropdownContainer}
+          />
         </View>
-
         <Text style={styles.sectionTitle}>Description (Optional)</Text>
         <View style={styles.formInput}>
           <TextInput
@@ -468,12 +558,21 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#222',
   },
+  // Jayasekara, 2025 (dropdown css)
+  dropdown: {
+    borderColor: '#C9D3DB',
+    borderRadius: 12,
+  },
+  dropdownContainer: {
+    borderColor: '#C9D3DB',
+  },
 });
 /**
  * References
- * Adeoye, T.2024. React Hooks: useState (With Practical Examples).(Version 8.0) [Source code]. Available at:< https://medium.com/@titoadeoye/react-hooks-usestate-with-practical-examples-64abd6df6471 > [Accessed 30 Aug. 2026].
- * Hiếu, N.H.2022. react-native: upload image - DEV Community.(Version 8.0) [Source code] Available at:< https://dev.to/hieunh1801/react-native-upload-file-1860 > [Accessed 30 August 2026].
- * Kindacode.com.2022. Using Image Picker and Camera in React Native (Expo) - KindaCode. (Version 8.0) [Source code] Available at:< https://www.kindacode.com/article/image-picker-in-react-native > [Accessed 30 Aug. 2026].
- * Sanja.2022. How to upload a photo in React, create a FormData object (with the image file and string data types), send it to the NodeJS server, save it in MongoDB and fetch it from React and render it on a page. (Version 8.0) [Source code] Available at:< https://medium.com/@sanja1mandic/how-to-upload-a-photo-in-react-create-a-formdata-object-with-image-file-and-string-data-types-71e9e08fb53c > [Accessed 30 Aug. 2026].
- * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 8.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 August 2026].
+ * Adeoye, T.2024. React Hooks: useState (With Practical Examples).(Version 10.0) [Source code]. Available at:< https://medium.com/@titoadeoye/react-hooks-usestate-with-practical-examples-64abd6df6471 > [Accessed 30 Aug. 2026].
+ * Hiếu, N.H.2022. react-native: upload image - DEV Community.(Version 10.0) [Source code] Available at:< https://dev.to/hieunh1801/react-native-upload-file-1860 > [Accessed 30 August 2026].
+ * Jayasekara, S.S. 2025. How to Add a Dropdown Picker in React Native Expo (iOS & Android Compatible). (Version 10.0) [Source code] Available at:< https://sasandasaumya.medium.com/how-to-add-a-dropdown-picker-in-react-native-expo-ios-android-compatible-4944c66f58c7 > [Accessed 1 Sept. 2026].
+ * Kindacode.com.2022. Using Image Picker and Camera in React Native (Expo) - KindaCode. (Version 10.0) [Source code] Available at:< https://www.kindacode.com/article/image-picker-in-react-native > [Accessed 30 Aug. 2026].
+ * Sanja.2022. How to upload a photo in React, create a FormData object (with the image file and string data types), send it to the NodeJS server, save it in MongoDB and fetch it from React and render it on a page. (Version 10.0) [Source code] Available at:< https://medium.com/@sanja1mandic/how-to-upload-a-photo-in-react-create-a-formdata-object-with-image-file-and-string-data-types-71e9e08fb53c > [Accessed 30 Aug. 2026].
+ * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 10.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 August 2026].
  */
