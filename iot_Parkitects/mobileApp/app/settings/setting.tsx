@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
+import * as Location from 'expo-location'
 
 // importing our custom auth setup
 import { auth } from '../../config/firebaseConfig';
@@ -39,6 +40,51 @@ export default function SettingsScreen() {
     emailNotifications: true,
     pushNotifications: false,
   });
+
+  //Displaying the location
+  useFocusEffect(
+    useCallback(() => {
+      const currentLocation = aync () => {
+        const currentUser = auth.currentUser;
+        if(!currentUser) {
+          return;
+        }
+
+        const {status} = await Location.getForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          return; //does not reprompt the user- this can be linked to the permissions screen or some sort of notification prompt idea
+        }
+        
+        try {
+          const position = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+
+          const geocode = await Location.reverseGeocodeAsync({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+
+          const locationLabel = place ? `${place.city ?? place.subregion ?? ''}, ${place.region ?? ''}`.trim() : null;
+
+          if(locationLabel) {
+            const existingPreference = await fetch (`${API_BASE_URL}/api/Preferences/user/${currentUser.uid}`);
+            const existing = existingPreference.ok ? await existingPreference.json() : {};
+
+            await fetch(`${API_BASE_URL}/api/Preferences/user/${currentUser.uid}`, {
+              method: 'PUT',
+              headers: {'Content-Type': 'application/json'},
+              bosy: JSON.stringify({...existing, location: locationLabel, userID: currentUser.uid}),
+            });
+
+            steForm ((prev) => ({ ..prev}))
+            setLocationDisplay(label); //location gets stored locally-better approach since it refreshes when user goes to settings screen only not always syncing in the background
+          }
+        } catch (error) { }
+      };
+      currentLocation();
+    }, [])
+  };
 
     //loads default settings values
 //(Spencer,2024)
@@ -525,6 +571,10 @@ const styles = StyleSheet.create({
 *
 * References
 * 
-* Spencer,P., 2024. The Full stack (React & ASP.NET)- 12 - UseEffect.[video online] Available at: < https://youtu.be/tJxBtmg-92w?si=NYNfh-oL9nZO0EFb > [Accessed 30 August 2026]
- * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
- */
+* CoddyKit, 2026. Reading GPS Location with expo location. (Version 10.0) [Source Code] Available at: < https://www.coddykit.com/courses/learn_react_native/reading-gps-location-with-expo-location-10687394 > [Accessed 2 Septemeber 2026]
+* Expo Documentation, 2026. Expo Location. (Version 10.0) [Source Code] Available at:< https://docs.expo.dev/versions/latest/sdk/location/ > [Accessed 2 September 2026]
+* Kumaar, A., 2025. When to use useEffect and UseFocusEffect in React or React Native: A deep dive. (Version 10.0) [Source Code] Available at: < https://blog.stackademic.com/when-to-use-useeffect-and-usefocuseffect-in-react-or-react-native-a-deep-dive-a02f8df7131c > [Accessed 2 September 2026]
+* Singh, A., 2024. Expo Location: How to get the location in adnroid and ios using reverse Geo location. (Version 10.0) [Source Code] Available at: < https://medium.com/@ashu6530/expo-location-how-to-get-the-location-in-android-and-ios-using-reverse-geo-location-5f40a3b19e3b > [Accessed 2 September 2026]
+* Spencer,P., 2024. The Full stack (React & ASP.NET)- 12 - UseEffect.[video online] (Version 10.0) [Source Code] Available at: < https://youtu.be/tJxBtmg-92w?si=NYNfh-oL9nZO0EFb > [Accessed 30 August 2026]
+* Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
+*/
