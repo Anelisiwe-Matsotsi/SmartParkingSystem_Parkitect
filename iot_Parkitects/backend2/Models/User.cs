@@ -14,6 +14,10 @@ namespace backend2.Models
         
         [Required]
         public string FirebaseUid { get; set; } = string.Empty; // This links our SQL DB to Firebase (Microsoft, 2026b)
+
+        [Required]
+        [Column("userNumber")]
+        public string UserNumber { get; set; } = string.Empty;
         
         [Required]
         [Column("name")]
@@ -24,7 +28,7 @@ namespace backend2.Models
         public string Email { get; set; } = string.Empty;
 
         [Column("userRole")]
-        public string UserRole { get; set; } = "User";
+        public string UserRole { get; set; } = "Student";
 
         [Column("isParked")]
         public bool IsParked { get; set; } = false;
@@ -37,8 +41,8 @@ namespace backend2.Models
 /*
 Reference List:
 
-Microsoft, 2026. DataAnnotations Namespace. [online] Available at: <https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations> [Accessed 30 August 2026].
+Microsoft, 2026a. DataAnnotations Namespace. [online] Available at: <https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations> [Accessed 30 August 2026].
 
-Microsoft, 2026. Entity Framework Core. [online] Available at: <https://learn.microsoft.com/en-us/ef/core/> [Accessed 30 August 2026].
+Microsoft, 2026b. Entity Framework Core. [online] Available at: <https://learn.microsoft.com/en-us/ef/core/> [Accessed 30 August 2026].
 
 */
