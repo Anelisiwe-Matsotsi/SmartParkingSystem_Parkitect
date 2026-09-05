@@ -44,7 +44,7 @@ export default function SettingsScreen() {
   //Displaying the location
   useFocusEffect(
     useCallback(() => {
-      const currentLocation = aync () => {
+      const currentLocation = async () => {
         const currentUser = auth.currentUser;
         if(!currentUser) {
           return;
@@ -77,7 +77,7 @@ export default function SettingsScreen() {
               bosy: JSON.stringify({...existing, location: locationLabel, userID: currentUser.uid}),
             });
 
-            steForm ((prev) => ({ ..prev}))
+            setForm ((prev) => ({ ..prev}))
             setLocationDisplay(label); //location gets stored locally-better approach since it refreshes when user goes to settings screen only not always syncing in the background
           }
         } catch (error) { }
@@ -294,7 +294,7 @@ export default function SettingsScreen() {
             </View>
 
             <View style={[styles.rowWrapper, styles.rowLast]}>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7}>
+              <TouchableOpacity onPress={() => router.push('/settings/rules')}style={styles.row} activeOpacity={0.7}>
                 <Text style={styles.rowLabel}>Campus Parking Rules</Text>
                 <View style={styles.rowSpacer} />
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
