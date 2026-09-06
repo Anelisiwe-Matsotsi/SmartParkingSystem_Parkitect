@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore;
-using Backend2.Data;
-using Backend2.Models;
-using Microsoft.AspNetCore.Mvc;
+using backend2.Data;
 using backend2.Models;
+using Microsoft.AspNetCore.Mvc;
 
-namespace Backend2.Controllers
+
+namespace backend2.Controllers
 {
     //(Noble, 2024)
     [ApiController] //attribute tells ASP NET Core that this class is an API controller 
@@ -23,12 +23,12 @@ namespace Backend2.Controllers
         public async Task<ActionResult<Rating>> SubmitRating([FromBody] Rating rating)
         {
             rating.submittedAt = DateTime.UtcNow; //time is automatically fetched when rating is submitted
-            _context.Ratings.Add(rating); //adds rating to DB
+            _context.Rating.Add(rating); //adds rating to DB
             await _context.SaveChangesAsync();
 
             //(Christy, 2025)
             //CreatedAtAction = 201 Created
-            return CreatedAtAction(nameof(SubmitRating), new { id = rating.Id }, rating); //returns the created rating with its ID
+            return CreatedAtAction(nameof(SubmitRating), new { id = rating.ratingID }, rating); //returns the created rating with its ID
         }
     }
 }

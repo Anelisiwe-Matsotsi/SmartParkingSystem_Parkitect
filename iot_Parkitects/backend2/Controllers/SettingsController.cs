@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore;
-using Backend2.Data;
-using Backend2.Models;
-using Microsoft.AspNetCore.Mvc;
+using backend2.Data;
 using backend2.Models;
+using Microsoft.AspNetCore.Mvc;
 
-namespace Backend2.Controllers
+
+namespace backend2.Controllers
 {
     //(Noble, 2024)
     [ApiController] //attribute tells ASP NET Core that this class is an API controller 
