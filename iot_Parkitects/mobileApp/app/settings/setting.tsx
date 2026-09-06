@@ -3,6 +3,8 @@ import React, { useState, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import * as Location from 'expo-location'
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 // importing our custom auth setup
 import { auth } from '../../config/firebaseConfig';
@@ -14,7 +16,7 @@ import {
   Text,
   TouchableOpacity,
   Switch,
-  Álert,
+  Alert,
 } from 'react-native';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import RBSheet from 'react-native-raw-bottom-sheet';
@@ -35,6 +37,7 @@ export default function SettingsScreen() {
   const [value, setValue] = useState(4);
   const sheet = useRef<any>(null);
   const router = useRouter();
+  const[locationDisplay, setLocationDisplay] = useState('');
 
   const [form, setForm] = useState({
     emailNotifications: true,
@@ -65,6 +68,7 @@ export default function SettingsScreen() {
             longitude: position.coords.longitude,
           });
 
+          const place = geocode[0];
           const locationLabel = place ? `${place.city ?? place.subregion ?? ''}, ${place.region ?? ''}`.trim() : null;
 
           if(locationLabel) {
@@ -74,17 +78,18 @@ export default function SettingsScreen() {
             await fetch(`${API_BASE_URL}/api/Preferences/user/${currentUser.uid}`, {
               method: 'PUT',
               headers: {'Content-Type': 'application/json'},
-              bosy: JSON.stringify({...existing, location: locationLabel, userID: currentUser.uid}),
+              body: JSON.stringify({...existing, location: locationLabel, userID: currentUser.uid}),
             });
 
-            setForm ((prev) => ({ ..prev}))
-            setLocationDisplay(label); //location gets stored locally-better approach since it refreshes when user goes to settings screen only not always syncing in the background
+            setForm((prev) => ({ ...prev }))
+
+            setLocationDisplay(locationLabel) //location gets stored locally-better approach since it refreshes when user goes to settings screen only not always syncing in the background
           }
         } catch (error) { }
       };
       currentLocation();
     }, [])
-  };
+  );
 
     //loads default settings values
 //(Spencer,2024)
@@ -139,7 +144,7 @@ export default function SettingsScreen() {
     sheet.current?.open();
   };
 
-    const handleCloseSheet = () => {
+    const handleCloseSheet = async () => {
         const currentUser = auth.currentUser;
         if (currentUser) {
             try {
