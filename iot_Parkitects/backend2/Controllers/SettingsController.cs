@@ -2,7 +2,7 @@ using Microsoft.AspNetCore;
 using backend2.Data;
 using backend2.Models;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace backend2.Controllers
 {
@@ -25,9 +25,9 @@ namespace backend2.Controllers
             var settings = await _context.Settings.FirstOrDefaultAsync(s => s.userID == userID);
             if (settings == null)
             {
-                return OK(new Settings { userID = userID }); //sets preferences to default values
+                return Ok(new Settings { userID = userID }); //sets preferences to default values
             }
-            return OK(settings);
+            return Ok(settings);
         }
 
         //Updates user preferences in settings
@@ -41,7 +41,8 @@ namespace backend2.Controllers
             {
                 settings.userID = userID;
                 _context.Settings.Add(settings);
-                return NotFound();
+                await _context.SaveChangesAsync(); //changes are saved to the DB
+                return Ok(settings);
             }
            
             //updated is user changes their preferences in settings

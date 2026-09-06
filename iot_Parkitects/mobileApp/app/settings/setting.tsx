@@ -95,7 +95,7 @@ export default function SettingsScreen() {
 //(Spencer,2024)
     useEffect(() => {
         const fetchSettings = async () => {
-            const currentUser = auth.currentUser //idntifies the user from firebase authentication
+            const currentUser = auth.currentUser //identifies the user from firebase authentication
             if (!currentUser) {
                 return;
             }

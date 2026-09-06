@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { AccessibilityInfo, useColorScheme } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/theme';
+import * as Speech from 'expo-speech';
 
 type TextSize = 'small' | 'medium' | 'large';
 type ColorMode = 'light' | 'dark';
@@ -31,6 +32,7 @@ interface AccessibilityContextValue extends AccessibilityState {
   setScreenReader: (v: boolean) => void;
   setHapticFeedback: (v: boolean) => void;
   loadFromServer: (settings: Partial<AccessibilityState>) => void;
+  triggerScreenReader: (text: string) => void;
   triggerHaptic: (style?: Haptics.ImpactFeedbackStyle) => void;
 }
 
@@ -85,6 +87,16 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     [hapticFeedback]
   );
 
+  const triggerScreenReader = useCallback(
+    (text: string) => {
+      if (screenReader) {
+        Speech.stop();
+        Speech.speak(text);
+      }
+    },
+    [screenReader]
+  );
+
   const scale = scaleMap[textSize];
   const theme = Colors[colorMode];
 
@@ -107,6 +119,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         setHapticFeedback,
         loadFromServer,
         triggerHaptic,
+        triggerScreenReader,
       }}
     >
       {children}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   StyleSheet,
   SafeAreaView,
@@ -6,7 +6,6 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import FeatherIcon from '@expo/vector-icons/Feather';
@@ -21,7 +20,7 @@ interface RuleItem {
 const RULES: RuleItem[] = [
   {
     id: '1',
-    icon: 'square-parking',
+    icon: 'map-pin',
     title: 'Designated Bays Only',
     description: 'Vehicles must be parked only in designated and clearly marked parking bays.',
   },
@@ -71,15 +70,6 @@ const RULES: RuleItem[] = [
 
 export default function RulesScreen() {
   const router = useRouter();
-  const [selectedRule, setSelectedRule] = useState<RuleItem | null>(null);
-
-  const handleOpenRule = (item: RuleItem) => {
-    setSelectedRule(item);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedRule(null);
-  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -100,12 +90,7 @@ export default function RulesScreen() {
         <Text style={styles.screenTitle}>Parking Lot Rules</Text>
 
         {RULES.map((item) => (
-          <TouchableOpacity
-            key={item.id}
-            style={styles.ruleCard}
-            activeOpacity={0.7}
-            onPress={() => handleOpenRule(item)}
-          >
+          <View key={item.id} style={styles.ruleCard}>
             <View style={styles.cardHeader}>
               <View style={styles.cardTitleRow}>
                 <View style={styles.iconBadge}>
@@ -113,49 +98,14 @@ export default function RulesScreen() {
                 </View>
                 <Text style={styles.cardTitle}>{item.title}</Text>
               </View>
-              <FeatherIcon name="chevron-right" size={18} color="#94A3B8" />
             </View>
 
-            <Text style={styles.cardDescription} numberOfLines={2}>
+            <Text style={styles.cardDescription}>
               {item.description}
             </Text>
-          </TouchableOpacity>
+          </View>
         ))}
       </ScrollView>
-
-      {/* Detail Modal */}
-      <Modal
-        visible={selectedRule !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={handleCloseModal}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={handleCloseModal}
-        >
-          <TouchableOpacity style={styles.modalCard} activeOpacity={1}>
-            {selectedRule && (
-              <>
-                <View style={styles.modalIconBadge}>
-                  <FeatherIcon name={selectedRule.icon} size={28} color="#0D5265" />
-                </View>
-
-                <Text style={styles.modalTitle}>{selectedRule.title}</Text>
-                <Text style={styles.modalDescription}>{selectedRule.description}</Text>
-
-                <TouchableOpacity
-                  style={[styles.btn, styles.btnPrimary, styles.fullWidthBtn]}
-                  onPress={handleCloseModal}
-                >
-                  <Text style={styles.btnPrimaryText}>Got it</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -226,65 +176,6 @@ const styles = StyleSheet.create({
     color: '#64748B',
     lineHeight: 18,
     paddingLeft: 38,
-  },
-
-  /* Modal Overlay & Card */
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  modalCard: {
-    width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-  },
-  modalIconBadge: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#F0F7F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  modalDescription: {
-    fontSize: 14,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-
-  /* Shared Button Styles */
-  btn: {
-    flex: 1,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fullWidthBtn: {
-    width: '100%',
-  },
-  btnPrimary: {
-    backgroundColor: '#0D5265',
-  },
-  btnPrimaryText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
   },
 });
 

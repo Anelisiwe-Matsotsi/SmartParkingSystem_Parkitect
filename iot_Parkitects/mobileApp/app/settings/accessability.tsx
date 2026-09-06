@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
+import * as Speech from 'expo-speech';
 import { useAccessibility } from '@/context/accessibilityContext';
 
 // importing our custom auth setup
@@ -43,8 +44,10 @@ export default function Example() {
     screenReader, setScreenReader,
     hapticFeedback, setHapticFeedback,
     theme,
+    scale,
     loadFromServer,
     triggerHaptic,
+    triggerScreenReader,
   } = useAccessibility();
 
     //(Spencer, 2024)
@@ -77,9 +80,10 @@ export default function Example() {
             await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...existing, textSize, colorMode, reduceMotion, screenReader, hapticFeedback, userID: currentUser.uid }),
+                body: JSON.stringify({ ...existing, textSize, theme: colorMode, reduceMotion, screenReader, hapticFeedback, userID: currentUser.uid }),
             });
             triggerHaptic();
+            router.back(); //sends user back to the previous screen which is settings
         } catch (error) {
             Alert.alert('Please try again','Error occured while saving accessibility settings');
         }
@@ -97,12 +101,21 @@ export default function Example() {
 
         <Text style={[styles.title, { color: theme.heading }]}>Accessibility</Text>
         <Text style={[styles.subtitle, { color: theme.muted }]}>
-          Adjust how Parkitech looks and feels for you
+           Customize your app experience for better accessibility
         </Text>
       </View>
 
       <ScrollView>
-        {/* TEXT SIZE */}
+        {/* text size preview */}
+          <Text
+              style={[
+                styles.previewText,
+                {
+                  fontSize:
+                    16 * scale, color: theme.text }]}>
+                      Preview Text Size
+            </Text>
+
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.muted }]}>Text Size</Text>
           <View style={styles.segmentRow}>
@@ -112,6 +125,7 @@ export default function Example() {
                 onPress={() => {
                   setTextSize(size);
                   triggerHaptic();
+                  triggerScreenReader(`Text size set to ${size}`);
                 }}
                 style={[
                   styles.segmentBtn,
@@ -138,15 +152,16 @@ export default function Example() {
 
           <View style={[styles.sectionItem, { backgroundColor: theme.surface, borderColor: theme.muted }]}>
             <View style={styles.sectionInfo}>
-              <Text style={[styles.sectionName, { color: theme.heading }]}>Dark Mode</Text>
+              <Text style={[styles.sectionName, { color: theme.heading }]}>Colour Theme</Text>
               <Text style={[styles.sectionDescription, { color: theme.muted }]}>
-                Switch between light and dark color scheme
+                Switch between light and dark mode
               </Text>
             </View>
             <Switch
               onValueChange={(isDark) => {
                 setColorMode(isDark ? 'dark' : 'light');
                 triggerHaptic();
+                triggerScreenReader(isDark? 'Dark mode enabled' : 'Light mode enabled');
               }}
               trackColor={{ false: '#757575', true: theme.primary }}
               value={colorMode === 'dark'}
@@ -157,7 +172,7 @@ export default function Example() {
             <View style={styles.sectionInfo}>
               <Text style={[styles.sectionName, { color: theme.heading }]}>Reduce Motion</Text>
               <Text style={[styles.sectionDescription, { color: theme.muted }]}>
-                Minimize animations throughout the app
+                Minimize animations and transitions
               </Text>
             </View>
             <Switch
@@ -177,15 +192,18 @@ export default function Example() {
 
           <View style={[styles.sectionItem, { backgroundColor: theme.surface, borderColor: theme.muted }]}>
             <View style={styles.sectionInfo}>
-              <Text style={[styles.sectionName, { color: theme.heading }]}>Screen Reader Support</Text>
+              <Text style={[styles.sectionName, { color: theme.heading }]}>Screen Reader</Text>
               <Text style={[styles.sectionDescription, { color: theme.muted }]}>
-                Optimize labels and layout for screen readers
+                Enable voice feedback for actions
               </Text>
             </View>
             <Switch
               onValueChange={(v) => {
                 setScreenReader(v);
                 triggerHaptic();
+                if(v) {
+                  Speech.speak('Screen reader enabled.');
+                }
               }}
               trackColor={{ false: '#757575', true: theme.primary }}
               value={screenReader}
@@ -196,7 +214,7 @@ export default function Example() {
             <View style={styles.sectionInfo}>
               <Text style={[styles.sectionName, { color: theme.heading }]}>Haptic Feedback</Text>
               <Text style={[styles.sectionDescription, { color: theme.muted }]}>
-                Feel a light tap when interacting with buttons
+                Vibrate on touch interactions
               </Text>
             </View>
             <Switch
@@ -206,9 +224,6 @@ export default function Example() {
             />
           </View>
 
-          <Text style={[styles.sectionFooter, { color: theme.muted }]}>
-            You can always change these settings later.
-          </Text>
         </View>
       </ScrollView>
 
@@ -224,40 +239,135 @@ export default function Example() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 34, fontWeight: 'bold', marginBottom: 4 },
-  subtitle: { fontSize: 15, lineHeight: 20, fontWeight: '500' },
-  formFooter: { marginTop: 12, marginBottom: 24, paddingHorizontal: 24 },
-  header: { paddingHorizontal: 24, marginBottom: 28, marginTop: 28 },
-  headerActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  title: { 
+    fontSize: 34,
+     fontWeight: 'bold', 
+     marginBottom: 4 
+    },
+     
+  subtitle: {
+     fontSize: 15,
+      lineHeight: 20,
+       fontWeight: '500' 
+      },
+
+  formFooter: { 
+    marginTop: 12,
+     marginBottom: 24,
+      paddingHorizontal: 24 
+    },
+
+  header: { 
+    paddingHorizontal: 24,
+     marginBottom: 28,
+      marginTop: 28 
+    },
+
+  headerActions: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between',
+     alignItems: 'center'
+     },
+
   headerAction: {
-    width: 40, height: 40, borderRadius: 9999,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#146564', marginBottom: 16, marginTop: 16,
+    width: 40,
+     height: 40, 
+     borderRadius: 9999,
+    alignItems: 'center',
+     justifyContent: 'center',
+    backgroundColor: '#146564', 
+    marginBottom: 16,
+     marginTop: 16,
   },
-  section: { paddingHorizontal: 24, marginBottom: 24 },
+
+  section: { 
+    paddingHorizontal: 24,
+     marginBottom: 24 
+    },
+
   sectionTitle: {
-    fontSize: 13, fontWeight: '600', marginBottom: 12,
-    textTransform: 'uppercase', letterSpacing: 0.19,
+    fontSize: 13, 
+    fontWeight: '600', 
+    marginBottom: 12,
+    textTransform: 'uppercase', 
+    letterSpacing: 0.19,
   },
+
   sectionItem: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    padding: 16, marginBottom: 12, borderRadius: 12, borderWidth: 2,
+    flexDirection: 'row', 
+    alignItems: 'center',
+     justifyContent: 'space-between',
+    padding: 16, 
+    marginBottom: 12,
+     borderRadius: 12, 
+     borderWidth: 2,
   },
-  sectionInfo: { flexGrow: 1, flexShrink: 1, flexBasis: 0, marginRight: 16 },
-  sectionName: { fontSize: 15, lineHeight: 20, fontWeight: '600', marginBottom: 4 },
-  sectionDescription: { fontSize: 13, lineHeight: 18 },
-  sectionFooter: { fontSize: 13, lineHeight: 18, marginTop: 4 },
-  segmentRow: { flexDirection: 'row', gap: 10 },
+
+  sectionInfo: { 
+    flexGrow: 1, 
+    flexShrink: 1, 
+    flexBasis: 0,
+     marginRight: 16 
+    },
+  
+  sectionName: { 
+    fontSize: 15, 
+    lineHeight: 20,
+     fontWeight: '600', 
+     marginBottom: 4 
+    },
+ 
+  sectionDescription: { 
+    fontSize: 13,
+     lineHeight: 18
+     },
+  
+  sectionFooter: { 
+    fontSize: 13, 
+    lineHeight: 18,
+     marginTop: 4
+     },
+  
+  segmentRow: { 
+    flexDirection: 'row', 
+    gap: 10
+   },
+  
   segmentBtn: {
-    flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1.5,
-    alignItems: 'center', justifyContent: 'center',
+    flex: 1, 
+    paddingVertical: 12,
+     borderRadius: 10, 
+     borderWidth: 1.5,
+    alignItems: 'center', 
+    justifyContent: 'center',
   },
-  segmentText: { fontSize: 14, fontWeight: '600' },
+
+  segmentText: { 
+    fontSize: 14, 
+    fontWeight: '600'
+   },
+
   btn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    borderRadius: 8, paddingVertical: 16, paddingHorizontal: 24, marginBottom: 24,
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    borderRadius: 8, 
+    paddingVertical: 16, 
+    paddingHorizontal: 24, 
+    marginBottom: 24,
   },
-  btnText: { fontSize: 17, lineHeight: 22, fontWeight: 'bold', color: '#fff' },
+  btnText: { 
+    fontSize: 17, 
+    lineHeight: 22,
+     fontWeight: 'bold', 
+     color: '#fff' 
+    },
+
+  previewText: {
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
 });
 
 /**
