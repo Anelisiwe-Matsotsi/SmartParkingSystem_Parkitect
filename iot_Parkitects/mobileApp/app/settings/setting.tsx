@@ -267,7 +267,7 @@ export default function SettingsScreen() {
           <View style={styles.sectionBody}>
             <View style={[styles.rowWrapper, styles.rowFirst]}>
               <TouchableOpacity
-                onPress={() => router.push('/settings/preferences')}
+                onPress={() => router.push('/settings/accessability')}
                 style={styles.row}
                 activeOpacity={0.7}
               >

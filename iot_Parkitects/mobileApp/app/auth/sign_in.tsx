@@ -37,7 +37,7 @@ export default function SignIn() {
       const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
       
       // if it passes, they are granted access to the app
-      router.replace('/accessability');
+      router.replace('/permissions');
       
     } catch (error: any) {
       // wrong password or email throws an alert
