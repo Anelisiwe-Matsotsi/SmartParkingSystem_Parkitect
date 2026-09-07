@@ -7,14 +7,26 @@ namespace backend2.Data
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
      // Tells Entity Framework to create tables related to the application models (Microsoft, 2026)
-        public DbSet<Analytics> Analytics { get; set; }
-        public DbSet<Chatbot> Chatbot { get; set; }
-        public DbSet<FindMyCar> FindMyCar { get; set; }
-        public DbSet<Notifications> Notifications { get; set; }
-        public DbSet<Parking> Parking { get; set; }
-        public DbSet<Settings> Settings { get; set; }
+        // public DbSet<Analytics> Analytics { get; set; }
+        // public DbSet<Chatbot> Chatbot { get; set; }
+        // public DbSet<FindMyCar> FindMyCar { get; set; }
+        // public DbSet<Notifications> Notifications { get; set; }
+        // public DbSet<Parking> Parking { get; set; }
+        // public DbSet<Settings> Settings { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
+
         public DbSet<User> Users { get; set; }
+        public DbSet<Student> Students { get; set; }
+        public DbSet<Lecturer> Lecturers { get; set; }
+        public DbSet<SecurityPersonnel> SecurityPersonnel { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            
+            // Forces EF Core to map inheritance to separate tables linked by primary keys (Microsoft, 2026)
+            modelBuilder.Entity<User>().UseTptMappingStrategy();
+        }
     }
 }
 

@@ -12,19 +12,12 @@ GO
 USE ParkitectsDB;
 GO
 
--- Create the ParkingLot table
-CREATE TABLE Parking (
-    parkingID INT PRIMARY KEY IDENTITY(1,1),
-    lotName NVARCHAR(255) NOT NULL,
-    campusLocation NVARCHAR(255) NOT NULL,
-    totalCapacity INT NOT NULL
-);
-
-
+-- User Related Tables
 -- Create the User table
 CREATE TABLE [User] (
     userID INT PRIMARY KEY IDENTITY(1,1),
     firebaseUid NVARCHAR(255) NOT NULL UNIQUE,
+    userNumber NVARCHAR(50) NOT NULL UNIQUE,
     name NVARCHAR(255) NOT NULL,
     email NVARCHAR(255) NOT NULL,
     userRole NVARCHAR(255) NOT NULL DEFAULT 'User',
@@ -32,13 +25,42 @@ CREATE TABLE [User] (
     createdAt DATETIME NOT NULL DEFAULT GETUTCDATE()
 );
 
+CREATE TABLE [Student] (
+    userID INT PRIMARY KEY,
+    studentNumber NVARCHAR(50) NOT NULL,
+    yearOfStudy INT NOT NULL DEFAULT 1,
+    CONSTRAINT FK_Student_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
+);
+
+CREATE TABLE [Lecturer] (
+    userID INT PRIMARY KEY,
+    staffNumber NVARCHAR(50) NOT NULL,
+    facultyDepartment NVARCHAR(100) NOT NULL DEFAULT 'General',
+    CONSTRAINT FK_Lecturer_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
+);
+
+CREATE TABLE [SecurityPersonnel] (
+    userID INT PRIMARY KEY,
+    employeeNumber NVARCHAR(50) NOT NULL,
+    assignedShift NVARCHAR(50) NOT NULL DEFAULT 'Day',
+    CONSTRAINT FK_SecurityPersonnel_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
+);
+
+-- Parking Related Tables
+-- Create the ParkingLot table
+CREATE TABLE ParkingLot (
+    parkingID INT PRIMARY KEY IDENTITY(1,1),
+    lotName NVARCHAR(255) NOT NULL,
+    campusLocation NVARCHAR(255) NOT NULL,
+    totalCapacity INT NOT NULL
+);
 
 -- Create the ParkingLayout table
-CREATE TABLE ParkingLayout (
-    layoutID INT PRIMARY KEY IDENTITY(1,1), 
+CREATE TABLE ParkingSection (
+    bayID INT PRIMARY KEY IDENTITY(1,1), 
     parkingID INT NOT NULL,
     sectionName NVARCHAR(255) NOT NULL,
-    CONSTRAINT FK_ParkingLayout_Parking FOREIGN KEY (parkingID) REFERENCES Parking(parkingID) ON DELETE CASCADE
+    CONSTRAINT FK_ParkingLayout_Parking FOREIGN KEY (parkingID) REFERENCES ParkingLot(parkingID) ON DELETE CASCADE
 );
 
 -- Create the ParkingBay table
@@ -59,7 +81,7 @@ CREATE TABLE ParkingSession (
     bayID INT NOT NULL,
     startDate DATETIME NOT NULL,
     endDate DATETIME NULL,
-       CONSTRAINT FK_ParkingSession_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
+    CONSTRAINT FK_ParkingSession_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
 );
 
 -- Part of analytics
