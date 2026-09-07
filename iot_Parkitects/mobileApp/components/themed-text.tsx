@@ -34,7 +34,7 @@ export function ThemedText({
       style={[
         { color },
         flattened,
-        { fontSize: baseFrontSize * scale },
+        { fontSize: baseFontSize * scale },
       ]}
       {...rest}
     />
