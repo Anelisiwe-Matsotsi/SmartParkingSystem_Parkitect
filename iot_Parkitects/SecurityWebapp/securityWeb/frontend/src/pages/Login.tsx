@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import parkitechlogo from "../assets/parkitechlogo.png";
 import { useNavigate } from "react-router-dom";
-
+import { Link } from "react-router-dom";
 
 
 //Firebase imports for authentication
@@ -14,7 +14,9 @@ import {auth} from "../config/firebase";
 
 export const Login: React.FC = () => {
   const [username, setUsername] = useState("");
+
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); //eye
   const [error, setError] = useState("");
 
 const navigate = useNavigate();//navigates to the dashboard page after successful login
@@ -100,6 +102,7 @@ const navigate = useNavigate();//navigates to the dashboard page after successfu
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               autoComplete="username"
+              placeholder="Enter your email"
             />
           </div>
 
@@ -115,14 +118,34 @@ const navigate = useNavigate();//navigates to the dashboard page after successfu
               )}
             </label>
 
+          <div className="password-input-container">
             <input
               id="password"
               className="login-input"
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
+              placeholder="Enter your password"
             />
+
+              <button
+                  type="button"
+                  className="password-toggle"
+                  onMouseDown={() => setShowPassword(true)}
+                  onMouseUp={() => setShowPassword(false)}
+                  onMouseLeave={() => setShowPassword(false)}
+                  onTouchStart={() => setShowPassword(true)}
+                  onTouchEnd={() => setShowPassword(false)}
+                  aria-label="Hold to show password"
+                >
+                  <i
+                    className="fa fa-eye"
+                    aria-hidden="true"
+                  />
+              </button>
+          </div>
+
           </div>
           {/* Error message */}
           {error && (
@@ -146,6 +169,23 @@ const navigate = useNavigate();//navigates to the dashboard page after successfu
 
         <p className="login-footer">
           Parkitech Security System
+        </p>
+
+          <p className="login-footer">
+          Don't have an account?{" "}
+          <button
+            type="button"
+            onClick={() => navigate("/register")}
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+              textDecoration: "underline",
+            }}
+          >
+            Register
+          </button>
         </p>
 
       </div>
