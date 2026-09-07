@@ -22,7 +22,7 @@ import FeatherIcon from '@expo/vector-icons/Feather';
 import RBSheet from 'react-native-raw-bottom-sheet';
 
 //THE API BASE URL- TO BE CHANGED (same as tickets one-natasha)
-const API_BASE_URL = 'http://92.168.0.183:8080';
+const API_BASE_URL = 'http://192.168.0.183:8080';
 const options = [
   { name: 'Terrible', icon: '😩' },
   { name: 'Bad', icon: '🙁' },
@@ -157,11 +157,14 @@ export default function SettingsScreen() {
                         label: options[value].name,
                     }),
                 });
+                sheet.current?.close();
+                Alert.alert('Thank you!', 'Feedback submitted successfully.');
             } catch (error) {
                 Alert.alert('Error','Failed to submit rating. Please try again');
             }
-        }
+        } else{
     sheet.current?.close();
+        }
   };
 
   return (
