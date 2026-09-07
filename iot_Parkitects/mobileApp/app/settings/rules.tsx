@@ -3,12 +3,13 @@ import {
   StyleSheet,
   SafeAreaView,
   View,
-  Text,
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import FeatherIcon from '@expo/vector-icons/Feather';
+import { ThemedText } from '@/components/themed-text'
+import { useAccessibility } from '@/context/accessibilityContext';
 
 interface RuleItem {
   id: string;
@@ -70,6 +71,7 @@ const RULES: RuleItem[] = [
 
 export default function RulesScreen() {
   const router = useRouter();
+  const { theme } = useAccessibility();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -87,7 +89,7 @@ export default function RulesScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
-        <Text style={styles.screenTitle}>Parking Lot Rules</Text>
+        <ThemedText style={styles.screenTitle}>Parking Lot Rules</ThemedText>
 
         {RULES.map((item) => (
           <View key={item.id} style={styles.ruleCard}>
@@ -96,13 +98,13 @@ export default function RulesScreen() {
                 <View style={styles.iconBadge}>
                   <FeatherIcon name={item.icon} size={16} color="#0D5265" />
                 </View>
-                <Text style={styles.cardTitle}>{item.title}</Text>
+                <ThemedText style={styles.cardTitle}>{item.title}</ThemedText>
               </View>
             </View>
 
-            <Text style={styles.cardDescription}>
+            <ThemedText style={styles.cardDescription}>
               {item.description}
-            </Text>
+            </ThemedText>
           </View>
         ))}
       </ScrollView>

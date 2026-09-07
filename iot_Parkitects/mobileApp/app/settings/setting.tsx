@@ -13,13 +13,14 @@ import {
   SafeAreaView,
   ScrollView,
   View,
-  Text,
   TouchableOpacity,
   Switch,
   Alert,
 } from 'react-native';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import RBSheet from 'react-native-raw-bottom-sheet';
+import { ThemedText } from '@/components/themed-text'
+import { useAccessibility } from '@/context/accessibilityContext';
 
 //THE API BASE URL- TO BE CHANGED (same as tickets one-natasha)
 const API_BASE_URL = 'http://192.168.0.183:8080';
@@ -38,6 +39,8 @@ export default function SettingsScreen() {
   const sheet = useRef<any>(null);
   const router = useRouter();
   const[locationDisplay, setLocationDisplay] = useState('');
+
+  const { theme } = useAccessibility();
 
   const [form, setForm] = useState({
     emailNotifications: true,
@@ -168,7 +171,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F7FAFB' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       {/* Top Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -178,9 +181,9 @@ export default function SettingsScreen() {
           <FeatherIcon color="#0F172A" name="arrow-left" size={22} />
         </TouchableOpacity>
 
-        <Text numberOfLines={1} style={styles.headerTitle}>
+        <ThemedText numberOfLines={1} style={styles.headerTitle}>
           Settings
-        </Text>
+        </ThemedText>
 
         <TouchableOpacity style={styles.headerAction}>
           <FeatherIcon color="#0F172A" name="more-vertical" size={22} />
@@ -188,13 +191,13 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.headerSubtitle}>
+        <ThemedText style={styles.headerSubtitle}>
           Manage your personal details and security preferences below.
-        </Text>
+        </ThemedText>
 
         {/* ACCOUNT SECTION */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ACCOUNT</Text>
+          <ThemedText style={styles.sectionTitle}>ACCOUNT</ThemedText>
           <View style={styles.sectionBody}>
             <TouchableOpacity
               onPress={() => router.push('/settings/profie')}
@@ -202,8 +205,8 @@ export default function SettingsScreen() {
               activeOpacity={0.7}
             >
               <View style={styles.profileBody}>
-                <Text style={styles.profileName}>Marcus Aimes</Text>
-                <Text style={styles.profileHandle}>ST1289066</Text>
+                <ThemedText style={styles.profileName}>Marcus Aimes</ThemedText>
+                <ThemedText style={styles.profileHandle}>ST1289066</ThemedText>
               </View>
               <FeatherIcon color="#94A3B8" name="chevron-right" size={20} />
             </TouchableOpacity>
@@ -212,29 +215,29 @@ export default function SettingsScreen() {
 
         {/* PREFERENCES SECTION */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
+          <ThemedText style={styles.sectionTitle}>Preferences</ThemedText>
           <View style={styles.sectionBody}>
             <View style={[styles.rowWrapper, styles.rowFirst]}>
               <TouchableOpacity style={styles.row} activeOpacity={0.7}>
-                <Text style={styles.rowLabel}>Language</Text>
+                <ThemedText style={styles.rowLabel}>Language</ThemedText>
                 <View style={styles.rowSpacer} />
-                <Text style={styles.rowValue}>English</Text>
+                <ThemedText style={styles.rowValue}>English</ThemedText>
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.rowWrapper}>
               <TouchableOpacity style={styles.row} activeOpacity={0.7}>
-                <Text style={styles.rowLabel}>Location</Text>
+                <ThemedText style={styles.rowLabel}>Location</ThemedText>
                 <View style={styles.rowSpacer} />
-                <Text style={styles.rowValue}>Los Angeles, CA</Text>
+                <ThemedText style={styles.rowValue}>{locationDisplay || 'Port Elizabeth, SA'}</ThemedText>
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.rowWrapper}>
               <View style={styles.row}>
-                <Text style={styles.rowLabel}>Email Notifications</Text>
+                <ThemedText style={styles.rowLabel}>Email Notifications</ThemedText>
                               <View style={styles.rowSpacer} />
              {/* Notifications depends on savePreference method that user can change*/}
                 <Switch
@@ -249,7 +252,7 @@ export default function SettingsScreen() {
 
             <View style={[styles.rowWrapper, styles.rowLast]}>
               <View style={styles.row}>
-                <Text style={styles.rowLabel}>Push Notifications</Text>
+                <ThemedText style={styles.rowLabel}>Push Notifications</ThemedText>
                               <View style={styles.rowSpacer} />
            {/* Notifications depends on savePreference method that user can change*/}
                 <Switch
@@ -266,7 +269,7 @@ export default function SettingsScreen() {
 
         {/* RESOURCES SECTION */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Resources</Text>
+          <ThemedText style={styles.sectionTitle}>Resources</ThemedText>
           <View style={styles.sectionBody}>
             <View style={[styles.rowWrapper, styles.rowFirst]}>
               <TouchableOpacity
@@ -274,7 +277,7 @@ export default function SettingsScreen() {
                 style={styles.row}
                 activeOpacity={0.7}
               >
-                <Text style={styles.rowLabel}>Accessibility</Text>
+                <ThemedText style={styles.rowLabel}>Accessibility</ThemedText>
                 <View style={styles.rowSpacer} />
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
@@ -282,7 +285,7 @@ export default function SettingsScreen() {
 
             <View style={styles.rowWrapper}>
               <TouchableOpacity style={styles.row} activeOpacity={0.7}>
-                <Text style={styles.rowLabel}>Report Bug</Text>
+                <ThemedText style={styles.rowLabel}>Report Bug</ThemedText>
                 <View style={styles.rowSpacer} />
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
@@ -295,7 +298,7 @@ export default function SettingsScreen() {
                 style={styles.row}
                 activeOpacity={0.7}
               >
-                <Text style={styles.rowLabel}>Rate Parkitech</Text>
+                <ThemedText style={styles.rowLabel}>Rate Parkitech</ThemedText>
                 <View style={styles.rowSpacer} />
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
@@ -303,7 +306,7 @@ export default function SettingsScreen() {
 
             <View style={[styles.rowWrapper, styles.rowLast]}>
               <TouchableOpacity onPress={() => router.push('/settings/rules')}style={styles.row} activeOpacity={0.7}>
-                <Text style={styles.rowLabel}>Campus Parking Rules</Text>
+                <ThemedText style={styles.rowLabel}>Campus Parking Rules</ThemedText>
                 <View style={styles.rowSpacer} />
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
@@ -313,7 +316,7 @@ export default function SettingsScreen() {
 
         {/* LOGOUT */}
         <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.8}>
-          <Text style={styles.logoutText}>Log Out</Text>
+          <ThemedText style={styles.logoutText}>Log Out</ThemedText>
         </TouchableOpacity>
       </ScrollView>
 
@@ -328,15 +331,15 @@ export default function SettingsScreen() {
         }}
       >
         <View style={styles.sheetHeader}>
-          <Text style={styles.sheetHeaderTitle}>Rate Your Experience</Text>
-          <Text style={styles.sheetHeaderSubtitle}>
+          <ThemedText style={styles.sheetHeaderTitle}>Rate Your Experience</ThemedText>
+          <ThemedText style={styles.sheetHeaderSubtitle}>
             How is your experience using Parkitech?
-          </Text>
+          </ThemedText>
         </View>
 
         <View style={styles.sheetBody}>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{options[value].name}</Text>
+            <ThemedText style={styles.badgeText}>{options[value].name}</ThemedText>
           </View>
 
           <View style={styles.options}>
@@ -352,7 +355,7 @@ export default function SettingsScreen() {
                   onPress={() => setValue(index)}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.optionText}>{item.icon}</Text>
+                  <ThemedText style={styles.optionText}>{item.icon}</ThemedText>
                 </TouchableOpacity>
               );
             })}
@@ -363,7 +366,7 @@ export default function SettingsScreen() {
             onPress={handleCloseSheet}
             activeOpacity={0.8}
           >
-            <Text style={styles.btnText}>Submit Rating</Text>
+            <ThemedText style={styles.btnText}>Submit Rating</ThemedText>
           </TouchableOpacity>
         </View>
       </RBSheet>

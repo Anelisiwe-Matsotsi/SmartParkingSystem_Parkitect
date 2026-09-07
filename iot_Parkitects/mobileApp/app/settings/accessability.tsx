@@ -1,8 +1,6 @@
 //(Withfra.me, 2022)
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
-import * as Haptics from 'expo-haptics';
 import * as Speech from 'expo-speech';
 import { useAccessibility } from '@/context/accessibilityContext';
 
@@ -13,12 +11,12 @@ import {
   SafeAreaView,
   View,
   TouchableOpacity,
-  Text,
   ScrollView,
   Switch,
   Alert,
 } from 'react-native';
 import FeatherIcon from '@expo/vector-icons/Feather';
+import { ThemedText } from '@/components/themed-text'
 
 //THE API BASE URL- TO BE CHANGED (same as tickets one-natasha)
 const API_BASE_URL = 'http://192.168.0.183:8080';
@@ -99,25 +97,23 @@ export default function Example() {
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.title, { color: theme.heading }]}>Accessibility</Text>
-        <Text style={[styles.subtitle, { color: theme.muted }]}>
+      <ThemedText type="title">Accessibility</ThemedText>
+        <ThemedText style={[styles.subtitle, { color: theme.muted }]}>
            Customize your app experience for better accessibility
-        </Text>
+        </ThemedText>
       </View>
 
       <ScrollView>
         {/* text size preview */}
-          <Text
+          <ThemedText
               style={[
                 styles.previewText,
-                {
-                  fontSize:
-                    16 * scale, color: theme.text }]}>
+                { color: theme.text }]}>
                       Preview Text Size
-            </Text>
+            </ThemedText>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.muted }]}>Text Size</Text>
+          <ThemedText style={[styles.sectionTitle, { color: theme.muted }]}>Text Size</ThemedText>
           <View style={styles.segmentRow}>
             {textSizes.map((size) => (
               <TouchableOpacity
@@ -133,14 +129,14 @@ export default function Example() {
                   textSize === size && { backgroundColor: theme.primary, borderColor: theme.primary },
                 ]}
               >
-                <Text
+                <ThemedText
                   style={[
                     styles.segmentText,
                     { color: textSize === size ? '#fff' : theme.text },
                   ]}
                 >
                   {size.charAt(0).toUpperCase() + size.slice(1)}
-                </Text>
+                </ThemedText>
               </TouchableOpacity>
             ))}
           </View>
@@ -148,14 +144,14 @@ export default function Example() {
 
         {/* DISPLAY */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.muted }]}>Display</Text>
+          <ThemedText style={[styles.sectionTitle, { color: theme.muted }]}>Display</ThemedText>
 
           <View style={[styles.sectionItem, { backgroundColor: theme.surface, borderColor: theme.muted }]}>
             <View style={styles.sectionInfo}>
-              <Text style={[styles.sectionName, { color: theme.heading }]}>Colour Theme</Text>
-              <Text style={[styles.sectionDescription, { color: theme.muted }]}>
+              <ThemedText style={[styles.sectionName, { color: theme.heading }]}>Colour Theme</ThemedText>
+              <ThemedText style={[styles.sectionDescription, { color: theme.muted }]}>
                 Switch between light and dark mode
-              </Text>
+              </ThemedText>
             </View>
             <Switch
               onValueChange={(isDark) => {
@@ -170,10 +166,10 @@ export default function Example() {
 
           <View style={[styles.sectionItem, { backgroundColor: theme.surface, borderColor: theme.muted }]}>
             <View style={styles.sectionInfo}>
-              <Text style={[styles.sectionName, { color: theme.heading }]}>Reduce Motion</Text>
-              <Text style={[styles.sectionDescription, { color: theme.muted }]}>
+              <ThemedText style={[styles.sectionName, { color: theme.heading }]}>Reduce Motion</ThemedText>
+              <ThemedText style={[styles.sectionDescription, { color: theme.muted }]}>
                 Minimize animations and transitions
-              </Text>
+              </ThemedText>
             </View>
             <Switch
               onValueChange={(v) => {
@@ -188,14 +184,14 @@ export default function Example() {
 
         {/* ASSISTANCE */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.muted }]}>Assistance</Text>
+          <ThemedText style={[styles.sectionTitle, { color: theme.muted }]}>Features</ThemedText>
 
           <View style={[styles.sectionItem, { backgroundColor: theme.surface, borderColor: theme.muted }]}>
             <View style={styles.sectionInfo}>
-              <Text style={[styles.sectionName, { color: theme.heading }]}>Screen Reader</Text>
-              <Text style={[styles.sectionDescription, { color: theme.muted }]}>
+              <ThemedText style={[styles.sectionName, { color: theme.heading }]}>Screen Reader</ThemedText>
+              <ThemedText style={[styles.sectionDescription, { color: theme.muted }]}>
                 Enable voice feedback for actions
-              </Text>
+              </ThemedText>
             </View>
             <Switch
               onValueChange={(v) => {
@@ -212,10 +208,10 @@ export default function Example() {
 
           <View style={[styles.sectionItem, { backgroundColor: theme.surface, borderColor: theme.muted }]}>
             <View style={styles.sectionInfo}>
-              <Text style={[styles.sectionName, { color: theme.heading }]}>Haptic Feedback</Text>
-              <Text style={[styles.sectionDescription, { color: theme.muted }]}>
+              <ThemedText style={[styles.sectionName, { color: theme.heading }]}>Haptic Feedback</ThemedText>
+              <ThemedText style={[styles.sectionDescription, { color: theme.muted }]}>
                 Vibrate on touch interactions
-              </Text>
+              </ThemedText>
             </View>
             <Switch
               onValueChange={(v) => setHapticFeedback(v)}
@@ -230,7 +226,7 @@ export default function Example() {
       <View style={styles.formFooter}>
         <TouchableOpacity onPress={saveAccessibility}>
           <View style={[styles.btn, { backgroundColor: theme.primary }]}>
-            <Text style={styles.btnText}>Save Preferences</Text>
+            <ThemedText style={styles.btnText}>Save Preferences</ThemedText>
           </View>
         </TouchableOpacity>
       </View>
