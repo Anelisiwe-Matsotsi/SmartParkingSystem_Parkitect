@@ -6,11 +6,15 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+//(Lai, 2025)
+//using a path alias to call files that have supporting code for accessibility functions to work
 import { useRouter } from 'expo-router';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import { ThemedText } from '@/components/themed-text'
 import { useAccessibility } from '@/context/accessibilityContext';
 
+//(StackOverflow, 2022)
+//the rule item interface is declared with attributes that the array will contain
 interface RuleItem {
   id: string;
   icon: string;
@@ -18,7 +22,10 @@ interface RuleItem {
   description: string;
 }
 
+//(StackOverflow, 2022)
+//creating an array for the rules object by initializing it- it will contain multiple rules in that object
 const RULES: RuleItem[] = [
+  //rules are structured and designed similar to the notifications screen
   {
     id: '1',
     icon: 'map-pin',
@@ -81,6 +88,7 @@ export default function RulesScreen() {
           onPress={() => router.back()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
+          {/*(Expo Documentation, 2026)*/}
           <FeatherIcon name="arrow-left" size={24} color="#1F2937" />
         </TouchableOpacity>
       </View>
@@ -96,6 +104,7 @@ export default function RulesScreen() {
             <View style={styles.cardHeader}>
               <View style={styles.cardTitleRow}>
                 <View style={styles.iconBadge}>
+                  {/*(Expo Documentation, 2026)*/}
                   <FeatherIcon name={item.icon} size={16} color="#0D5265" />
                 </View>
                 <ThemedText style={styles.cardTitle}>{item.title}</ThemedText>
@@ -112,6 +121,7 @@ export default function RulesScreen() {
   );
 }
 
+//(Wireframe, 2022)
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -183,5 +193,9 @@ const styles = StyleSheet.create({
 
 /**
  * References
+ * 
+ * Expo Documentation, 2026. Expo vector icons. (Version 2.0) [Source Code] Available at: < https://docs.expo.dev/guides/icons/ > [Accessed 2 September 2026]
+ * Lai, C., 2025. How to use path aliases '@' in React Native with Expo. (Version 2.0) [Source Code] Available at: < https://dev.to/cathylai/how-to-use-path-aliases-in-react-native-with-expo-1fl2 > [Accessed 3 September 2026]
+ * StackOverflow, 2022. How to define the interface for an array in react and typescript. (Version 2.0) [Source Code] Available at: < https://stackoverflow.com/questions/73856606/how-to-define-the-interface-for-an-array-in-react-and-typescript > [Accessed 2 September 2026]
  * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
  */

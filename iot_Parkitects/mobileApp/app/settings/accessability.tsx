@@ -31,8 +31,10 @@ const API_BASE_URL = 'http://192.168.0.183:8080';
 //     microphone: false,
 //   });
 
+//(Cusick, 2025)
 const textSizes: Array<'small' | 'medium' | 'large'> = ['small', 'medium', 'large'];
 
+//(Schult, 2022)
 export default function Example() {
     const router = useRouter();
     const {
@@ -51,10 +53,11 @@ export default function Example() {
     //(Spencer, 2024)
     useEffect(() => {
         const userAccessibility = async () => {
+          //gets the current user that is logged on
             const currentUser = auth.currentUser;
             if (!currentUser) return;
 
-            try {
+            try { //calling the backend API to save user preferences/changes
                 const response = await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`);
                 if (response.ok) {
                     loadFromServer(await response.json());
@@ -67,6 +70,7 @@ export default function Example() {
         userAccessibility();
     }, []);
 
+    //linked the the save prefeences button the user clicks after they are done making changes
     const saveAccessibility = async () => {
         const currentUser = auth.currentUser;
         if (!currentUser) return;
@@ -75,12 +79,13 @@ export default function Example() {
             const existingRes = await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`);
             const existing = existingRes.ok ? await existingRes.json() : {};
 
+            //(Fahim, 2026)
             await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ...existing, textSize, theme: colorMode, reduceMotion, screenReader, hapticFeedback, userID: currentUser.uid }),
             });
-            triggerHaptic();
+            triggerHaptic(); //activates the haptic feedback when the user saves it
             router.back(); //sends user back to the previous screen which is settings
         } catch (error) {
             Alert.alert('Please try again','Error occured while saving accessibility settings');
@@ -224,7 +229,7 @@ export default function Example() {
       </ScrollView>
 
       <View style={styles.formFooter}>
-        <TouchableOpacity onPress={saveAccessibility}>
+        <TouchableOpacity onPress={saveAccessibility}> 
           <View style={[styles.btn, { backgroundColor: theme.primary }]}>
             <ThemedText style={styles.btnText}>Save Preferences</ThemedText>
           </View>
@@ -368,6 +373,9 @@ const styles = StyleSheet.create({
 
 /**
  * References
+*  Cusick, J., 2025. Flexible typography in react. (Version 2.0) [Source Code] Available at: < https://joshcusick.substack.com/p/flexible-typography-in-react > [Accessed 4 September 2026]
+*  Fahim, M., 2026. Mastering the Fetch API with real-life javascript examples. (Version 2.0) [Source Code] Available at: < https://dev.to/mdfahim18/mastering-the-fetch-api-with-real-life-javascript-examples-eke > [Accessed 3 September 2026]
+*  Schult, J., 2022. Accessibility-Demo. (Version 2.0) [Source Code] Available at: < https://github.com/jonnyschult/accessibility-demo > [Accessed 3 September 2026]
  * Spencer,P., 2024. The Full stack (React & ASP.NET)- 12 - UseEffect.[video online] Available at: < https://youtu.be/tJxBtmg-92w?si=NYNfh-oL9nZO0EFb > [Accessed 30 August 2026]
  * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
  */

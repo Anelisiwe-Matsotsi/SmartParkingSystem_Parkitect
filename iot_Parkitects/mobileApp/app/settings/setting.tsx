@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import * as Location from 'expo-location'
+import * as Location from 'expo-location' //(CoddyKit, 2026)
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 
@@ -48,24 +48,26 @@ export default function SettingsScreen() {
   });
 
   //Displaying the location
-  useFocusEffect(
+  useFocusEffect( //(Kumaar, 2025)
     useCallback(() => {
       const currentLocation = async () => {
         const currentUser = auth.currentUser;
         if(!currentUser) {
           return;
         }
-
+          //(Singh, 2024)
         const {status} = await Location.getForegroundPermissionsAsync();
         if (status !== 'granted') {
           return; //does not reprompt the user- this can be linked to the permissions screen or some sort of notification prompt idea
         }
         
         try {
+          //gets the current position
           const position = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.Balanced,
           });
 
+          //provide the latitude and longitude to get the actual address
           const geocode = await Location.reverseGeocodeAsync({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
@@ -122,10 +124,13 @@ export default function SettingsScreen() {
         fetchSettings();
     }, []);
 
+    //(Syed, 2023)
     const savePreferences = async (updated: Partial<typeof form>) => {
         const currentUser = auth.currentUser;
         if (!currentUser) return;
 
+        //(Holeczek, 2023)
+        //merging the state so that updates to the users selected preferences
         const merged = { ...form, ...updated };
         setForm(merged);
 
@@ -133,6 +138,7 @@ export default function SettingsScreen() {
             const existingPreferences = await fetch(`${API_BASE_URL}/api/Preferences/user/${currentUser.uid}`);
             const existing = existingPreferences.ok ? await existingPreferences.json() : {};
 
+            //(Fahim, 2026)
             await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -500,7 +506,6 @@ const styles = StyleSheet.create({
     color: '#EF4444',
   },
 
-  /* RBSheet css*/
   sheetContainer: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -584,8 +589,11 @@ const styles = StyleSheet.create({
 * 
 * CoddyKit, 2026. Reading GPS Location with expo location. (Version 10.0) [Source Code] Available at: < https://www.coddykit.com/courses/learn_react_native/reading-gps-location-with-expo-location-10687394 > [Accessed 2 Septemeber 2026]
 * Expo Documentation, 2026. Expo Location. (Version 10.0) [Source Code] Available at:< https://docs.expo.dev/versions/latest/sdk/location/ > [Accessed 2 September 2026]
+* Fahim, M., 2026. Mastering the Fetch API with real-life javascript examples. (Version 2.0) [Source Code] Available at: < https://dev.to/mdfahim18/mastering-the-fetch-api-with-real-life-javascript-examples-eke > [Accessed 3 September 2026]
+* Holeczek, K., 2023. Mastering the spread operator ('...') in react.js. (Version 2.0) [Source Code] Available at: < https://coreui.io/blog/draft-how-to-replace-all-occurrences-of-a-string-in-javascript/ > [Accessed 3 September 2026] 
 * Kumaar, A., 2025. When to use useEffect and UseFocusEffect in React or React Native: A deep dive. (Version 10.0) [Source Code] Available at: < https://blog.stackademic.com/when-to-use-useeffect-and-usefocuseffect-in-react-or-react-native-a-deep-dive-a02f8df7131c > [Accessed 2 September 2026]
 * Singh, A., 2024. Expo Location: How to get the location in adnroid and ios using reverse Geo location. (Version 10.0) [Source Code] Available at: < https://medium.com/@ashu6530/expo-location-how-to-get-the-location-in-android-and-ios-using-reverse-geo-location-5f40a3b19e3b > [Accessed 2 September 2026]
 * Spencer,P., 2024. The Full stack (React & ASP.NET)- 12 - UseEffect.[video online] (Version 10.0) [Source Code] Available at: < https://youtu.be/tJxBtmg-92w?si=NYNfh-oL9nZO0EFb > [Accessed 30 August 2026]
+* Syed, A.B., 2023. Using built-in utility types in typescript. (Version 2.0) [Source Code] Available at: < https://blog.logrocket.com/using-built-in-utility-types-typescript/ > [Accessed 4 September 2026]
 * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
 */
