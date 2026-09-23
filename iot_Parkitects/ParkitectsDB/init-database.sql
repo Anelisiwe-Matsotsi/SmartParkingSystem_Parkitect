@@ -56,8 +56,8 @@ CREATE TABLE ParkingLot (
 );
 
 -- Create the ParkingLayout table
-CREATE TABLE ParkingSection (
-    bayID INT PRIMARY KEY IDENTITY(1,1), 
+CREATE TABLE ParkingLayout (
+    layoutID INT PRIMARY KEY IDENTITY(1,1), 
     parkingID INT NOT NULL,
     sectionName NVARCHAR(255) NOT NULL,
     CONSTRAINT FK_ParkingLayout_Parking FOREIGN KEY (parkingID) REFERENCES ParkingLot(parkingID) ON DELETE CASCADE
@@ -119,7 +119,7 @@ CREATE TABLE Permissions (
 -- Create the Preferences table
 CREATE TABLE Preferences (
     settingsID INT PRIMARY KEY IDENTITY(1,1),
-    userID NVARCHAR(128) NOT NULL, --firebase user id is a string
+    userID INT NOT NULL, --firebase user id is an INT
     text FLOAT,
     colorMode NVARCHAR(255),
     screenReader BIT NOT NULL,
@@ -138,7 +138,7 @@ CREATE TABLE Preferences (
 -- Create the Tickets table
 CREATE TABLE Tickets (
     ticketID INT PRIMARY KEY IDENTITY(1,1),
-    userID NVARCHAR(128) NOT NULL, --stores firebase user uid
+    userID INT NOT NULL, --stores firebase user uid
     bayID NVARCHAR(50) NOT NULL,
     bayNumber NVARCHAR(50) NOT NULL,
     sectionID NVARCHAR(50) NOT NULL,
@@ -171,7 +171,7 @@ CREATE TABLE Notification (
 --Create App Rating table (the popup)
 CREATE TABLE Ratings (
     ratingID INT PRIMARY KEY IDENTITY(1,1),
-    userID NVARCHAR(128) NOT NULL,
+    userID INT NOT NULL,
     value INT NOT NULL,
     label NVARCHAR(20) NOT NULL,
     submittedAt DATETIME NOT NULL,

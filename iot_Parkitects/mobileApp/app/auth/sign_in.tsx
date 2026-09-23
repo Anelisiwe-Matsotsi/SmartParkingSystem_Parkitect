@@ -25,6 +25,8 @@ export default function SignIn() {
     password: '',
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+
   // this fires when the user presses the login button
   const handleLogin = async () => {
     if (!form.userNumber || !form.password) 
@@ -32,6 +34,8 @@ export default function SignIn() {
       Alert.alert('Oops', 'Please fill in both your user number and password.');
       return;
     }
+
+    setIsLoading(true);
 
     try 
     {
@@ -42,6 +46,7 @@ export default function SignIn() {
       if (!response.ok) 
       {
         Alert.alert('Login Failed', 'User number not found.');
+        setIsLoading(false);
         return;
       }
       
@@ -52,14 +57,16 @@ export default function SignIn() {
       await signInWithEmailAndPassword(auth, resolvedEmail, form.password);
       
       // if it passes, they are granted access to the app
-      router.replace('/permissions');
+      router.replace('/permissions' as any);
       
     } 
     catch (error: any) 
     {
       // wrong password or user number throws an alert
       Alert.alert('Login Failed', 'Invalid user number or password. Please try again.');
-    }
+    } finally {
+    setIsLoading(false); // Unlock button
+  }
   };
 
   return (
@@ -115,9 +122,13 @@ export default function SignIn() {
           <View style={styles.formAction}>
             <TouchableOpacity
             // routing through our new login function (Firebase, 2026)
-              onPress={handleLogin}>
-              <View style={styles.btn}>
-                <Text style={styles.btnText}>Sign in</Text>
+              onPress={handleLogin}
+              disabled={isLoading}
+              >
+              <View style={[styles.btn, isLoading && { opacity: 0.7 }]}>
+                <Text style={styles.btnText}>
+                  {isLoading ? 'Signing in...' : 'Sign in'}
+                </Text>
               </View>
             </TouchableOpacity>
           </View>
