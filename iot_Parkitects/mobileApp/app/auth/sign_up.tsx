@@ -22,6 +22,7 @@ import { auth } from '../../config/firebaseConfig';
 
 export default function SignUp() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false); // loading state for the registration process
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -36,6 +37,8 @@ export default function SignUp() {
       Alert.alert('Hold up!', 'Please enter your name, email, password and user number.');
       return;
     }
+
+    setIsLoading(true);
 
     try {
       // Creates the secure account in Firebase
@@ -64,6 +67,7 @@ export default function SignUp() {
       if (!backendResponse.ok) 
       {
         const errorText = await backendResponse.text();
+        await userCredential.user.delete(); // deletes the firebase account if the backend fails to sync
         throw new Error(`Server returned error: ${errorText}`);
       }
       
@@ -76,6 +80,8 @@ export default function SignUp() {
     {
       // if firebase complains about a weak password or existing email, this tells the user
       Alert.alert('Registration Failed', error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -164,9 +170,13 @@ export default function SignUp() {
 
           <TouchableOpacity
           // routing through our new signup function (Firebase, 2026)
-            onPress={handleRegister}>
-            <View style={styles.btn}>
-              <Text style={styles.btnText}>Sign up now</Text>
+            onPress={handleRegister}
+            disabled={isLoading} // disbaled when loading to prevent multiple submissions
+            >
+            <View style={[styles.btn, isLoading && { opacity: 0.7 }]}>
+              <Text style={styles.btnText}>
+                {isLoading ? 'Creating Account...' : 'Sign up now'}
+              </Text>
             </View>
           </TouchableOpacity>
 

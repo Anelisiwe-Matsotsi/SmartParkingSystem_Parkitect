@@ -12,8 +12,8 @@ namespace backend2.Data
        // // public DbSet<FindMyCar> FindMyCar { get; set; }
       //  // public DbSet<Notifications> Notifications { get; set; }
       //  // public DbSet<Parking> Parking { get; set; }
-        // public DbSet<Settings> Settings { get; set; }
-       // public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<Settings> Settings { get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
 
         public DbSet<User> Users { get; set; }
         public DbSet<Rating> Rating { get; set; }
