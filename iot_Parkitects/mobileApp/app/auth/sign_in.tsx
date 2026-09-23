@@ -52,7 +52,7 @@ export default function SignIn() {
       await signInWithEmailAndPassword(auth, resolvedEmail, form.password);
       
       // if it passes, they are granted access to the app
-      router.replace('/accessability');
+      router.replace('/permissions');
       
     } 
     catch (error: any) 
