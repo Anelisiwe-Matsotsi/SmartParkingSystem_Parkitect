@@ -26,12 +26,14 @@ export default function SignUp() {
     name: '',
     email: '',
     password: '',
+    userRole: 'Student', // default role for new users
+    userNumber: ''
   });
 
   const handleRegister = async () => {
     // checks that they dont submit blank forms
-    if (!form.name ||!form.email || !form.password) {
-      Alert.alert('Hold up!', 'Please enter your name, email and password.');
+    if (!form.name ||!form.email || !form.password || !form.userNumber) {
+      Alert.alert('Hold up!', 'Please enter your name, email, password and user number.');
       return;
     }
 
@@ -52,8 +54,10 @@ export default function SignUp() {
         },
         body: JSON.stringify({
           firebaseUid: firebaseUid,
+          userNumber: form.userNumber,
           name: form.name,
-          email: form.email
+          email: form.email,
+          userRole: form.userRole
         })
       });
 
@@ -114,6 +118,36 @@ export default function SignUp() {
               placeholderTextColor="#A5A5AE"
               style={styles.inputControl}
               value={form.email} />
+          </View>
+
+          {/* custom radio button layout for role selection */}
+          <View style={styles.radioContainer}>
+            <TouchableOpacity 
+              style={[styles.radioButton, form.userRole === 'Student' && styles.radioSelected]} 
+              onPress={() => setForm({ ...form, userRole: 'Student' })}
+            >
+              <Text style={form.userRole === 'Student' ? styles.textSelected : styles.textUnselected}>Student</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.radioButton, form.userRole === 'Lecturer' && styles.radioSelected]} 
+              onPress={() => setForm({ ...form, userRole: 'Lecturer' })}
+            >
+              <Text style={form.userRole === 'Lecturer' ? styles.textSelected : styles.textUnselected}>Lecturer</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* dynamic input that changes based on the selected radio button */}
+          <View style={styles.input}>
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              clearButtonMode="while-editing"
+              onChangeText={userNumber => setForm({ ...form, userNumber })}
+              placeholder={form.userRole === 'Student' ? "Student Number" : "Lecturer / Staff ID"}
+              placeholderTextColor="#A5A5AE"
+              style={styles.inputControl}
+              value={form.userNumber} />
           </View>
 
           <View style={styles.input}>
@@ -254,6 +288,38 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: '#222',
+  },
+  /** Radio Buttons */
+  radioContainer: 
+  { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    marginBottom: 12 
+  },
+  radioButton: 
+  { 
+    flex: 0.48, 
+    paddingVertical: 10, 
+    borderWidth: 1, 
+    borderColor: '#C9D3DB', 
+    borderRadius: 12, 
+    alignItems: 'center', 
+    backgroundColor: '#EFF1F5' 
+  },
+  radioSelected: 
+  { 
+    backgroundColor: '#0c4b64', 
+    borderColor: '#0c4b64' 
+  },
+  textSelected: 
+  { 
+    color: '#fff', 
+    fontWeight: '600' 
+  },
+  textUnselected: 
+  { 
+    color: '#A5A5AE', 
+    fontWeight: '500'
   },
   /** Button */
   btn: {

@@ -9,7 +9,13 @@ namespace backend2
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Added services to the container
+            // Add services to the container.
+            //Chandra, S 2026.
+            // Add services to the container.
+
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+               options.UseSqlServer(Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING")));
+
             builder.Services.AddControllers();
             builder.Services.AddHttpClient();
             builder.Services.AddOpenApi(); // Keeps the native engine

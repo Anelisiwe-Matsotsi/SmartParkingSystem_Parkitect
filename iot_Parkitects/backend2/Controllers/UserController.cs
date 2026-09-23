@@ -22,8 +22,10 @@ namespace backend2.Controllers
         public class UserSyncDto
         {
             public string FirebaseUid { get; set; } = string.Empty;
+            public string UserNumber { get; set; } = string.Empty;
             public string Name { get; set; } = string.Empty;
             public string Email { get; set; } = string.Empty;
+            public string UserRole { get; set; } = "Student";
         }
 
         [HttpPost("sync")]
@@ -35,22 +37,64 @@ namespace backend2.Controllers
             // Checks if this user already synced to avoid duplicates using Entity Framework (Microsoft, 2026b)
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == dto.FirebaseUid);
             
-            if (existingUser == null)
+            if (existingUser != null)
+            {
+                return Ok(new { message = "User already exists", user = existingUser });
+            }
+
+            // Maps to the specific table based on the frontend selection
+            if (dto.UserRole == "Student")
+            {
+                var newStudent = new Student
+                {
+                    FirebaseUid = dto.FirebaseUid,
+                    UserNumber = dto.UserNumber,
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    UserRole = dto.UserRole,
+                    StudentNumber = dto.UserNumber
+                };
+                _context.Students.Add(newStudent);
+            }
+            else if (dto.UserRole == "Lecturer")
+            {
+                var newLecturer = new Lecturer
+                {
+                    FirebaseUid = dto.FirebaseUid,
+                    UserNumber = dto.UserNumber,
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    UserRole = dto.UserRole,
+                    StaffNumber = dto.UserNumber
+                };
+                _context.Lecturers.Add(newLecturer);
+            }
+            else
             {
                 var newUser = new User
                 {
                     FirebaseUid = dto.FirebaseUid,
+                    UserNumber = dto.UserNumber,
                     Name = dto.Name,
-                    Email = dto.Email
+                    Email = dto.Email,
+                    UserRole = dto.UserRole
                 };
-                
                 _context.Users.Add(newUser);
-                await _context.SaveChangesAsync();
-                
-                return Ok(new { message = "User synced successfully", user = newUser });
             }
 
-            return Ok(new { message = "User already exists", user = existingUser });
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User synced successfully" });
+        }
+
+        [HttpGet("resolve-email/{userNumber}")]
+        public async Task<IActionResult> GetEmailFromUserNumber(string userNumber)
+        {
+            // Queries the db to allow login with their student/staff number (Microsoft, 2026b)
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserNumber == userNumber);
+            if (user == null) return NotFound("User not found");
+
+            return Ok(new { email = user.Email, role = user.UserRole });
         }
     }
 }
