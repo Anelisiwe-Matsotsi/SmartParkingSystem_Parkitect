@@ -1,7 +1,7 @@
 //(Withfra.me, 2022)
 //Chatbot screen for the Parkitects mobile app, this screen allows users to interact with a chatbot that provides answers 
 //to frequently asked questions about parking
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -30,27 +30,36 @@ const faqOptions = [
 export default function ChatbotScreen() {
   //This stores the question selected by the user
   const [message, setMessage] = useState("");
-  //This is used to keep track of which question the user has selected from the array of questions
-  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(
-    null
-  );
+  // Stores the history of selected questions and their answers
+  const [chatHistory, setChatHistory] = useState<{question: string, answer: string}[]>([]);
+  // Controls whether the FAQ options or the "Back to Questions" button is showing
+  const [showOptions, setShowOptions] = useState<boolean>(true);
+  // Provides the scrollview to automatically go down when a new question is added
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  //This function runs when the user selects a question from the list of frequently asked questions, 
-  //then it saves the selected question so that the answer can be displayed
+  // This function runs when the user selects a question from the list of frequently asked questions, 
+  // then it saves the selected question so that the answer can be displayed
   const handleQuestion = (question: string) => {
-    setSelectedQuestion(question);
+    // Add the new question and its answer to the bottom of the chat history
+    setChatHistory((prev) => [...prev, { question, answer: getAnswer(question) }]);
+    // Afterwards, hide the options and show the back button
+    setShowOptions(false);
   };
+
 
   //This function takes the user back to the list of questions when they click the back button, it resets the selected question
   const handleBack = () => {
-    setSelectedQuestion(null);
+    setShowOptions(true);
   }
 
   return (
     <View style={styles.container}>
       <ScrollView
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
+        // Triggers the scroll to the bottom when the user returns to the question
+        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
       
         <StatsCard/>
@@ -64,51 +73,49 @@ export default function ChatbotScreen() {
         </View>
 
         {/* Stack Overflow, 2018 */}
-        {/* FAQ Buttons */}
-        {!selectedQuestion && (
-        <View style={styles.questionsContainer}>
-          {faqOptions.map((question) => (
-            <TouchableOpacity
-              key={question}
-              style={styles.questionButton}
-              //When a button is pressed, the selected question is passed to the handleQuestion function
-              onPress={() => handleQuestion(question)}
-            >
-              <Text style={styles.questionText}>
-                {question}
+        {/* Chat History */}
+        {chatHistory.map((chat, index) => (
+          <View key={index}>
+            <View style={styles.selectedQuestionContainer}>
+              <Text style={styles.selectedQuestionText}>
+                {chat.question}
               </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+            </View>
+            <View style={styles.botMessage}>
+              <Text style={styles.botMessageText}>
+                {chat.answer}
+              </Text>
+            </View>
+          </View>
+        ))}
+
+        {/* FAQ Buttons */}
+        {showOptions && (
+          <View style={styles.questionsContainer}>
+            {faqOptions.map((question) => (
+              <TouchableOpacity
+                key={question}
+                style={styles.questionButton}
+                onPress={() => handleQuestion(question)}
+              >
+                <Text style={styles.questionText}>
+                  {question}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
 
-        {/* Selected Question & Answer, only displays sfter the user selects on of the FAQ questions */}
-        {selectedQuestion && (
-          <>
-          {/*Displays the question selected by the user */}
-          <View style={styles.selectedQuestionContainer}>
-            <Text style={styles.selectedQuestionText}>
-              {selectedQuestion}
-            </Text>
-          </View>
-          {/* Displays the answer to the selected question */}
-          <View style={styles.answerContainer}>
-            <Text style={styles.answerText}>
-              {getAnswer(selectedQuestion)}
-            </Text>
-          </View>
-
-          {/* Back Button, allows the user to return to the list of questions */}
+        {/* Back Button */}
+        {!showOptions && (
           <TouchableOpacity
             style={styles.backButton}
-            onPress = {handleBack}
-            >
-              <Text
-              style={styles.backButtonText}>
-                Back to Questions
-              </Text>
-            </TouchableOpacity>
-            </>
+            onPress={handleBack}
+          >
+            <Text style={styles.backButtonText}>
+              Back to Questions
+            </Text>
+          </TouchableOpacity>
         )}
       </ScrollView>
 
@@ -129,16 +136,16 @@ function getAnswer(question: string) {
       return "Mondays when everyone decides they have to do better.";
 
     case "What are the parking rules?":
-      return "Park within the marked parking bay, When entering campus follow the speed limit of 20km, Do NOT park by the pick and drop area";
+      return "- Park within the marked parking bay. \n- When entering campus do NOT exceed the speed limit of 20km. \n- Do NOT park by the pick and drop area.";
 
     case "How do I find my parked car?":
-      return "Use our Find My Parking to locate your parked vehicle using the Bluetooth signal from the parking sensor.";
+      return "Use our Find My Parking by navigating to the notifications page on the home screen to locate your parked vehicle using the Bluetooth signal from the parking sensor.";
 
     case "How does parking availability work?":
-      return "Parking sensors detect whether a bay is occupied and update the live parking map.";
+      return "Parking sensors detect whether a bay is occupied and updates the parking map in real-time.";
 
     case "Report a parking problem":
-      return "You can report a parking problem by creating a ticket and selecting the relevant parking bay.";
+      return "You can report a parking problem by navigating to the tickets screen and then create a ticket and select the relevant parking bay.";
 
     default:
       return "Please select one of the questions above.";
