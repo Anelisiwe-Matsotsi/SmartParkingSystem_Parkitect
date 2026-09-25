@@ -42,6 +42,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "12954daf-6ed5-467c-ba98-c32bc7757bdb"
+      }
+    },
+    "owner": "nattyexpo"
   }
 }
