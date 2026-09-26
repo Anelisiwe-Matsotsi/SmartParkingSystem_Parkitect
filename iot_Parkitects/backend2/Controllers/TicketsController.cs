@@ -13,11 +13,13 @@ namespace backend2.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IExpoPushService _pushService;//(Expo Docs, 2026)
 
-        public TicketsController(ApplicationDbContext context, IConfiguration config)
+        public TicketsController(ApplicationDbContext context, IConfiguration config, IExpoPushService pushService)
         {
             _context = context;
             _configuration = config;
+            _pushService = pushService;
         }
 
         // GET: api/Ticket
@@ -54,9 +56,9 @@ namespace backend2.Controllers
             return CreatedAtAction(nameof(GetById), new { id = ticket.ticketID }, ticket);
         }
 
-//POST: api/ Tickets/upload-image
-[HttpPost("upload-image")]
-public async Task<IActionResult> UploadImage(IFormFile file)
+        //POST: api/ Tickets/upload-image
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadImage(IFormFile file)
         {
             ////Emeris School of Computer Science, 2025b
             if (file == null || file.Length == 0)
@@ -88,6 +90,11 @@ public async Task<IActionResult> UploadImage(IFormFile file)
             
                 return BadRequest();
             
+            //gets the status of the ticket for the ticket response workflow
+            var previousState = await _context.Tickets.Where(t => t.ticketID == id)
+                                .Select(t=> t.status)
+                                .FirstOrDefualtAsync();
+
               ticket.updatedAt = DateTime.UtcNow; //time updated
             _context.Entry(ticket).State = EntityState.Modified;
 
@@ -104,8 +111,21 @@ public async Task<IActionResult> UploadImage(IFormFile file)
                 
                 
                     throw;
-                }
-          
+            }
+
+            //(Expo Docs, 2026)
+            //notify user based on ticket status for expo push service
+            if (ticket.status == "Notified" && previousStatus == "Pending")
+            {
+                await _pushService.NotifyUserAsync(ticket.userID, "Parking ticket issued",
+                    $"Ticket #{ticket.ticketID} - {ticket.reason}", new {ticketId = ticket.ticketID});
+            }
+            //if the user does not solve the ticket properly they will be notified again
+            else if (ticket.status == "Notified" && previousStatus == "Awaiting review")
+            {
+                await _pushService.NotifyUserAsync(ticket.userID, "Ticket needs to be reviewed again",
+                    "Security says violation has not been resolved. Please fix it properly.", new {ticketId = ticket.ticketID});
+            }
 
             return NoContent();
         }
@@ -134,4 +154,5 @@ Emeris School of Computer Science. 2025. PROG7311 Docker part 3- databases in do
 Emeris School of Computer Science. 2025. PROG7311 Docker part 4- connecting to database from the API.(Version 10.0) [Source Code]. Available at: <https://youtu.be/_PwpPMoeqzw?si=Q0ELlPZdN42dFU9q> [Accessed 5 June 2026]
 Emeris School of Computer Science. 2025. PROG7311 Docker part 5- connecting them all together- DB -API -MVC. (Version 10.0) [Source Code]. Available at: <https://youtu.be/YlIajRMdLPk?si=D75XZKO-L6nQhR-3> [Accessed 5 June 2026]
 Emeris School of Computer Science. 2025b. All about the blob storage - CLDV6211.[video online] (Version 10.0) [Source Code] . Available at:< https://www.youtube.com/watch?v=tCROBkSoi3Y&list=PL480DYS-b_kevhFsiTpPIB2RzhKPig4iK&index=9>  [Accessed 30 Aug. 2026].
+Expo Docs, 2026. Expo push notifications setup. (Version 10.0) [Source Code]. Available at: < https://docs.expo.dev/push-notifications/push-notifications-setup/ > [Accessed 25 September 2026]
 */
