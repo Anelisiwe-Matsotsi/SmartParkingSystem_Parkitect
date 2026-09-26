@@ -1,55 +1,93 @@
-import type { Book } from "../models/book.ts";
+import type { Ticket } from "../models/ticket";
 
-const API_URL = "https://localhost:3000/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
-// this function will get ALL books from the API
-export async function getBooks(): Promise<Book[]> {
-  // fetch(http://localhost:3000/api/books)
-  const response = await fetch(`${API_URL}/books`);
+// GET ALL tickets
+export async function getTickets(): Promise<Ticket[]> {
+  const response = await fetch(`${API_URL}/Tickets`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch tickets");
+  }
+
   return response.json();
 }
 
-// this function will get a SINGLE book based on ID
-export async function getBook(id: string): Promise<Book> {
-  // fetch(http://localhost:3000/api/books/abc123)
-  const response = await fetch(`${API_URL}/books/${id}`);
+// GET ONE ticket
+export async function getTicket(id: number): Promise<Ticket> {
+  const response = await fetch(`${API_URL}/Tickets/${id}`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch ticket");
+  }
+
   return response.json();
 }
 
-// this function will CREATE a new book using a POST request
-export async function createBook(book: Book): Promise<Book> {
-  const response = await fetch(`${API_URL}/books`, {
+// CREATE a ticket
+export async function createTicket(ticket: Ticket): Promise<Ticket> {
+  const response = await fetch(`${API_URL}/Tickets`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(book),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(ticket),
   });
+
+  if (!response.ok) {
+    throw new Error("Failed to create ticket");
+  }
+
   return response.json();
 }
 
-// this function will update sections of an existing Book in the database using PATCH
-export async function updateBook(book: Book, id: string): Promise<Book> {
-  const response = await fetch(`${API_URL}/books/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(book),
-  });
-  return response.json();
-}
-
-// this function will replace an entire book in the database using PUT
-export async function replaceBook(book: Book, id: string): Promise<Book> {
-  const response = await fetch(`${API_URL}/books/${id}`, {
+// UPDATE a ticket
+export async function updateTicket(
+  ticket: Ticket,
+  id: number
+): Promise<void> {
+  const response = await fetch(`${API_URL}/Tickets/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(book),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(ticket),
   });
-  return response.json();
+
+  if (!response.ok) {
+    throw new Error("Failed to update ticket");
+  }
 }
 
-// this function will delete a book from the database using a DELETE request
-export async function deleteBook(id: string): Promise<Book> {
-  const response = await fetch(`${API_URL}/books/${id}`, {
+// DELETE a ticket
+export async function deleteTicket(id: number): Promise<void> {
+  const response = await fetch(`${API_URL}/Tickets/${id}`, {
     method: "DELETE",
   });
-  return response.json();
+
+  if (!response.ok) {
+    throw new Error("Failed to delete ticket");
+  }
+}
+
+//UPLOAD an image 
+export async function uploadTicketImage(
+  file: File
+): Promise<string> {
+  const formData = new FormData();
+
+  formData.append("file", file);
+
+  const response = await fetch(`${API_URL}/Tickets/upload-image`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to upload ticket image");
+  }
+
+  const data = await response.json();
+
+  return data.imageUrl;
 }

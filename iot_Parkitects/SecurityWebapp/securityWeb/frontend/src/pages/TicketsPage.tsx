@@ -1,6 +1,6 @@
  {/* Material UI,2026*/}
  //(rudderz243,2026)
-import React, { useState} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -16,6 +16,13 @@ import FormLabel from "@mui/material/FormLabel";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
 
+import type { Ticket } from "../models/ticket";
+import {
+  getTickets,
+  createTicket,
+  uploadTicketImage,
+} from "../services/api";
+
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
   clipPath: "inset(50%)",
@@ -29,8 +36,36 @@ const VisuallyHiddenInput = styled("input")({
 });
 
 export const TicketsPage: React.FC = () => {
-     const [open, setOpen] = useState(false);
-     const [activeTicket, setActiveTicket] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [activeTicket, setActiveTicket] = useState<number | null>(null);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const [parkingBay, setParkingBay] = useState("");
+  const [reason, setReason] = useState("");
+  const [description, setDescription] = useState("");
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  // GET tickets from backend
+  useEffect(() => {
+    const loadTickets = async () => {
+      try {
+        setLoading(true);
+
+        const data = await getTickets();
+
+        setTickets(data);
+      } catch (error) {
+        console.error("Failed to load tickets", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTickets();
+  }, []);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -38,12 +73,126 @@ export const TicketsPage: React.FC = () => {
 
   const handleClose = () => {
     setOpen(false);
+
+    setParkingBay("");
+    setReason("");
+    setDescription("");
+    setSelectedImage(null);
+  };
+
+  // Accessible ticket menu
+  const handleTicketMenu = (ticketID: number) => {
+    setActiveTicket(
+      activeTicket === ticketID ? null : ticketID
+    );
+  };
+
+  // Close ticket menu when Escape is pressed
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActiveTicket(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  // Close ticket menu when clicking outside of it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        setActiveTicket(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Handle image selection
+  const handleImageChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      setSelectedImage(file);
+    }
+  };
+
+  // CREATE ticket
+  const handleSubmit = async () => {
+    if (!parkingBay) {
+      alert("Please select a parking bay.");
+      return;
+    }
+
+    if (!reason) {
+      alert("Please select a violation.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      let imageURL: string | null = null;
+
+      // Upload image first if one was selected
+      if (selectedImage) {
+        imageURL = await uploadTicketImage(selectedImage);
+      }
+
+      const selectedBay = parkingBay;
+
+      const newTicket: Ticket = {
+        ticketID: 0,
+        userID: "",
+        bayID: selectedBay,
+        bayNumber: selectedBay,
+        sectionID: `${selectedBay.charAt(0)}-Block`,
+        reason: reason,
+        description: description || null,
+        imageURL: imageURL,
+        status: "Pending",
+        createdAt: new Date().toISOString(),
+        updatedAt: null,
+        response: null,
+      };
+
+      const createdTicket = await createTicket(newTicket);
+
+      setTickets((previousTickets) => [
+        ...previousTickets,
+        createdTicket,
+      ]);
+
+      handleClose();
+    } catch (error) {
+      console.error("Failed to create ticket", error);
+
+      alert("Failed to create ticket. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <section className="page is-active" aria-labelledby="ticketsTitle">
+    <section
+      className="page is-active"
+      aria-labelledby="ticketsTitle"
+    >
 
-     
       <div className="page-heading">
         <div>
           <p className="eyebrow">Parking management</p>
@@ -55,415 +204,358 @@ export const TicketsPage: React.FC = () => {
           </p>
         </div>
 
-        <button className="button primary" type="button"
-        onClick={handleClickOpen}>
+        <button
+          className="button primary"
+          type="button"
+          onClick={handleClickOpen}
+        >
           Issue ticket
         </button>
       </div>
 
-     
+
       <div className="project-grid">
 
-        {/* TICKET 1 */}
-        <article
-          className="project-card searchable"
-          data-search="parking ticket A01 car parked skew"
-        >
-          <div className="project-card-top">
-            <span className="project-icon violet">
-              <i
-                className="fa-solid fa-ticket"
-                aria-hidden="true"
-              ></i>
-            </span>
-
-     <div className="ticket-menu">
-  <button
-    type="button"
-    aria-label="More options"
-    onClick={() =>
-      setActiveTicket(
-        activeTicket === "PT-1048" ? null : "PT-1048"
-      )
-    }
-  >
-    <i
-      className="fa-solid fa-ellipsis"
-      aria-hidden="true"
-    ></i>
-  </button>
-
-  {activeTicket === "PT-1048" && (
-    <div className="ticket-actions">
-      <button type="button" className="approve">
-        Approve
-      </button>
-
-      <button type="button" className="reject">
-        Reject
-      </button>
-    </div>
-  )}
-</div>
-</div>
-          <span className="status pending">
-            Waiting for Approval
-          </span>
-
-          <h2>Parking Bay A01</h2>
-
-          <p>
-            Vehicle parked skew.
+        {loading && tickets.length === 0 && (
+          <p role="status">
+            Loading tickets...
           </p>
+        )}
 
-          <div className="project-meta">
-            <span>
-              <small>Ticket ID</small>
-              <strong>#PT-1048</strong>
-            </span>
+        {!loading && tickets.length === 0 && (
+          <p role="status">
+            No tickets have been issued yet.
+          </p>
+        )}
 
-            <span>
-              <small>Issued</small>
-              <strong>10:42 AM</strong>
-            </span>
-          </div>
+        {tickets.map((ticket) => (
+          <article
+            key={ticket.ticketID}
+            className="project-card searchable"
+            data-search={`parking ticket ${ticket.bayNumber} ${ticket.reason}`}
+          >
+            <div className="project-card-top">
 
-          <div className="project-footer">
-            <div className="avatar-stack">
-              <i>SG</i>
+              <span className="project-icon violet">
+                <i
+                  className="fa-solid fa-ticket"
+                  aria-hidden="true"
+                ></i>
+              </span>
+
+              <div
+                className="ticket-menu"
+                ref={
+                  activeTicket === ticket.ticketID
+                    ? menuRef
+                    : null
+                }
+              >
+
+                <button
+                  type="button"
+                  aria-label={`More options for ticket ${ticket.ticketID}`}
+                  aria-expanded={
+                    activeTicket === ticket.ticketID
+                  }
+                  aria-controls={
+                    activeTicket === ticket.ticketID
+                      ? `ticket-actions-${ticket.ticketID}`
+                      : undefined
+                  }
+                  onClick={() =>
+                    handleTicketMenu(ticket.ticketID)
+                  }
+                >
+                  <i
+                    className="fa-solid fa-ellipsis"
+                    aria-hidden="true"
+                  ></i>
+                </button>
+
+                {activeTicket === ticket.ticketID && (
+                  <div
+                    id={`ticket-actions-${ticket.ticketID}`}
+                    className="ticket-actions"
+                    role="menu"
+                    aria-label={`Actions for ticket ${ticket.ticketID}`}
+                  >
+                    {/* Approve and Reject will be implemented by another team member */}
+
+                    <button
+                      type="button"
+                      className="approve"
+                      role="menuitem"
+                    >
+                      Approve
+                    </button>
+
+                    <button
+                      type="button"
+                      className="reject"
+                      role="menuitem"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
+
+              </div>
             </div>
 
-            <strong>5 Aug 2026</strong>
-          </div>
-
-          <div className="progress-track">
-            <span style={{ width: "0%" }}></span>
-          </div>
-        </article>
-
-
-        {/* TICKET 2 */}
-        <article
-          className="project-card searchable"
-          data-search="parking ticket B14 lecturer moved"
-        >
-          <div className="project-card-top">
-            <span className="project-icon green">
-              <i
-                className="fa-solid fa-ticket"
-                aria-hidden="true"
-              ></i>
+            <span
+              className={`status ${
+                ticket.status === "Pending"
+                  ? "pending"
+                  : ticket.status === "Resolved"
+                    ? "success"
+                    : "review"
+              }`}
+            >
+              {ticket.status}
             </span>
 
-            <button type="button" aria-label="More options">
-              <i
-                className="fa-solid fa-ellipsis"
-                aria-hidden="true"
-              ></i>
-            </button>
-          </div>
+            <h2>
+              Parking Bay {ticket.bayNumber}
+            </h2>
 
-          <span className="status review">
-            Notified
-          </span>
+            <p>
+              {ticket.reason}
+            </p>
 
-          <h2>Parking Bay B14</h2>
+            {ticket.description && (
+              <p>
+                <span className="status review">
+                  Description:
+                </span>{" "}
+                {ticket.description}
+              </p>
+            )}
 
-          <p>
-             Vehicle parked in a restricted parking bay.
-          </p>
+            <div className="project-meta">
+              <span>
+                <small>Ticket ID</small>
+                <strong>
+                  #{ticket.ticketID}
+                </strong>
+              </span>
 
-          <div className="project-meta">
-            <span>
-              <small>Ticket ID</small>
-              <strong>#PT-1047</strong>
-            </span>
-
-            <span>
-              <small>Issued</small>
-              <strong>09:15 AM</strong>
-            </span>
-          </div>
-
-          <div className="project-footer">
-            <div className="avatar-stack">
-              <i>SG</i>
+              <span>
+                <small>Issued</small>
+                <strong>
+                  {new Date(ticket.createdAt).toLocaleTimeString(
+                    [],
+                    {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    }
+                  )}
+                </strong>
+              </span>
             </div>
 
-            <strong>5 Aug 2026</strong>
-          </div>
+            <div className="project-footer">
+              <div className="avatar-stack">
+                <i>SG</i>
+              </div>
 
-          <div className="progress-track">
-            <span style={{ width: "50%" }}></span>
-          </div>
-        </article>
-
-
-        {/* TICKET 3 */}
-        <article
-          className="project-card searchable"
-          data-search="parking ticket C07  vehicle lights are on"
-        >
-          <div className="project-card-top">
-            <span className="project-icon green">
-              <i
-                className="fa-solid fa-ticket"
-                aria-hidden="true"
-              ></i>
-            </span>
-
-            <button type="button" aria-label="More options">
-              <i
-                className="fa-solid fa-ellipsis"
-                aria-hidden="true"
-              ></i>
-            </button>
-          </div>
-
-          <span className="status review">
-            Under review
-          </span>
-        
-
-          <h2>Parking Bay C07</h2>
-
-          <p>
-           Vehicle lights are on
-          </p>
-          <p>
-          <span className="status review">Description:</span> They have been flashing for the past hour!
-          </p>
-
-          <div className="project-meta">
-            <span>
-              <small>Ticket ID</small>
-              <strong>#PT-1046</strong>
-            </span>
-
-            <span>
-              <small>Issued</small>
-              <strong>08:32 AM</strong>
-            </span>
-          </div>
-
-          <div className="project-footer">
-            <div className="avatar-stack">
-              <i>SG</i>
+              <strong>
+                {new Date(ticket.createdAt).toLocaleDateString()}
+              </strong>
             </div>
 
-            <strong>5 Aug 2026</strong>
-          </div>
-
-          <div className="progress-track">
-            <span style={{ width: "60%" }}></span>
-          </div>
-        </article>
-
-
-        {/* TICKET 4 */}
-        <article
-          className="project-card searchable"
-          data-search="vehicle not fully in bay "
-        >
-          <div className="project-card-top">
-            <span className="project-icon blue">
-              <i
-                className="fa-solid fa-ticket"
-                aria-hidden="true"
-              ></i>
-            </span>
-
-            <button type="button" aria-label="More options">
-              <i
-                className="fa-solid fa-ellipsis"
-                aria-hidden="true"
-              ></i>
-            </button>
-          </div>
-
-          <span className="status success">
-            Resolved
-          </span>
-
-          <h2>Parking Bay D22</h2>
-
-          <p>
-           Vehicle is too far out of the bay
-          </p>
-
-          <div className="project-meta">
-            <span>
-              <small>Ticket ID</small>
-              <strong>#PT-1045</strong>
-            </span>
-
-            <span>
-              <small>Issued</small>
-              <strong>1:35pm</strong>
-            </span>
-          </div>
-
-          <div className="project-footer">
-            <div className="avatar-stack">
-              <i>SG</i>
+            <div className="progress-track">
+              <span
+                style={{
+                  width:
+                    ticket.status === "Resolved"
+                      ? "100%"
+                      : ticket.status === "Pending"
+                        ? "0%"
+                        : "50%",
+                }}
+              ></span>
             </div>
 
-            <strong>5 Aug 2026</strong>
-          </div>
-
-          <div className="progress-track">
-            <span style={{ width: "100%" }}></span>
-          </div>
-        </article>
+          </article>
+        ))}
 
       </div>
+
       {/* Material UI,2026*/}
       <Dialog
-  open={open}
-  onClose={handleClose}
-  fullWidth
-  maxWidth="sm"
->
-  <DialogTitle>
-    Create Ticket
-  </DialogTitle>
-
-  <DialogContent>
-
-    {/* PARKING BAY */}
-   <FormControl fullWidth margin="normal">
-  <FormLabel sx={{ mb: 1 }}>
-    Parking Bay
-  </FormLabel>
-
-  <NativeSelect
-    defaultValue=""
-    inputProps={{
-      name: "parkingBay",
-      id: "parking-bay-select",
-    }}
-  >
-    <option value="" disabled>
-      Select a parking bay
-    </option>
-
-    <option value="A01">A01</option>
-    <option value="A02">A02</option>
-    <option value="A03">A03</option>
-
-    <option value="B01">B01</option>
-    <option value="B04">B04</option>
-    <option value="B07">B07</option>
-    <option value="B14">B14</option>
-
-    <option value="C02">C02</option>
-    <option value="C07">C07</option>
-
-    <option value="D01">D01</option>
-    <option value="D05">D05</option>
-    <option value="D22">D22</option>
-  </NativeSelect>
-</FormControl>
-
-
-    {/* VIOLATION */}
-    <FormControl margin="dense">
-      <FormLabel id="violation-label">
-        Violation
-      </FormLabel>
-
-      <RadioGroup
-        aria-labelledby="violation-label"
-        name="violation"
+        open={open}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="sm"
+        aria-labelledby="create-ticket-title"
       >
-        <FormControlLabel
-          value="Restricted parking"
-          control={<Radio />}
-          label="Restricted parking"
-        />
+        <DialogTitle id="create-ticket-title">
+          Create Ticket
+        </DialogTitle>
 
-        <FormControlLabel
-          value="Incorrect bay"
-          control={<Radio />}
-          label="Incorrect bay"
-        />
+        <DialogContent>
 
-        <FormControlLabel
-          value="Vehicle outside bay"
-          control={<Radio />}
-          label="Vehicle outside bay"
-        />
+          {/* PARKING BAY */}
+          <FormControl fullWidth margin="normal">
+            <FormLabel
+              id="parking-bay-label"
+              sx={{ mb: 1 }}
+            >
+              Parking Bay
+            </FormLabel>
 
-        <FormControlLabel
-          value="Other"
-          control={<Radio />}
-          label="Other"
-        />
-      </RadioGroup>
-    </FormControl>
+            <NativeSelect
+              value={parkingBay}
+              onChange={(event) =>
+                setParkingBay(event.target.value)
+              }
+              inputProps={{
+                name: "parkingBay",
+                id: "parking-bay-select",
+                "aria-labelledby": "parking-bay-label",
+              }}
+            >
+              <option value="" disabled>
+                Select a parking bay
+              </option>
 
+              <option value="A01">A01</option>
+              <option value="A02">A02</option>
+              <option value="A03">A03</option>
 
-    {/* DESCRIPTION */}
-    <TextField
-      margin="dense"
-      id="description"
-      name="description"
-      label="Description (optional)"
-      multiline
-      rows={4}
-      fullWidth
-      placeholder="Add any additional information about the violation..."
-    />
+              <option value="B01">B01</option>
+              <option value="B04">B04</option>
+              <option value="B07">B07</option>
+              <option value="B14">B14</option>
 
+              <option value="C02">C02</option>
+              <option value="C07">C07</option>
 
-    {/* IMAGE UPLOAD */}
-    <Button
-      component="label"
-      variant="outlined"
-      tabIndex={-1}
-      startIcon={<CloudUploadIcon />}
-      sx={{ mt: 2 }}
-    >
-      Upload image (optional)
-
-      <VisuallyHiddenInput
-        type="file"
-        accept="image/*"
-        onChange={(event) => {
-          console.log(event.target.files);
-        }}
-      />
-    </Button>
-
-  </DialogContent>
+              <option value="D01">D01</option>
+              <option value="D05">D05</option>
+              <option value="D22">D22</option>
+            </NativeSelect>
+          </FormControl>
 
 
-  <DialogActions>
+          {/* VIOLATION */}
+          <FormControl margin="dense">
+            <FormLabel id="violation-label">
+              Violation
+            </FormLabel>
 
-    <Button
-     className="login-button"
-            type="button" onClick={handleClose}>
-      Cancel
-    </Button>
+            <RadioGroup
+              aria-labelledby="violation-label"
+              name="violation"
+              value={reason}
+              onChange={(event) =>
+                setReason(event.target.value)
+              }
+            >
+              <FormControlLabel
+                value="Restricted parking"
+                control={<Radio />}
+                label="Restricted parking"
+              />
 
-    <Button
-     className="login-button"
+              <FormControlLabel
+                value="Incorrect bay"
+                control={<Radio />}
+                label="Incorrect bay"
+              />
+
+              <FormControlLabel
+                value="Vehicle outside bay"
+                control={<Radio />}
+                label="Vehicle outside bay"
+              />
+
+              <FormControlLabel
+                value="Other"
+                control={<Radio />}
+                label="Other"
+              />
+            </RadioGroup>
+          </FormControl>
+
+
+          {/* DESCRIPTION */}
+          <TextField
+            margin="dense"
+            id="description"
+            name="description"
+            label="Description (optional)"
+            multiline
+            rows={4}
+            fullWidth
+            value={description}
+            onChange={(event) =>
+              setDescription(event.target.value)
+            }
+            placeholder="Add any additional information about the violation..."
+          />
+
+
+          {/* IMAGE UPLOAD */}
+          <Button
+            component="label"
+            variant="outlined"
+            tabIndex={-1}
+            startIcon={<CloudUploadIcon />}
+            sx={{ mt: 2 }}
+          >
+            Upload image (optional)
+
+            <VisuallyHiddenInput
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+            />
+          </Button>
+
+          {selectedImage && (
+            <p
+              role="status"
+              aria-live="polite"
+            >
+              Selected image: {selectedImage.name}
+            </p>
+          )}
+
+        </DialogContent>
+
+
+        <DialogActions>
+
+          <Button
+            className="login-button"
             type="button"
-      variant="contained"
-      onClick={handleClose}
-    >
-      Issue Ticket
-    </Button>
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
 
-  </DialogActions>
+          <Button
+            className="login-button"
+            type="button"
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? "Creating..." : "Issue Ticket"}
+          </Button>
 
-</Dialog>
-      
+        </DialogActions>
+
+      </Dialog>
+
     </section>
   );
 };
 
 export default TicketsPage;
+
 
 
   {/*References
