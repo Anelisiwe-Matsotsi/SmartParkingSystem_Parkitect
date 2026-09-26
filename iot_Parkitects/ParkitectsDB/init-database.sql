@@ -177,4 +177,14 @@ CREATE TABLE Ratings (
     submittedAt DATETIME NOT NULL,
     CONSTRAINT FK_AppRating_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
 );
+
+--Creating a table to handle push tokens sent by security to user mobile app
+CREATE TABLE PushToken (
+    tokenID INT PRIMARY KEY IDENTITY(1,1),
+    userID NVARCHAR(128) NOT NULL,
+    token NVARCHAR(255) NOT NULL,
+    platform NVARCHAR(20) NOT NULL,
+    createdAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+    updatedAt DATETIME2 NULL
+);
 GO

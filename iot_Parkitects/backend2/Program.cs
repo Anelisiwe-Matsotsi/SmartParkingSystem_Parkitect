@@ -17,7 +17,15 @@ namespace backend2
                options.UseSqlServer(Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING")));
 
             builder.Services.AddControllers();
-            builder.Services.AddHttpClient();
+
+            //(Bravo, 2021)
+            builder.Services.AddHttpClient("ExpoPush", client =>
+            {
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+                client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
+            });
+            builder.Services.AddScoped<IExpoPushService, ExpoPushService>();
+
             builder.Services.AddOpenApi(); // Keeps the native engine
 
             // DB configuration
@@ -67,6 +75,7 @@ namespace backend2
 
 /* Reference list:
 
+Bravo, R., 2021. expo push notifications helper.cs. (Version 10.0) [Source Code]. Available at: < https://gist.github.com/rbravo/092dda13daf769b031c70d363aaf738d > [Accessed 25 September 2026]
    Microsoft, 2026. Enable Cross-Origin Requests (CORS) in ASP.NET Core. [online] Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/cors> [Accessed 30 August 2026].
 
 */

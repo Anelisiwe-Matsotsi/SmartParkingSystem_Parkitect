@@ -20,6 +20,9 @@ namespace backend2.Data
         public DbSet<Student> Students { get; set; }
         public DbSet<Lecturer> Lecturers { get; set; }
         public DbSet<SecurityPersonnel> SecurityPersonnel { get; set; }
+        public DbSet<PushToken> PushToken { get; set; }
+        public DbSet<Notifications> Notifications { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
