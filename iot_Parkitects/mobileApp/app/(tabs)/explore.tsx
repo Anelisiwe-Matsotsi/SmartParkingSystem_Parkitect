@@ -121,7 +121,7 @@ export default function Example() {
 
   const router = useRouter();
 //
-
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('A01');
@@ -185,7 +185,7 @@ export default function Example() {
 
     try {
       // BASE API URL at the moment it is YOUR wifi network:8000
-      const response = await fetch('http://192.168.0.183:8080/api/Tickets/upload-image', {
+      const response = await fetch(`${API_BASE_URL}/api/Tickets/upload-image`, {
         method: 'POST',
         headers: {
           'Content-Type': 'multipart/form-data',

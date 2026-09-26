@@ -23,7 +23,7 @@ import { ThemedText } from '@/components/themed-text'
 import { useAccessibility } from '@/context/accessibilityContext';
 
 //THE API BASE URL- TO BE CHANGED (same as tickets one-natasha)
-const API_BASE_URL = 'http://192.168.0.183:8080';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 const options = [
   { name: 'Terrible', icon: '😩' },
   { name: 'Bad', icon: '🙁' },
