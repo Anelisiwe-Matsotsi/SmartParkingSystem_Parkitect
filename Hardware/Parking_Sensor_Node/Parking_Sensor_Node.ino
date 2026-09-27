@@ -32,6 +32,14 @@ void loop() {
   // Reads the pulse on a pin and returns the length of the pulse in microseconds (Arduino, 2023d)
   // The 30000 parameter is the timeout to prevent the board from freezing if no echo returns
   long duration = pulseIn(ECHO_PIN, HIGH, 30000);
+
+  // Math logic for calculating distance:
+  // Calculates speed of sound which is ~343 m/s (0.034 cm/us)
+  int distance = duration * 0.034 / 2; // we divide by 2 because the sound wave travels to the object and back (Random Nerd Tutorials, 2019).
+  
+  Serial.print("RESULT: ");
+  Serial.print(distance);
+  Serial.println(" cm");
   
   delay(250);
 
@@ -43,5 +51,6 @@ void loop() {
  * Arduino, 2023b. digitalWrite() (Version 2.0) [Source Code] Available at: < https://www.arduino.cc/reference/en/language/functions/digital-io/digitalwrite/ > [Accessed 16 August 2026]
  * Arduino, 2023c. pinMode() (Version 2.0) [Source Code] Available at: < https://www.arduino.cc/reference/en/language/functions/digital-io/pinmode/ > [Accessed 16 August 2026]
  * Arduino, 2023d. pulseIn() (Version 2.0) [Source Code] Available at: < https://www.arduino.cc/reference/en/language/functions/advanced-io/pulsein/ > [Accessed 16 August 2026]
- 
+ * Random Nerd Tutorials, 2019. Complete Guide for Ultrasonic Sensor HC-SR04 with Arduino. [online] Available at: < https://randomnerdtutorials.com/complete-guide-for-ultrasonic-sensor-hc-sr04/ > [Accessed 18 August 2026]
+
 */
