@@ -15,6 +15,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import FormLabel from "@mui/material/FormLabel";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
+import { getTickets, createTicket, uploadTicketImage, updateTicket, deleteTicket } from "../services/api";
 
 import type { Ticket } from "../models/ticket";
 import {
@@ -128,6 +129,32 @@ export const TicketsPage: React.FC = () => {
 
     if (file) {
       setSelectedImage(file);
+    }
+  };
+
+  //handles the approve button for tickets that are valid
+  const handleApprove= async (ticket: Ticket) => {
+    try {
+      await updateTicket({...ticket, status: "Notified"}, ticket.ticketID);
+      setTickets((prev) => prev.map((t) => (t.ticketID == ticket.ticketID? { ...t, status:"Notified"} : t)));
+    }
+    catch(error) {
+      console.error("Failed to approve ticket", error);
+    } finally{
+      setActiveTicket(null);
+    }
+  };
+
+  //handles the reject button to delete the ticket
+  const handleReject= async (ticketID: number) => {
+    try {
+      await deleteTicket(ticketID);
+      setTickets((prev) => prev.filter((t) => t.ticketID !== ticketID));
+    }
+    catch(error) {
+      console.error("Failed to reject ticket", error);
+    } finally{
+      setActiveTicket(null);
     }
   };
 
@@ -280,12 +307,11 @@ export const TicketsPage: React.FC = () => {
                     role="menu"
                     aria-label={`Actions for ticket ${ticket.ticketID}`}
                   >
-                    {/* Approve and Reject will be implemented by another team member */}
-
                     <button
                       type="button"
                       className="approve"
                       role="menuitem"
+                      onClick={() => handleApprove(ticket)}
                     >
                       Approve
                     </button>
@@ -294,6 +320,7 @@ export const TicketsPage: React.FC = () => {
                       type="button"
                       className="reject"
                       role="menuitem"
+                      onClick={() => handleReject(ticket.ticketID)}
                     >
                       Reject
                     </button>

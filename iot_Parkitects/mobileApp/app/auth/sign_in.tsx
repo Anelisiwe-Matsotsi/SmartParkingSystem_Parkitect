@@ -1,6 +1,7 @@
 //(Withfra.me, 2022)
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { registerForPushNotificationsAsync } from '../../utils/pushNotifications';
 import {
   StyleSheet,
   SafeAreaView,
@@ -56,6 +57,10 @@ export default function SignIn() {
       // checks the found email and password against firebase (Firebase, 2026)
       await signInWithEmailAndPassword(auth, resolvedEmail, form.password);
       
+      if(auth.currentUser)
+      {
+        await registerForPushNotificationsAsync(auth.currentUser.uid); //push notification token given after user logs in
+      }
       // if it passes, they are granted access to the app
       router.replace('/permissions' as any);
       
