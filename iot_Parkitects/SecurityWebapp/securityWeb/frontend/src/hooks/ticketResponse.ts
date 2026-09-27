@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
+import type { Ticket } from "../models/ticket";
 import { getTickets } from "../services/api";
 
 export function useTicketPolling(intervalMs = 5000) {
-  const [tickets, setTickets] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
 
   useEffect(() => {
     let active = true;
     const fetchTickets = async () => {
-      try{
+      try {
         const data = await getTickets();
-      if (active) setTickets(data);
-      } catch (error){
+        if (active) setTickets(data);
+      } catch (error) {
         console.error("error getting tickets", error);
       }
     };
