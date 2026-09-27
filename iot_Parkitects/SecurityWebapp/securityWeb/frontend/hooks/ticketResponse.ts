@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getTickets } from "../services/api";
 
-export function useTicketPolling(intervalMs = 10000) {
+export function useTicketPolling(intervalMs = 5000) {
   const [tickets, setTickets] = useState<any[]>([]);
 
   useEffect(() => {
