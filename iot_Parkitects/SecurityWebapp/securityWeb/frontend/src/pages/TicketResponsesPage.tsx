@@ -1,12 +1,12 @@
 //(rudderz243,2026)
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ticketResponse } from "../hooks/ticketResponse";
+import { useTicketPolling } from "../hooks/ticketResponse";
 import { updateTicket, deleteTicket, getUserByFirebaseUid } from "../services/api";
 
 export const TicketResponsesPage: React.FC = () => {
   const navigate = useNavigate();
-  const tickets = ticketResponse();
+  const tickets = useTicketPolling();
   const responses = tickets.filter((t) => t.status === "Awaiting review");
 
   const [selectedId, setSelectedId] = useState<number | null>(null);

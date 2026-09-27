@@ -7,18 +7,19 @@ namespace backend2.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class NotificationController : Controller
+    public class NotificationController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly IExpoPushService _pushService;
+        //private readonly IExpoPushService _pushService;
         
         public NotificationController(ApplicationDbContext context, IExpoPushService pushService)
         {
             _context = context;
-            _pushService = pushService;
+            //_pushService = pushService;
         }
 
         //register the token when user logs into mobile app
+        [HttpPost("register-token")]
         public async Task<IActionResult> RegisterToken([FromBody] PushTokenDTO dto)
         {
             var existing = await _context.PushToken.FirstOrDefaultAsync(t => t.userID == dto.userID &&
@@ -46,7 +47,7 @@ namespace backend2.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Notifications>>> GetAll()
         {
-            return await _context.Notification.OrderbyDescending(n => n.time).ToListAsync();
+            return await _context.Notifications.OrderByDescending(n => n.time).ToListAsync();
         }
     }
 }

@@ -91,9 +91,9 @@ namespace backend2.Controllers
                 return BadRequest();
             
             //gets the status of the ticket for the ticket response workflow
-            var previousState = await _context.Tickets.Where(t => t.ticketID == id)
+            var previousStatus = await _context.Tickets.Where(t => t.ticketID == id)
                                 .Select(t=> t.status)
-                                .FirstOrDefualtAsync();
+                                .FirstOrDefaultAsync();
 
               ticket.updatedAt = DateTime.UtcNow; //time updated
             _context.Entry(ticket).State = EntityState.Modified;

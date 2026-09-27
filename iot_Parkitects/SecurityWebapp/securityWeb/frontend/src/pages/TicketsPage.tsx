@@ -15,14 +15,9 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import FormLabel from "@mui/material/FormLabel";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
+import type { Ticket } from "../models/ticket";
 import { getTickets, createTicket, uploadTicketImage, updateTicket, deleteTicket } from "../services/api";
 
-import type { Ticket } from "../models/ticket";
-import {
-  getTickets,
-  createTicket,
-  uploadTicketImage,
-} from "../services/api";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
