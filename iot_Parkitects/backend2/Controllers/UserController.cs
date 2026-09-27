@@ -101,10 +101,10 @@ namespace backend2.Controllers
         public async Task<IActionResult> GetFirebaseUid(string firebaseUid)
         {
             //gets the user ID to find the users name for the tickets response page
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.firebaseUid == firebaseUid);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
             if (user == null) return NotFound("User not found");
 
-            return Ok(new { name = user.name });
+            return Ok(new { name = user.Name });
         }
 
     }

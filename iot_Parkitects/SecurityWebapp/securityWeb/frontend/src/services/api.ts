@@ -3,7 +3,7 @@ import type { Ticket } from "../models/ticket";
 const API_URL = import.meta.env.VITE_API_URL;
 
 //gets the users name through firebase ID
-export async function getUserByFirebaseUid(firebaseUid: string): Promise<{name: String}> {
+export async function getUserByFirebaseUid(firebaseUid: string): Promise<{name: string}> {
   const response = await fetch(`${API_URL}/User/user/${firebaseUid}`);
 
   if (!response.ok) {

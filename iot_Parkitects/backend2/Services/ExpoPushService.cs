@@ -11,9 +11,9 @@ namespace backend2.Services
         //(Glyph, Putten and Nasstrom,2022)
         private readonly ApplicationDbContext _context;
         private readonly HttpClient _httpClient;
-        private const string ExpoPushUrl = "http://exp.host/--/api/v2/push/send";
+        private const string ExpoPushUrl = "https://exp.host/--/api/v2/push/send";
 
-        public ExpoPushService(ApplicationDbContext context, IConfiguration config)
+        public ExpoPushService(ApplicationDbContext context, IHttpClientFactory httpClientFactory)
         {
             _context = context;
             _httpClient = httpClientFactory.CreateClient("ExpoPush");
