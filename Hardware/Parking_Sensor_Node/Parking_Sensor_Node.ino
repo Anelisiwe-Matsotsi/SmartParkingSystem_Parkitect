@@ -94,6 +94,14 @@ void setup() {
   BLEDevice::init("Parkitects Beacon");
   BLEServer *pServer = BLEDevice::createServer();
 
+  // BLE broadcasting section (Espressif Systems, 2023a)
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->setScanResponse(true);
+  
+  BLEDevice::startAdvertising();
+  Serial.println("BLE Advertising Started: Parkitects Beacon");
+
   // Firebase section
   // Configures Firebase API Key and Realtime Database URL (Mobizt, 2023)
   config.api_key = API_KEY;
