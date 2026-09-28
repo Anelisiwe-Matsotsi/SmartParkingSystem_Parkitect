@@ -53,6 +53,7 @@ void setup() {
   // Configures Bay 2s sensor and LED pins as input or output (Arduino, 2023c)
   pinMode(TRIG_PIN_2, OUTPUT);
   pinMode(ECHO_PIN_2, INPUT);
+  pinMode(RED_PIN_2, OUTPUT);
   pinMode(GREEN_PIN_2, OUTPUT);
 
   // Turns Bay 1s LEDs OFF initially (anode logic >> HIGH = OFF) (Arduino, 2023b)
@@ -110,7 +111,7 @@ void setup() {
 }
 
 // Created this function to trigger, read and display the occupancy status for either of the 2 bays
-void processBay(int trigPin, int echoPin, int redPin, int greenPin, String bayId, bool &lastState, int &lastDist {
+void processBay(int trigPin, int echoPin, int redPin, int greenPin, String bayId, bool &lastState, int &lastDist) {
   // Clears and sends a pulse (Arduino, 2023b)
   // This fires the trigger
   digitalWrite(trigPin, LOW); // Clears the trigger pin by setting the voltage to LOW (Arduino, 2023b)
@@ -148,15 +149,15 @@ void processBay(int trigPin, int echoPin, int redPin, int greenPin, String bayId
   // Changes the LED colours based off the occupancy state
   if (isCurrentlyOccupied)
   {
-    // Turns the green light ON (LOW) and RED OFF (HIGH) (Arduino, 2023b)
-    digitalWrite(greenPin, LOW);
-    digitalWrite(redPin, HIGH);
-  } 
-  else
-  {
     // Turns red ON (LOW) and GREEN OFF (HIGH) (Arduino, 2023b)
     digitalWrite(redPin, LOW);
     digitalWrite(greenPin, HIGH);
+  } 
+  else
+  {
+    // Turns the green light ON (LOW) and RED OFF (HIGH) (Arduino, 2023b)
+    digitalWrite(greenPin, LOW);
+    digitalWrite(redPin, HIGH);
   }
 
   // Determines if the parking status changed or if distance just shifted by at least 4cm
@@ -200,13 +201,13 @@ void processBay(int trigPin, int echoPin, int redPin, int greenPin, String bayId
 
 void loop() {
   // Runs the scan for Bay 1
-  processBay(TRIG_PIN_1, ECHO_PIN_1, RED_PIN_1, GREEN_PIN_1, "BAY 1");
+  processBay(TRIG_PIN, ECHO_PIN, RED_PIN, GREEN_PIN, "Bay1", lastStateBay1, lastDistBay1);
   
   // 50ms time allows the physical ultrasonic reflections to clear before triggering the next sensor
   delay(50);
   
   // Runs rhe scan for Bay 2
-  processBay(TRIG_PIN_2, ECHO_PIN_2, RED_PIN_2, GREEN_PIN_2, "BAY 2");
+  processBay(TRIG_PIN_2, ECHO_PIN_2, RED_PIN_2, GREEN_PIN_2, "Bay2", lastStateBay2, lastDistBay2);
   
   Serial.println("-------------------------");
   
