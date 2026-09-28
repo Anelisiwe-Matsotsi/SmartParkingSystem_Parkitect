@@ -17,7 +17,9 @@
         "foregroundImage": "./assets/images/parki-logo.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.nattyexpo.MobileApp",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",

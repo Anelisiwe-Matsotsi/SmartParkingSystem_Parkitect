@@ -16,26 +16,43 @@ Notifications.setNotificationHandler({
 
 //(Expo Docs, 2026b)
 export async function registerForPushNotificationsAsync(userID: string) {
-  if (!Device.isDevice) return null;
-
+  if (!Device.isDevice) {
+    console.warn('Must use physical device for Push Notifications')
+    return null;
+  }
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Default',
       importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
     });
   }
 
+  //Request permissions
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
-  if (existingStatus !== 'granted') {
-    finalStatus = (await Notifications.requestPermissionsAsync()).status;
-  }
-  if (finalStatus !== 'granted') return null;
 
+  if (existingStatus !== 'granted') {
+    const{ status } = await Notifications.requestPermissionsAsync();
+    finalStatus = status;
+  }
+  if (finalStatus !== 'granted') 
+  {
+    console.warn('Failed to get push token for push notification!')
+    return null;
+}
+//get project id from app.json
   const projectId =
     Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+    if (!projectId) {
+      console.error('Project Id mot found in app.js')
+      return null;
+    }
+    try {
   const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync({ projectId });
 
+  //register token with backend API
   await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/notification/register-token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -43,6 +60,11 @@ export async function registerForPushNotificationsAsync(userID: string) {
   });
 
   return expoPushToken;
+}
+catch (error) {
+  console.error('Error fetching Expo Push token:', error);
+  return null;
+}
 }
 
 /*References

@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using backend2.Data;
 using System.Text;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend2.Services
 {
@@ -29,7 +29,8 @@ namespace backend2.Services
             }
 
             //object to store the notification message to json
-            var payload = new {to = expoPushToken, title, body, data, sound = "default"};
+            var payload = new {to = expoPushToken, title, body, data, sound = "default",
+             _displayInForeground = true};//makes sure that notification pops up when app is open
             //(Glyph, Putten and Nasstrom,2022)
             var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
             await _httpClient.PostAsync(ExpoPushUrl, content);

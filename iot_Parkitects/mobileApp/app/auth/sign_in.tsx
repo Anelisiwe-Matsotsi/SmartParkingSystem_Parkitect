@@ -4,14 +4,16 @@ import { useRouter } from 'expo-router';
 import { registerForPushNotificationsAsync } from '../../utils/pushNotifications';
 import {
   StyleSheet,
-  SafeAreaView,
   View,
   Image,
   Text,
   TouchableOpacity,
+  InteractionManager,
   TextInput,
   Alert // pulling in alerts to show login errors (React Native, 2026)
 } from 'react-native';
+
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/theme';
 
 // importing the login function from firebase
@@ -28,6 +30,8 @@ export default function SignIn() {
 
   const [isLoading, setIsLoading] = useState(false);
 
+
+ 
   // this fires when the user presses the login button
   const handleLogin = async () => {
     if (!form.userNumber || !form.password) 
@@ -56,6 +60,16 @@ export default function SignIn() {
 
       // checks the found email and password against firebase (Firebase, 2026)
       await signInWithEmailAndPassword(auth, resolvedEmail, form.password);
+
+       const uid = auth.currentUser?.uid;
+
+       router.replace('/permissions' as any);
+
+       if (uid) {
+        InteractionManager.runAfterInteractions(() => {
+          registerForPushNotificationsAsync(uid);
+        });
+       }
       
       if(auth.currentUser)
       {

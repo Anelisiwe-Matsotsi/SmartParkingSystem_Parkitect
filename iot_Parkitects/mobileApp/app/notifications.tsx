@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback} from 'react';
 import {
   StyleSheet,
-  SafeAreaView,
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import FeatherIcon from '@expo/vector-icons/Feather';
+import {auth} from '../config/firebaseConfig'
+import { registerForPushNotificationsAsync } from '@/utils/pushNotifications';
 
 type NotificationType = 'complaint' | 'info' | 'reminder' | 'alert';
 
@@ -26,14 +29,17 @@ export default function NotificationsScreen() {
   const router = useRouter();
 
   const isParked = true;
+  const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [complaintFixed, setComplaintFixed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+
+
   // gets the driver's own tickets that and general notiifications (Expo, 2026)
   const loadNotifications = useCallback(async () => {
-    const firebaseUid = auth.currentUser?.uid;
+    const firebaseUid = auth?.currentUser?.uid;
     if (!firebaseUid) {
       setLoading(false);
       return;
@@ -147,6 +153,7 @@ const handleOpenNotification = (item: NotificationItem) => {
   };
 
   return (
+    <View style ={styles.container}>
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <TouchableOpacity
@@ -160,6 +167,7 @@ const handleOpenNotification = (item: NotificationItem) => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={false}
         contentContainerStyle={styles.scrollContainer}
       >
         <Text style={styles.screenTitle}>Notifications</Text>
@@ -226,22 +234,17 @@ const handleOpenNotification = (item: NotificationItem) => {
           </View>
         )}
       </ScrollView>
-
+</SafeAreaView>
       {/* Detail Modal */}
-      <Modal
-        visible={selectedNotification !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={handleCloseModal}
-      >
+      {selectedNotification !== null && (
+        <View style = {StyleSheet.absoluteFillObject}>
+       
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={handleCloseModal}
         >
           <TouchableOpacity style={styles.modalCard} activeOpacity={1}>
-            {selectedNotification && (
-              <>
                 <View style={styles.modalIconBadge}>
                   <FeatherIcon
                     name={getModalIconName(selectedNotification.type)}
@@ -290,16 +293,22 @@ const handleOpenNotification = (item: NotificationItem) => {
                     <Text style={styles.btnPrimaryText}>Got it</Text>
                   </TouchableOpacity>
                 )}
-              </>
-            )}
+            
+          
           </TouchableOpacity>
         </TouchableOpacity>
-      </Modal>
-    </SafeAreaView>
+        </View>
+      )}
+    </View>
   );
-}
 
+}
 const styles = StyleSheet.create({
+
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
   safeArea: {
     flex: 1,
     backgroundColor: '#F8FAFC',

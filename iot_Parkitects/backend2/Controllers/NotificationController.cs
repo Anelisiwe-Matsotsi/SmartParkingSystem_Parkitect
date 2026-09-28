@@ -11,12 +11,12 @@ namespace backend2.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        //private readonly IExpoPushService _pushService;
+        private readonly IExpoPushService _pushService;
         
         public NotificationController(ApplicationDbContext context, IExpoPushService pushService)
         {
             _context = context;
-            //_pushService = pushService;
+            _pushService = pushService;
         }
 
         //register the token when user logs into mobile app
