@@ -9,26 +9,33 @@ const int ECHO_PIN = 7;
 const int RED_PIN = 2;
 const int GREEN_PIN = 3;
 
-// this is for the second sensor
+// this is for the second sensor + LED
 const int TRIG_PIN_2 = 6;
 const int ECHO_PIN_2 = 8;
+const int RED_PIN_2 = 9;
+const int GREEN_PIN_2 = 18;
 
 void setup() {
   Serial.begin(115200); // Initializes serial communication at 115200 bits per second
 
-  // Configures the specified pins to act either as an input or an output (Arduino, 2023c)
+  // Configures the specified pins to act either as an input or an output for Bay 1 (Arduino, 2023c)
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
   pinMode(RED_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
 
-  // Configures Bay 2s sensor pins as input or output (Arduino, 2023c)
+  // Configures Bay 2s sensor and LED pins as input or output (Arduino, 2023c)
   pinMode(TRIG_PIN_2, OUTPUT);
   pinMode(ECHO_PIN_2, INPUT);
+  pinMode(GREEN_PIN_2, OUTPUT);
 
   // Turns Bay 1s LEDs OFF initially (anode logic >> HIGH = OFF) (Arduino, 2023b)
   digitalWrite(RED_PIN, HIGH);
   digitalWrite(GREEN_PIN, HIGH);
+
+  // Turns Bay 2s LEDs OFF initially (anode logic >> HIGH = OFF) (Arduino, 2023b)
+  digitalWrite(RED_PIN_2, HIGH);
+  digitalWrite(GREEN_PIN_2, HIGH);
   
   delay(1000); 
   Serial.println("Starting Distance Test with Bay 2's Sensor added...");
@@ -40,17 +47,16 @@ void loop() {
   // Bay 1
   digitalWrite(TRIG_PIN, LOW); // Clears the trigger pin by setting the voltage to LOW (Arduino, 2023b)
   delayMicroseconds(2); // Pauses the program for the amount of time (in microseconds) specified (Arduino, 2023a)
-
   // Fires the pulse by setting the pin to HIGH for 20 microseconds (Arduino, 2023b)
   digitalWrite(TRIG_PIN, HIGH);
   delayMicroseconds(20);
-
   digitalWrite(TRIG_PIN, LOW);
 
   // Reads the pulse on a pin and returns the length of the pulse in microseconds (Arduino, 2023d)
   // The 30000 parameter is the timeout to prevent the board from freezing if no echo returns
   long duration = pulseIn(ECHO_PIN, HIGH, 30000);
 
+  // this logic still ONLY shows the sensor reading for Bay 1 (we only configured the pin allocations for Bay 2 thus far)
   // Logic for the RGB LEDs to turn green when parking spot is available (specified distance) or red when occupied (passed the specified distance)
   // 0 represents a timeout from the sensors 20cm blind spot, meaning the bay is occupied
   if (duration == 0) 
