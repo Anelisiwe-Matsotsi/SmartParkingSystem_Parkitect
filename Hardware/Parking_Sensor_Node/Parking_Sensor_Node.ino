@@ -42,29 +42,29 @@ void setup() {
 
 }
 
-void loop() {
+// Created this function to trigger, read and display the occupancy status for either of the 2 bays
+void processBay(int trigPin, int echoPin, int redPin, int greenPin, String bayName) {
+  // Clears and sends a pulse (Arduino, 2023b)
   // This fires the trigger
-  // Bay 1
-  digitalWrite(TRIG_PIN, LOW); // Clears the trigger pin by setting the voltage to LOW (Arduino, 2023b)
+  digitalWrite(trigPin, LOW); // Clears the trigger pin by setting the voltage to LOW (Arduino, 2023b)
   delayMicroseconds(2); // Pauses the program for the amount of time (in microseconds) specified (Arduino, 2023a)
   // Fires the pulse by setting the pin to HIGH for 20 microseconds (Arduino, 2023b)
-  digitalWrite(TRIG_PIN, HIGH);
+  digitalWrite(trigPin, HIGH);
   delayMicroseconds(20);
-  digitalWrite(TRIG_PIN, LOW);
+  digitalWrite(trigPin, LOW);
 
   // Reads the pulse on a pin and returns the length of the pulse in microseconds (Arduino, 2023d)
   // The 30000 parameter is the timeout to prevent the board from freezing if no echo returns
-  long duration = pulseIn(ECHO_PIN, HIGH, 30000);
+  long duration = pulseIn(echoPin, HIGH, 30000);
 
-  // this logic still ONLY shows the sensor reading for Bay 1 (we only configured the pin allocations for Bay 2 thus far)
   // Logic for the RGB LEDs to turn green when parking spot is available (specified distance) or red when occupied (passed the specified distance)
   // 0 represents a timeout from the sensors 20cm blind spot, meaning the bay is occupied
   if (duration == 0) 
   {
-    Serial.println("RESULT: NO ECHO (Likely Occupied / Blocked)");
+    Serial.println(bayName + " Status: Occupied");
     // Turns the red light ON (LOW) and green OFF (HIGH) (Arduino, 2023b)
-    digitalWrite(RED_PIN, LOW);
-    digitalWrite(GREEN_PIN, HIGH);
+    digitalWrite(redPin, LOW);
+    digitalWrite(greenPin, HIGH);
   } 
   else 
   {
@@ -72,7 +72,7 @@ void loop() {
     // Calculates speed of sound which is ~343 m/s (0.034 cm/us)
     int distance = duration * 0.034 / 2; // we divide by 2 because the sound wave travels to the object and back (Random Nerd Tutorials, 2019).
     
-    Serial.print("RESULT: ");
+    Serial.print(bayName + " Distance: ");
     Serial.print(distance);
     Serial.println(" cm");
 
@@ -80,16 +80,29 @@ void loop() {
     if (distance > 60) // empty bay
     {
       // Turns the green light ON (LOW) and RED OFF (HIGH) (Arduino, 2023b)
-      digitalWrite(GREEN_PIN, LOW);
-      digitalWrite(RED_PIN, HIGH);
+      digitalWrite(greenPin, LOW);
+      digitalWrite(redPin, HIGH);
     } 
     else // occupied
     {
       // Turns red ON (LOW) and GREEN OFF (HIGH) (Arduino, 2023b)
-      digitalWrite(RED_PIN, LOW);
-      digitalWrite(GREEN_PIN, HIGH);
+      digitalWrite(redPin, LOW);
+      digitalWrite(greenPin, HIGH);
     }
   }
+}
+
+void loop() {
+  // Runs the scan for Bay 1
+  processBay(TRIG_PIN_1, ECHO_PIN_1, RED_PIN_1, GREEN_PIN_1, "BAY 1");
+  
+  // 50ms time allows the physical ultrasonic reflections to clear before triggering the next sensor
+  delay(50);
+  
+  // Runs rhe scan for Bay 2
+  processBay(TRIG_PIN_2, ECHO_PIN_2, RED_PIN_2, GREEN_PIN_2, "BAY 2");
+  
+  Serial.println("-------------------------");
   
   delay(250);
 
