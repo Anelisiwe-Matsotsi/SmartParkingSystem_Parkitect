@@ -3,8 +3,15 @@
 // This is our pin setup. We are using the DFRobot Firebeetle 2 ESP32-C6 board on port 7 to flash the esp
 #include <Arduino.h>
 
+// this is for the first parking sensor + LED
 const int TRIG_PIN = 5;  // using pin 5 because pin 4 was found faulty on esp (didnt send trigger correctly unless I held it securely with my finger - cracked solder)
 const int ECHO_PIN = 7;
+const int RED_PIN = 2;
+const int GREEN_PIN = 3;
+
+// this is for the second sensor
+const int TRIG_PIN_2 = 6;
+const int ECHO_PIN_2 = 8;
 
 void setup() {
   Serial.begin(115200); // Initializes serial communication at 115200 bits per second
@@ -12,14 +19,25 @@ void setup() {
   // Configures the specified pins to act either as an input or an output (Arduino, 2023c)
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
+  pinMode(RED_PIN, OUTPUT);
+  pinMode(GREEN_PIN, OUTPUT);
+
+  // Configures Bay 2s sensor pins as input or output (Arduino, 2023c)
+  pinMode(TRIG_PIN_2, OUTPUT);
+  pinMode(ECHO_PIN_2, INPUT);
+
+  // Turns Bay 1s LEDs OFF initially (anode logic >> HIGH = OFF) (Arduino, 2023b)
+  digitalWrite(RED_PIN, HIGH);
+  digitalWrite(GREEN_PIN, HIGH);
   
   delay(1000); 
-  Serial.println("Starting Distance Test...");
+  Serial.println("Starting Distance Test with Bay 2's Sensor added...");
 
 }
 
 void loop() {
   // This fires the trigger
+  // Bay 1
   digitalWrite(TRIG_PIN, LOW); // Clears the trigger pin by setting the voltage to LOW (Arduino, 2023b)
   delayMicroseconds(2); // Pauses the program for the amount of time (in microseconds) specified (Arduino, 2023a)
 
@@ -33,13 +51,39 @@ void loop() {
   // The 30000 parameter is the timeout to prevent the board from freezing if no echo returns
   long duration = pulseIn(ECHO_PIN, HIGH, 30000);
 
-  // Math logic for calculating distance:
-  // Calculates speed of sound which is ~343 m/s (0.034 cm/us)
-  int distance = duration * 0.034 / 2; // we divide by 2 because the sound wave travels to the object and back (Random Nerd Tutorials, 2019).
-  
-  Serial.print("RESULT: ");
-  Serial.print(distance);
-  Serial.println(" cm");
+  // Logic for the RGB LEDs to turn green when parking spot is available (specified distance) or red when occupied (passed the specified distance)
+  // 0 represents a timeout from the sensors 20cm blind spot, meaning the bay is occupied
+  if (duration == 0) 
+  {
+    Serial.println("RESULT: NO ECHO (Likely Occupied / Blocked)");
+    // Turns the red light ON (LOW) and green OFF (HIGH) (Arduino, 2023b)
+    digitalWrite(RED_PIN, LOW);
+    digitalWrite(GREEN_PIN, HIGH);
+  } 
+  else 
+  {
+    // Math logic for calculating distance:
+    // Calculates speed of sound which is ~343 m/s (0.034 cm/us)
+    int distance = duration * 0.034 / 2; // we divide by 2 because the sound wave travels to the object and back (Random Nerd Tutorials, 2019).
+    
+    Serial.print("RESULT: ");
+    Serial.print(distance);
+    Serial.println(" cm");
+
+    // Checks the bays occupancy based on the distance threshold (60cm)
+    if (distance > 60) // empty bay
+    {
+      // Turns the green light ON (LOW) and RED OFF (HIGH) (Arduino, 2023b)
+      digitalWrite(GREEN_PIN, LOW);
+      digitalWrite(RED_PIN, HIGH);
+    } 
+    else // occupied
+    {
+      // Turns red ON (LOW) and GREEN OFF (HIGH) (Arduino, 2023b)
+      digitalWrite(RED_PIN, LOW);
+      digitalWrite(GREEN_PIN, HIGH);
+    }
+  }
   
   delay(250);
 
