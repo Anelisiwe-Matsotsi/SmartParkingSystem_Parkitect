@@ -22,6 +22,13 @@ FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
+// Default memeory states to track changes and prevent spamming network calls
+bool lastStateBay1 = false;
+int lastDistBay1 = -1;
+
+bool lastStateBay2 = false;
+int lastDistBay2 = -1;
+
 // this is for the first parking sensor + LED
 const int TRIG_PIN = 5;  // using pin 5 because pin 4 was found faulty on esp (didnt send trigger correctly unless I held it securely with my finger - cracked solder)
 const int ECHO_PIN = 7;
@@ -115,7 +122,7 @@ void processBay(int trigPin, int echoPin, int redPin, int greenPin, String bayId
 
   // Reads the pulse on a pin and returns the length of the pulse in microseconds (Arduino, 2023d)
   // The 30000 parameter is the timeout to prevent the board from freezing if no echo returns
-  long duration = pulseIn(echoPin, HIGH, 30000);\
+  long duration = pulseIn(echoPin, HIGH, 30000);
   int currentDistance = 0;
   bool isCurrentlyOccupied = false;
 
@@ -156,16 +163,37 @@ void processBay(int trigPin, int echoPin, int redPin, int greenPin, String bayId
   bool stateChanged = (isCurrentlyOccupied != lastState);
   bool distanceShifted = (abs(currentDistance - lastDist) >= 4);
 
-  if (stateChanged || distanceShifted) 
+  if ((stateChanged || distanceShifted) && Firebase.ready()) 
   {
     lastState = isCurrentlyOccupied;
     lastDist = currentDistance;
 
-    Serial.print("[" + bayId + "] Telemetry Updated: ");
-    Serial.print(isCurrentlyOccupied ? "Occupied" : "Available");
-    Serial.print(" | Distance: ");
-    Serial.print(currentDistance);
-    Serial.println(" cm");
+    String basePath = "/ParkingLots/Lot_A/nodes/Node_01/bays/" + bayId;
+    FirebaseJson json; // Creates structured JSON object for batch transmission (Mobizt, 2023)
+
+    json.set("status", isCurrentlyOccupied ? "Occupied" : "Available");
+    json.set("distanceCm", currentDistance);
+    json.set("isLive", true);
+
+    // Leaves user identifier ready for mobile app handshake
+    if (isCurrentlyOccupied) 
+    {
+      json.set("occupiedByUserId", "Anonymous"); // anonymous if the user refuses to use the mobile app and connect to the BLE linking their user account details
+    } 
+    else 
+    {
+      json.set("occupiedByUserId", "None");
+    }
+
+    // Pushes all fields in one single network packet to avoid ESP32 freezing (Mobizt, 2023)
+    if (Firebase.RTDB.updateNode(&fbdo, basePath, &json)) 
+    {
+      Serial.printf("[%s] Live Sync: %s (%d cm)\n", bayId.c_str(), isCurrentlyOccupied ? "Occupied" : "Available", currentDistance);
+    } 
+    else 
+    {
+      Serial.printf("[%s] Sync Error: %s\n", bayId.c_str(), fbdo.errorReason().c_str());
+    }
   }
 
 }
