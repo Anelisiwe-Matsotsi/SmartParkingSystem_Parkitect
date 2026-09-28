@@ -2,6 +2,25 @@
 
 // This is our pin setup. We are using the DFRobot Firebeetle 2 ESP32-C6 board on port 7 to flash the esp
 #include <Arduino.h>
+#include <WiFi.h> // ESP32 wifi driver library (Espressif Systems, 2023)
+#include <Firebase_ESP_Client.h> // Firebase RTDB Client (Mobizt, 2023)
+
+// Helper headers for Firebase token generation and RTDB operations (Mobizt, 2023)
+#include "addons/TokenHelper.h"
+#include "addons/RTDBHelper.h"
+
+// Wifi credentials (will have to update to varsity wifi/personal hotspot at a later stage when testing live in parking lot)
+#define WIFI_SSID "HUAWEI-B525-B6DF"
+#define WIFI_PASSWORD "0L659M2Y403"
+
+// Firebase Project Credentials
+#define API_KEY "AIzaSyDbL55frdOhcMZPmW3HiUFhBb7AWbj6Nwg"
+#define DATABASE_URL "https://wil-smartparking-default-rtdb.firebaseio.com"
+
+// Firebase core objects (Mobizt, 2023)
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
 
 // this is for the first parking sensor + LED
 const int TRIG_PIN = 5;  // using pin 5 because pin 4 was found faulty on esp (didnt send trigger correctly unless I held it securely with my finger - cracked solder)
@@ -36,9 +55,50 @@ void setup() {
   // Turns Bay 2s LEDs OFF initially (anode logic >> HIGH = OFF) (Arduino, 2023b)
   digitalWrite(RED_PIN_2, HIGH);
   digitalWrite(GREEN_PIN_2, HIGH);
+
+  // Wifi section
+  // Connects ESP32 Station mode to the local Wi-Fi router (Espressif Systems, 2023)
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Connecting to Wifi");
+
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+    delay(300);
+    Serial.print(".");
+  }
+
+  Serial.println("\nWifi Connected successfully.");
+  Serial.print("ESP32 IP Address: ");
+  Serial.println(WiFi.localIP());
+
+  // Firebase section
+  // Configures Firebase API Key and Realtime Database URL (Mobizt, 2023)
+  config.api_key = API_KEY;
+  config.database_url = DATABASE_URL;
+
+  // Registers anonymous credentials to use token for communication (Mobizt, 2023)
+  if (Firebase.signUp(&config, &auth, "", "")) 
+  {
+    Serial.println("Firebase Auth Successful.");
+  } 
+  else 
+  {
+    Serial.printf("Firebase Auth Error: %s\n", config.signer.signupError.message.c_str());
+  }
+
+  config.token_status_callback = tokenStatusCallback;
+  
+  // Sets memory buffer limits to ensure quick operations
+  fbdo.setResponseSize(1024);
+  fbdo.setBSSLBufferSize(1024, 512);
+
+  // Starts the Firebase client services (Mobizt, 2023)
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
   
   delay(1000); 
-  Serial.println("Starting Distance Test with Bay 2's Sensor added...");
+  Serial.println("Starting Distance Test with Bay 1 & 2's sensors...");
 
 }
 
@@ -114,6 +174,8 @@ void loop() {
  * Arduino, 2023b. digitalWrite() (Version 2.0) [Source Code] Available at: < https://www.arduino.cc/reference/en/language/functions/digital-io/digitalwrite/ > [Accessed 16 August 2026]
  * Arduino, 2023c. pinMode() (Version 2.0) [Source Code] Available at: < https://www.arduino.cc/reference/en/language/functions/digital-io/pinmode/ > [Accessed 16 August 2026]
  * Arduino, 2023d. pulseIn() (Version 2.0) [Source Code] Available at: < https://www.arduino.cc/reference/en/language/functions/advanced-io/pulsein/ > [Accessed 16 August 2026]
+ * Espressif Systems, 2023. WiFi Station Example (Version 3.0) [Source Code] Available at: < https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi > [Accessed 22 August 2026]
+ * Mobizt, 2023. Firebase Arduino Client Library for ESP8266 and ESP32 (Version 4.4.14) [Source Code] Available at: < https://github.com/mobizt/Firebase-ESP-Client > [Accessed 22 August 2026]
  * Random Nerd Tutorials, 2019. Complete Guide for Ultrasonic Sensor HC-SR04 with Arduino. [online] Available at: < https://randomnerdtutorials.com/complete-guide-for-ultrasonic-sensor-hc-sr04/ > [Accessed 18 August 2026]
 
 */
