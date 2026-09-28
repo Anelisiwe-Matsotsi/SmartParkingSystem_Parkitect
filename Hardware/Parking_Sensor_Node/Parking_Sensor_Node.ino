@@ -103,7 +103,7 @@ void setup() {
 }
 
 // Created this function to trigger, read and display the occupancy status for either of the 2 bays
-void processBay(int trigPin, int echoPin, int redPin, int greenPin, String bayName) {
+void processBay(int trigPin, int echoPin, int redPin, int greenPin, String bayId, bool &lastState, int &lastDist {
   // Clears and sends a pulse (Arduino, 2023b)
   // This fires the trigger
   digitalWrite(trigPin, LOW); // Clears the trigger pin by setting the voltage to LOW (Arduino, 2023b)
@@ -115,41 +115,59 @@ void processBay(int trigPin, int echoPin, int redPin, int greenPin, String bayNa
 
   // Reads the pulse on a pin and returns the length of the pulse in microseconds (Arduino, 2023d)
   // The 30000 parameter is the timeout to prevent the board from freezing if no echo returns
-  long duration = pulseIn(echoPin, HIGH, 30000);
+  long duration = pulseIn(echoPin, HIGH, 30000);\
+  int currentDistance = 0;
+  bool isCurrentlyOccupied = false;
 
   // Logic for the RGB LEDs to turn green when parking spot is available (specified distance) or red when occupied (passed the specified distance)
   // 0 represents a timeout from the sensors 20cm blind spot, meaning the bay is occupied
   if (duration == 0) 
   {
-    Serial.println(bayName + " Status: Occupied");
+    Serial.println(bayId + " Status: Occupied");
+    isCurrentlyOccupied = true;
+    currentDistance = 0;
     // Turns the red light ON (LOW) and green OFF (HIGH) (Arduino, 2023b)
     digitalWrite(redPin, LOW);
     digitalWrite(greenPin, HIGH);
   } 
   else 
   {
-    // Math logic for calculating distance:
-    // Calculates speed of sound which is ~343 m/s (0.034 cm/us)
-    int distance = duration * 0.034 / 2; // we divide by 2 because the sound wave travels to the object and back (Random Nerd Tutorials, 2019).
-    
-    Serial.print(bayName + " Distance: ");
-    Serial.print(distance);
-    Serial.println(" cm");
-
-    // Checks the bays occupancy based on the distance threshold (60cm)
-    if (distance > 60) // empty bay
-    {
-      // Turns the green light ON (LOW) and RED OFF (HIGH) (Arduino, 2023b)
-      digitalWrite(greenPin, LOW);
-      digitalWrite(redPin, HIGH);
-    } 
-    else // occupied
-    {
-      // Turns red ON (LOW) and GREEN OFF (HIGH) (Arduino, 2023b)
-      digitalWrite(redPin, LOW);
-      digitalWrite(greenPin, HIGH);
-    }
+    // Calculates speed of sound (Random Nerd Tutorials, 2019)
+    currentDistance = duration * 0.034 / 2;
+    isCurrentlyOccupied = (currentDistance <= 60);
   }
+
+  // LED section
+  // Changes the LED colours based off the occupancy state
+  if (isCurrentlyOccupied)
+  {
+    // Turns the green light ON (LOW) and RED OFF (HIGH) (Arduino, 2023b)
+    digitalWrite(greenPin, LOW);
+    digitalWrite(redPin, HIGH);
+  } 
+  else
+  {
+    // Turns red ON (LOW) and GREEN OFF (HIGH) (Arduino, 2023b)
+    digitalWrite(redPin, LOW);
+    digitalWrite(greenPin, HIGH);
+  }
+
+  // Determines if the parking status changed or if distance just shifted by at least 4cm
+  bool stateChanged = (isCurrentlyOccupied != lastState);
+  bool distanceShifted = (abs(currentDistance - lastDist) >= 4);
+
+  if (stateChanged || distanceShifted) 
+  {
+    lastState = isCurrentlyOccupied;
+    lastDist = currentDistance;
+
+    Serial.print("[" + bayId + "] Telemetry Updated: ");
+    Serial.print(isCurrentlyOccupied ? "Occupied" : "Available");
+    Serial.print(" | Distance: ");
+    Serial.print(currentDistance);
+    Serial.println(" cm");
+  }
+
 }
 
 void loop() {
