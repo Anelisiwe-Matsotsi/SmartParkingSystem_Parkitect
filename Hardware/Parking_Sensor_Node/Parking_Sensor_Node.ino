@@ -2,8 +2,13 @@
 
 // This is our pin setup. We are using the DFRobot Firebeetle 2 ESP32-C6 board on port 7 to flash the esp
 #include <Arduino.h>
-#include <WiFi.h> // ESP32 wifi driver library (Espressif Systems, 2023)
+#include <WiFi.h> // ESP32 wifi driver library (Espressif Systems, 2023b)
 #include <Firebase_ESP_Client.h> // Firebase RTDB Client (Mobizt, 2023)
+
+// BLE Headers that will be needed for our FindMyCar feature (Espressif Systems, 2023a)
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
 
 // Helper headers for Firebase token generation and RTDB operations (Mobizt, 2023)
 #include "addons/TokenHelper.h"
@@ -16,6 +21,9 @@
 // Firebase Project Credentials
 #define API_KEY "AIzaSyDbL55frdOhcMZPmW3HiUFhBb7AWbj6Nwg"
 #define DATABASE_URL "https://wil-smartparking-default-rtdb.firebaseio.com"
+
+// BLE unique id for the mobile app link
+#define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 
 // Firebase core objects (Mobizt, 2023)
 FirebaseData fbdo;
@@ -65,7 +73,7 @@ void setup() {
   digitalWrite(GREEN_PIN_2, HIGH);
 
   // Wifi section
-  // Connects ESP32 Station mode to the local Wi-Fi router (Espressif Systems, 2023)
+  // Connects ESP32 Station mode to the local Wi-Fi router (Espressif Systems, 2023b)
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to Wifi");
@@ -79,6 +87,12 @@ void setup() {
   Serial.println("\nWifi Connected successfully.");
   Serial.print("ESP32 IP Address: ");
   Serial.println(WiFi.localIP());
+
+  // Bluetooth beacon section
+  // BLE Setup (Espressif Systems, 2023a)
+  Serial.println("Initializing BLE Server...");
+  BLEDevice::init("Parkitects Beacon");
+  BLEServer *pServer = BLEDevice::createServer();
 
   // Firebase section
   // Configures Firebase API Key and Realtime Database URL (Mobizt, 2023)
@@ -221,7 +235,8 @@ void loop() {
  * Arduino, 2023b. digitalWrite() (Version 2.0) [Source Code] Available at: < https://www.arduino.cc/reference/en/language/functions/digital-io/digitalwrite/ > [Accessed 16 August 2026]
  * Arduino, 2023c. pinMode() (Version 2.0) [Source Code] Available at: < https://www.arduino.cc/reference/en/language/functions/digital-io/pinmode/ > [Accessed 16 August 2026]
  * Arduino, 2023d. pulseIn() (Version 2.0) [Source Code] Available at: < https://www.arduino.cc/reference/en/language/functions/advanced-io/pulsein/ > [Accessed 16 August 2026]
- * Espressif Systems, 2023. WiFi Station Example (Version 3.0) [Source Code] Available at: < https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi > [Accessed 22 August 2026]
+ * Espressif Systems, 2023a. BLE_Beacon Example (Version 3.0) [Source Code] Available at: < https://github.com/espressif/arduino-esp32/tree/master/libraries/BLE > [Accessed 24 August 2026]
+ * Espressif Systems, 2023b. WiFi Station Example (Version 3.0) [Source Code] Available at: < https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi > [Accessed 22 August 2026]
  * Mobizt, 2023. Firebase Arduino Client Library for ESP8266 and ESP32 (Version 4.4.14) [Source Code] Available at: < https://github.com/mobizt/Firebase-ESP-Client > [Accessed 22 August 2026]
  * Random Nerd Tutorials, 2019. Complete Guide for Ultrasonic Sensor HC-SR04 with Arduino. [online] Available at: < https://randomnerdtutorials.com/complete-guide-for-ultrasonic-sensor-hc-sr04/ > [Accessed 18 August 2026]
 
