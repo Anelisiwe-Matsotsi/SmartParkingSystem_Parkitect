@@ -168,3 +168,5 @@ export function scanNearbyNodes(durationMs = 4000): Promise<NearbyNode[]> {
     });
   });
 }
+//https://dev.to/harmonyos/estimating-distance-to-ble-beacons-using-rssi-and-txpower-in-harmonyos-2nic
+//https://dotintent.github.io/react-native-ble-plx/

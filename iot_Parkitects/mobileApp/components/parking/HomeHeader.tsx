@@ -9,16 +9,23 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
-  Image
+  Image,
+  Alert
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
-
+import {
+  requestBlePermissions,
+  isBluetoothOn,
+  tryEnableBluetooth,
+  scanNearbyNodes,
+} from '@/utils/ble';
 import SearchBar from "./SearchBar";
 
 export default function HomeHeader() {
   const router = useRouter();
   const availableSpaces = 3;
   const [showAlert, setShowAlert] = useState(true);
+  const [scanning, setScanning] = useState(false);
   return (
     <SafeAreaView style={styles.wrapper}>
       <View style={styles.container}>
@@ -79,6 +86,93 @@ export default function HomeHeader() {
               name="arrow-right"
               size={24} />
           </TouchableOpacity>
+
+          <TouchableOpacity
+  style={styles.parkingButton}
+ onPress={async () => {
+  try {
+    setScanning(true);
+
+    const permissionResult = await requestBlePermissions();
+
+    if (permissionResult === 'blocked') {
+      Alert.alert(
+        'Bluetooth permission blocked',
+        'Please enable Bluetooth permissions for Parkitects in your phone settings.'
+      );
+      return;
+    }
+
+    if (permissionResult === 'denied') {
+      Alert.alert(
+        'Bluetooth permission required',
+        'Parkitects needs Bluetooth permission to find your parking bay.'
+      );
+      return;
+    }
+
+    const bluetoothOn = await isBluetoothOn();
+
+    if (!bluetoothOn) {
+      const enabled = await tryEnableBluetooth();
+
+      if (!enabled) {
+        Alert.alert(
+          'Bluetooth is off',
+          'Please turn on Bluetooth and try again.'
+        );
+        return;
+      }
+    }
+
+    const nodes = await scanNearbyNodes();
+
+    if (nodes.length === 0) {
+      Alert.alert(
+        'No parking bays found',
+        'We could not detect a nearby parking beacon. Try moving closer to your parking bay and scan again.'
+      );
+      return;
+    }
+
+    const message = nodes
+      .map(
+        node =>
+          `${node.label}\nRSSI: ${node.rssi.toFixed(1)} dBm`
+      )
+      .join('\n\n');
+
+    Alert.alert(
+      'Nearby parking bays',
+      message
+    );
+
+  } catch (error) {
+    console.error('[BLE] Scan failed:', error);
+
+    Alert.alert(
+      'Bluetooth scan failed',
+      'Something went wrong while looking for nearby parking bays.'
+    );
+  } finally {
+    setScanning(false);
+  }
+}}
+>
+  <Feather name="map-pin" size={18} color="#FFFFFF" />
+
+  <View style={styles.parkingButtonText}>
+   <Text style={styles.parkingButtonTitle}>
+  {scanning ? 'Finding your parking bay...' : 'Where did you park?'}
+</Text>
+
+    <Text style={styles.parkingButtonSubtitle}>
+      Find your nearby parking bay
+    </Text>
+  </View>
+
+  <Feather name="chevron-right" size={20} color="#FFFFFF" />
+</TouchableOpacity>
         {/* Search Bar Container */}
         <View style={styles.search}>
           <SearchBar />
@@ -228,6 +322,33 @@ avatarText: {
       marginTop: 1,
       marginLeft:135,
   },
+  parkingButton: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#146564",
+  borderRadius: 16,
+  paddingHorizontal: 16,
+  paddingVertical: 14,
+  marginTop: 8,
+  marginBottom: 12,
+},
+
+parkingButtonText: {
+  flex: 1,
+  marginLeft: 12,
+},
+
+parkingButtonTitle: {
+  fontSize: 15,
+  fontWeight: "700",
+  color: "#FFFFFF",
+},
+
+parkingButtonSubtitle: {
+  fontSize: 11,
+  color: "#D9EEEE",
+  marginTop: 3,
+},
 });
 /**
  * References
