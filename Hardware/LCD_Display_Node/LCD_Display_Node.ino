@@ -5,14 +5,28 @@
 
 #include <Arduino.h>
 #include <WiFi.h> // (Espressif Systems, 2023)
+#include <Firebase_ESP_Client.h> // (Mobizt, 2023)
 #include <LiquidCrystal.h> // (Arduino, 2023b)
+
+// Helper headers needed for Firebase token generation (Mobizt, 2023)
+#include "addons/TokenHelper.h"
+#include "addons/RTDBHelper.h"
 
 // Wifi Credentials
 #define WIFI_SSID "HUAWEI-B525-B6DF"
 #define WIFI_PASSWORD "0L659M2Y403"
 
+// our Firebase Credentials
+#define API_KEY "AIzaSyDbL55frdOhcMZPmW3HiUFhBb7AWbj6Nwg"
+#define DATABASE_URL "https://wil-smartparking-default-rtdb.firebaseio.com"
+
 // Initialize the LCD pins (RS, E, D4, D5, D6, D7) (Arduino, 2023b)
 LiquidCrystal lcd(22, 23, 5, 18, 19, 21);
+
+// Firebase Core Objects (Mobizt, 2023)
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
 
 // Our parking lot configurations
 const int TOTAL_SPOTS = 350;
@@ -22,7 +36,7 @@ unsigned long lastDatabasePoll = 0;
 void setup() {
   Serial.begin(115200);
 
-  // LCD Contrast PWM Setup (Universal ESP32 Core compatibility) (Arduino, 2023c)
+  // LCD Contrast PWM Setup (Universal ESP32 Core compatibility) (Arduino, 2023d)
   pinMode(13, OUTPUT);
   #if defined(ESP_ARDUINO_VERSION_MAJOR) && ESP_ARDUINO_VERSION_MAJOR >= 3
     ledcAttach(13, 1000, 8); // 1 kHz frequency, 8-bit resolution
@@ -44,7 +58,8 @@ void setup() {
   lcd.setCursor(0, 1);
   lcd.print("Connecting Wifi");
 
-  // Connect to Wi-Fi (Espressif Systems, 2023)
+  // Wifi section
+  // Connect to Wifi (Espressif Systems, 2023)
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("\nConnecting to Wifi");
@@ -57,14 +72,85 @@ void setup() {
   Serial.println("\nWifi Connected.");
   lcd.setCursor(0, 1);
   lcd.print("Wifi Connected! ");
+
+  // Firebase section
+  // Initializes Firebase (Mobizt, 2023)
+  config.api_key = API_KEY;
+  config.database_url = DATABASE_URL;
+
+  if (Firebase.signUp(&config, &auth, "", "")) {
+    Serial.println("Firebase Auth Successful.");
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Firebase Ready");
+  } else {
+    Serial.printf("Firebase Auth Error: %s\n", config.signer.signupError.message.c_str());
+  }
+
+  config.token_status_callback = tokenStatusCallback;
+  fbdo.setResponseSize(1024);
+  
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
   
   delay(2000); 
   lcd.clear();
 
 }
 
+// Created this function to handle the UI display on the LCD (Arduino, 2023b)
+void updateDisplay(int available) {
+  lcd.setCursor(0, 0);
+  lcd.print("Spots Available:");
+  
+  lcd.setCursor(0, 1);
+  if (available <= 0) 
+  {
+     lcd.print("LOT FULL!       ");
+  } 
+  else 
+  {
+     lcd.print(available);
+     lcd.print(" / ");
+     lcd.print(TOTAL_SPOTS);
+     lcd.print("        "); 
+  }
+}
+
 void loop() {
-  // put your main code here, to run repeatedly:
+  // Non-blocking timer to poll Firebase every 2 seconds (Arduino, 2023c)
+  if (millis() - lastDatabasePoll > 2000) 
+  {
+    lastDatabasePoll = millis();
+    
+    if (Firebase.ready()) 
+    {
+      int liveAvailable = 0;
+
+      // Checks Bay 1's Status (Mobizt, 2023)
+      if (Firebase.RTDB.getString(&fbdo, "/ParkingLots/Lot_A/nodes/Node_01/bays/Bay1/status")) 
+      {
+        if (fbdo.stringData() == "Available") 
+        {
+          liveAvailable++;
+        }
+      }
+
+      // Checks Bay 2's Status (Mobizt, 2023)
+      if (Firebase.RTDB.getString(&fbdo, "/ParkingLots/Lot_A/nodes/Node_01/bays/Bay2/status")) 
+      {
+        if (fbdo.stringData() == "Available") 
+        {
+          liveAvailable++;
+        }
+      }
+
+      int totalAvailable = liveAvailable;
+      
+      Serial.printf("Live Free: %d/2 | Total Free: %d/%d\n", liveAvailable, totalAvailable, TOTAL_SPOTS);
+      updateDisplay(totalAvailable);
+    }
+  }
 
 }
 
@@ -72,7 +158,9 @@ void loop() {
 
  * Arduino, 2023a. digitalWrite() (Version 2.0) [Source Code] Available at: < https://www.arduino.cc/reference/en/language/functions/digital-io/digitalwrite/ > [Accessed 29 September 2026]
  * Arduino, 2023b. LiquidCrystal() (Version 1.0.7) [Source Code] Available at: < https://www.arduino.cc/reference/en/libraries/liquidcrystal/ > [Accessed 29 September 2026]
+ * Arduino, 2023c. millis() (Version 2.0) [Source Code] Available at: < https://www.arduino.cc/reference/en/language/functions/time/millis/ > [Accessed 29 September 2026]
  * Arduino, 2023c. pinMode() (Version 2.0) [Source Code] Available at: < https://www.arduino.cc/reference/en/language/functions/digital-io/pinmode/ > [Accessed 29 September 2026]
  * Espressif Systems, 2023. WiFi Station Example (Version 3.0) [Source Code] Available at: < https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi > [Accessed 29 September 2026]
- 
+ * Mobizt, 2023. Firebase Arduino Client Library for ESP8266 and ESP32 (Version 4.4.14) [Source Code] Available at: < https://github.com/mobizt/Firebase-ESP-Client > [Accessed 29 September 2026]
+
 */
