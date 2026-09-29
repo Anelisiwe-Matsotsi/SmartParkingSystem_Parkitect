@@ -1,11 +1,20 @@
 //(rudderz243,2026)
-import React, { useEffect,useState } from "react";
-import {auth} from "../config/firebase";
+import React, { useEffect, useState } from "react";
+import { auth } from "../config/firebase";
+import { onAuthStateChanged, updateEmail, updateProfile } from "firebase/auth"; //(Firebase, 2026)
 
-const API_BASE_URL = "http://192.168.101.104:8080";
+
+
 
 export const SettingsPage: React.FC = () => {
+
+  
   const [activeSection, setActiveSection] = useState("General");
+
+  //Stores the loggd in user's details
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+
 
   //Web security settings
   const [notifications, setNotifications] = useState({
@@ -14,49 +23,92 @@ export const SettingsPage: React.FC = () => {
     systemAlerts: true,
   });
 
-  const [preferences, setPreferences] = useState({
-    darkMode: false,
-    compactTables: false,
+  //(Leiberman, 2021)
+  const [preferences, setPreferences] = useState(() => {
+    const savedTheme = localStorage.getItem("theme"); 
+
+    return {
+      darkMode: savedTheme === "dark",
+      compactTables: localStorage.getItem("compactTables") === "true",
+    };
   });
 
-  //changes mode (Mustafamulla, 2024)
+  //changes the theme and saves it to localStorage
+  //(Mustafamulla, 2024)
   useEffect(() =>{
-    document.documentElement.setAttribute("data-theme", preferences.darkMode? "dark" : "light");
+
+    const theme = preferences.darkMode ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", theme);
+
+    //saves the selected mode so it stays when navigating from page to page
+    localStorage.setItem("theme", theme);
    }, [preferences.darkMode]);
+
 
    //changes the compact tables
   useEffect(() =>{
     document.documentElement.setAttribute("data-compact", preferences.compactTables? "true" : "false");
+    localStorage.setItem("compactTables", preferences.compactTables ? "true" : "false");
    }, [preferences.compactTables]);
 
-  //This load's user's settings from the backend
-  useEffect(() => {
-    const loadSettings = async () => {
-      const currentUser = auth.currentUser;
 
+  //This loads the current user's details
+  useEffect(() => {
+
+    //Firebase loads the logged in user
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+
+    
       if (!currentUser) {
         console.log("No user is logged in.");
         return;
       }
+
+      //Gets the user's name from firebase
+
+
+      //get's the logged in user's name from firebase
+      setUserName(currentUser.displayName || "");
+      //get's the user's email from firebase
+      setUserEmail(currentUser.email || "");
+    });
+
+    return() => unsubscribe();
+
+  }, []);
+
+  //loads the user's settings from the backend
+  useEffect(() => {
+
+    const loadSettings = async () => {
+      const currentUser = auth.currentUser;
+
+      if(!currentUser) {
+        console.log("No user is logged in.");
+        return;
+      }
+
       try{
-        const response = await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`);
+
+        const response = await fetch(`api/Settings/user/${currentUser.uid}`);
+
 
         if (!response.ok){
           throw new Error("Failed to load settings.");
         }
         const settings = await response.json();
 
-        //load web settings
+        //load the notification settings
         setNotifications({
           ticketUpdates: settings.ticketUpdates ?? true,
           parkingAlerts: settings.parkingAlerts ??  true,
           systemAlerts: settings.systemAlerts ?? true,
         });
 
-        setPreferences({
-          darkMode: settings.darkMode ?? false,
+        setPreferences((current) =>({
+          darkMode: current.darkMode,
           compactTables: settings.compactTables ?? false,
-        })
+        }));
       }
       catch (error) {
         console.error("Error loading settings:", error);
@@ -76,8 +128,23 @@ export const SettingsPage: React.FC = () => {
     }
 
     try {
+      //Updates the user's name in firebase
+      if(userName.trim() !== ""){
+        await updateProfile(currentUser, {
+          displayName: userName.trim(),
+        });
+      }
+
+      //Updates user's email in firebase
+      if(userEmail.trim() !== "" && userEmail.trim() !== currentUser.email){
+        await updateEmail(
+          currentUser,
+          userEmail.trim()
+        );
+      }
+      //saves the settings to the backend
       const response = await fetch(
-        `${API_BASE_URL}/api/Settings/user/${currentUser.uid}`,
+        `/api/Settings/user/${currentUser.uid}`,
         {
           method: "PUT",
           headers: {
@@ -89,6 +156,8 @@ export const SettingsPage: React.FC = () => {
             // Web settings
             darkMode: preferences.darkMode,
             compactTables: preferences.compactTables,
+
+            //Notification settings
             ticketUpdates: notifications.ticketUpdates,
             parkingAlerts: notifications.parkingAlerts,
             systemAlerts: notifications.systemAlerts,
@@ -102,6 +171,11 @@ export const SettingsPage: React.FC = () => {
 
         throw new Error(errorText);
       }
+
+      //this is so the selected theme stays active after navigating to other screens
+      localStorage.setItem(
+        "theme", preferences.darkMode ? "dark" : "light" //(Leiberman, 2021)
+      );
 
       alert("Settings saved successfully.");
     } catch (error) {
@@ -185,7 +259,8 @@ export const SettingsPage: React.FC = () => {
                     Full name
                     <input
                       type="text"
-                      defaultValue="Security Guard"
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
                     />
                   </label>
 
@@ -193,7 +268,8 @@ export const SettingsPage: React.FC = () => {
                     Email address
                     <input
                       type="email"
-                      defaultValue="security@parkitects.co.za"
+                      value={userEmail}
+                      onChange={(e) => setUserEmail(e.target.value)}
                     />
                   </label>
                 </div>
@@ -220,12 +296,18 @@ export const SettingsPage: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={preferences.darkMode}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const darkMode = e.target.checked;
+
                         setPreferences({
                           ...preferences,
-                          darkMode: e.target.checked,
-                        })
-                      }
+                          darkMode: darkMode, 
+                        });
+                        //saves the theme
+                        localStorage.setItem(
+                          "theme", darkMode ? "dark" : "light"
+                        );
+                      }}
                     />
 
                     <span></span>
@@ -425,7 +507,10 @@ export const SettingsPage: React.FC = () => {
 
 export default SettingsPage;
 {/*References
-           realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026].        
-  rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
+  Firebase. 2026. Manage Users in Firebase. (Version 2.0) [Source Code] Available at:<https://firebase.google.com/docs/auth/web/manage-users> [Accessed 27 September 2026].
+  Leiberman, L. 2021. Dark Mode 2.0 : With Local Storage. (Version 2.0) [Source Code] Available at:<https://dr-lucasleibs.medium.com/dark-mode-2-0-with-local-storage-6f992683204d> [Accessed 27 September 2026].
+  Mustafamulla. 2024. How to Implement Dark Mode in React with Tailwind CSS. (Version 2.0) [Source Code] Available at:<https://medium.com/@mustafamulla765/how-to-implement-dark-mode-in-react-with-tailwind-css-94df7522ed82> [Accessed 25 September 2026].
+  realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 August 2026].        
+  rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 August 2026].
            */}
        
