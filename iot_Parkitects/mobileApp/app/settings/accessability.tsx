@@ -19,7 +19,11 @@ import FeatherIcon from '@expo/vector-icons/Feather';
 import { ThemedText } from '@/components/themed-text'
 
 //THE API BASE URL- TO BE CHANGED (same as tickets one-natasha)
+<<<<<<< Updated upstream
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+=======
+const API_BASE_URL = 'http://172.20.10.6:8080';
+>>>>>>> Stashed changes
 
 // export default function Example() {
 //    const router = useRouter();
