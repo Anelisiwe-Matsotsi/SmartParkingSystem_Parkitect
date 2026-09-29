@@ -15,12 +15,14 @@ namespace backend2.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly IExpoPushService _pushService;//(Expo Docs, 2026)
+        private readonly IEmailService _emailService;
 
-        public TicketsController(ApplicationDbContext context, IConfiguration config, IExpoPushService pushService)
+        public TicketsController(ApplicationDbContext context, IConfiguration config, IExpoPushService pushService, IEmailService emailService)
         {
             _context = context;
             _configuration = config;
             _pushService = pushService;
+            _emailService = emailService;
         }
 
         // GET: api/Ticket
@@ -120,6 +122,15 @@ namespace backend2.Controllers
             {
                 await _pushService.NotifyUserAsync(ticket.userID, "Parking ticket issued",
                     $"Ticket #{ticket.ticketID} - {ticket.reason}", new {ticketId = ticket.ticketID});
+
+                //getting the users email address through firebase in users table
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == ticket.userID);
+                if (user != null)
+                {
+                    //message that get sent via email to the user
+                    await _emailService.SendTicketEmailAsync(user.Email, $"Parking Ticket Issued - #{ticket.ticketID}",
+                            $"A parking ticket has been issued against your vehicle.\n\nBay: {ticket.bayNumber}\nReason: {ticket.reason} \n\nPlease check the notifications sent in the Parkitech Mobile App for more details (enable your push notifications if not on).");
+                }
             }
             //if the user does not solve the ticket properly they will be notified again
             else if (ticket.status == "Notified" && previousStatus == "Awaiting review")

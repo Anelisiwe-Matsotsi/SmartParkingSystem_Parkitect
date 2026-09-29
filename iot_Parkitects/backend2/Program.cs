@@ -27,6 +27,9 @@ namespace backend2
             });
             builder.Services.AddScoped<IExpoPushService, ExpoPushService>();
 
+            //register the email service
+            builder.Services.AddScoped<IEmailService, EmailService>();
+           
             builder.Services.AddOpenApi(); // Keeps the native engine
 
             // DB configuration
