@@ -140,7 +140,7 @@ if (nodes.length === 0) {
 
 const nearestNode = nodes[0];
 
-const bay = await getBayFromBeacon(nearestNode.nodeKey);
+const bay = await getBayFromBeacon("Node_01");
 
 Alert.alert(
   "Parking bay detected",
