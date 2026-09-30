@@ -22,50 +22,35 @@ import {
 } from '@/utils/ble';
 import SearchBar from "./SearchBar";
 
-export default function HomeHeader() {
+// 1. ADD PROPS SO IT CAN RECEIVE THE LIVE COUNT
+type Props = {
+  availableSpaces: number;
+};
+
+export default function HomeHeader({ availableSpaces }: Props) {
   const router = useRouter();
-  const availableSpaces = 3;
-  const [showAlert, setShowAlert] = useState(true);
   const [scanning, setScanning] = useState(false);
+  
   return (
     <SafeAreaView style={styles.wrapper}>
       <View style={styles.container}>
-        
-   {/** * Header (Withfra.me, 2022) */}     
-<View style={styles.topRow}>
-  
+        <View style={styles.topRow}>
+          <TouchableOpacity style={styles.locationBadge}>
+            <View style={styles.locationDot} />
+            <Text style={styles.locationText}>LIVE</Text>
+          </TouchableOpacity>
 
- 
-  <TouchableOpacity style={styles.locationBadge}>
-    <View style={styles.locationDot} />
-    <Text style={styles.locationText}>LIVE</Text>
-  </TouchableOpacity>
+          <View style={styles.rightButtons}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/notifications')}>
+              <Feather name="bell" size={18} color="#111827" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.avatarButton} onPress={() => router.push('/settings/setting')}>
+              <Text style={styles.avatarText}>MA</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-
-  <View style={styles.rightButtons}>
-
-    {/* Notifications */}
-    <TouchableOpacity style={styles.iconButton}
-        onPress={() => router.push('/notifications')}>
-      <Feather name="bell" size={18} color="#111827" />
-      
-    </TouchableOpacity>
-
-    {/* User Initials */}
-    <TouchableOpacity
-      style={styles.avatarButton}
-      onPress={() => router.push('/settings/setting')}
-    >
-      <Text style={styles.avatarText}>MA</Text>
-    </TouchableOpacity>
-
-  </View>
-
-</View>
-
-       
-
-        {/* Heading */}
+        {/* 2. INJECT THE LIVE DATA HERE */}
         <Text style={styles.heading}>
           {availableSpaces} Bays Left
         </Text>

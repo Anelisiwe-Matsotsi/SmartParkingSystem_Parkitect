@@ -55,23 +55,31 @@ CREATE TABLE ParkingLot (
     totalCapacity INT NOT NULL
 );
 
--- Create the ParkingLayout table
-CREATE TABLE ParkingLayout (
-    layoutID INT PRIMARY KEY IDENTITY(1,1), 
+CREATE TABLE ParkingSection (
+    sectionID INT PRIMARY KEY IDENTITY(1,1), 
     parkingID INT NOT NULL,
     sectionName NVARCHAR(255) NOT NULL,
-    CONSTRAINT FK_ParkingLayout_Parking FOREIGN KEY (parkingID) REFERENCES ParkingLot(parkingID) ON DELETE CASCADE
+    CONSTRAINT FK_ParkingSection_Parking 
+        FOREIGN KEY (parkingID) REFERENCES ParkingLot(parkingID) ON DELETE CASCADE
 );
+
+-- Create the ParkingLayout table
+-- CREATE TABLE ParkingLayout (
+--     layoutID INT PRIMARY KEY IDENTITY(1,1), 
+--     parkingID INT NOT NULL,
+--     sectionName NVARCHAR(255) NOT NULL,
+--     CONSTRAINT FK_ParkingLayout_Parking FOREIGN KEY (parkingID) REFERENCES ParkingLot(parkingID) ON DELETE CASCADE
+-- );
 
 -- Create the ParkingBay table
 CREATE TABLE ParkingBay (
     bayID INT PRIMARY KEY IDENTITY(1,1),
-    layoutID INT NOT NULL,
+    sectionID INT NOT NULL,
     bayNumber NVARCHAR(255) NOT NULL,
-    isOccupied BIT NOT NULL,
-    CONSTRAINT FK_ParkingBay_ParkingLayout FOREIGN KEY (layoutID) REFERENCES ParkingLayout(layoutID) ON DELETE CASCADE
+    isOccupied BIT NOT NULL DEFAULT 0,
+    CONSTRAINT FK_ParkingBay_ParkingSection
+        FOREIGN KEY (sectionID) REFERENCES ParkingSection(sectionID) ON DELETE CASCADE
 );
-
 
 -- Part of analytics
 -- Create the ParkingSession table
@@ -81,7 +89,10 @@ CREATE TABLE ParkingSession (
     bayID INT NOT NULL,
     startDate DATETIME NOT NULL,
     endDate DATETIME NULL,
-    CONSTRAINT FK_ParkingSession_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
+    CONSTRAINT FK_ParkingSession_User
+        FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE,
+    CONSTRAINT FK_ParkingSession_ParkingBay
+        FOREIGN KEY (bayID) REFERENCES ParkingBay(bayID)
 );
 
 -- Part of analytics
@@ -148,7 +159,7 @@ CREATE TABLE Tickets (
     status NVARCHAR(50) NOT NULL DEFAULT 'Pending',
     createdAt DATETIME2 NOT NULL DEFAULT GETDATE(),
     updatedAt DATETIME2 NULL,
-    response NVARCHAR(MAX) NULL,
+    response NVARCHAR(MAX) NULL
 );
 
 -- Create ChatBot table
