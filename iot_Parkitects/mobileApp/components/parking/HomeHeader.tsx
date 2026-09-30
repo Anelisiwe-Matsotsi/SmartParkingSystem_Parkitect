@@ -10,7 +10,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
-  Alert
+  Alert,
+  Linking
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import {
@@ -73,19 +74,30 @@ export default function HomeHeader() {
         <Text style={styles.subtitle}>
           Go to Moffet and main
         </Text>
-   <TouchableOpacity
-            onPress={() => {
-              // handle onPress
-               router.push('/auth/sign_in');
-            }}
-            
-            style={styles.headerAction}>
-              
-            <Feather
-              color="#e2f1f3"
-              name="arrow-right"
-              size={24} />
-          </TouchableOpacity>
+  <TouchableOpacity
+  onPress={async () => {
+    const mapsUrl =
+      "https://maps.app.goo.gl/rJiNs9tSvVf75Tqf9?g_st=aw";
+
+    try {
+      await Linking.openURL(mapsUrl);
+    } catch (error) {
+      console.error("Could not open maps:", error);
+
+      Alert.alert(
+        "Unable to open maps",
+        "Something went wrong while opening the parking location."
+      );
+    }
+  }}
+  style={styles.headerAction}
+>
+  <Feather
+    color="#e2f1f3"
+    name="arrow-right"
+    size={24}
+  />
+</TouchableOpacity>
 
           <TouchableOpacity
   style={styles.parkingButton}
