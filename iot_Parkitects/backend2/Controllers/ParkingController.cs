@@ -170,6 +170,7 @@ new Sensor
         [HttpGet("beacon/{nodeKey}")]
         public async Task<IActionResult> GetBayFromBeacon(string nodeKey)
         {
+             Console.WriteLine($"[Beacon] lookup for '{nodeKey}'");
             var sensor = await _context.Sensors
                 .Include(s => s.ParkingBay)
                 .ThenInclude(b => b!.ParkingSection)
@@ -188,6 +189,7 @@ new Sensor
                 SectionName = sensor.ParkingBay.ParkingSection?.sectionName ?? "",
                 IsOccupied = sensor.ParkingBay.isOccupied
             });
+            
         }
 
         // POST: api/Parking/park

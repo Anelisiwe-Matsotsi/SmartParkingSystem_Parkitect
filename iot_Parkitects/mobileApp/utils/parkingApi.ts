@@ -1,12 +1,15 @@
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export async function getBayFromBeacon(nodeKey: string) {
-  const response = await fetch(
-    `${API_URL}/api/Parking/beacon/${encodeURIComponent(nodeKey)}`
-  );
+  const url = `${API_URL}/api/Parking/beacon/${encodeURIComponent(nodeKey)}`;
+  console.log("[API] GET", url);
+
+  const response = await fetch(url);
 
   if (!response.ok) {
-    throw new Error("Could not find parking bay for this beacon.");
+    const body = await response.text();
+    console.log("[API] failed:", response.status, body);
+    throw new Error(body || `Request failed (${response.status})`);
   }
 
   return await response.json();
