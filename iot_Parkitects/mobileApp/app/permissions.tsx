@@ -166,7 +166,6 @@ export default function Permissions() {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userID: uid,
             bluetooth: perms.bluetooth,
             location: perms.location,
             ruleAlerts: perms.ruleAlerts,

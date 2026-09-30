@@ -146,8 +146,20 @@ namespace backend2.Controllers
                     var bay2 = bays.First(b => b.bayNumber == "A2");
 
                     _context.Sensors.AddRange(
-                        new Sensor { bayID = bay1.bayID, hardwareModel = "ESP32-HC-SR04-Node1", distanceReadingCm = 150 },
-                        new Sensor { bayID = bay2.bayID, hardwareModel = "ESP32-HC-SR04-Node2", distanceReadingCm = 25 }
+                      new Sensor
+                      {
+                          bayID = bay1.bayID,
+                          hardwareModel = "ESP32-HC-SR04-Node1",
+                          distanceReadingCm = 150,
+                          beaconNodeKey = "Node_01"
+                      },
+new Sensor
+{
+    bayID = bay2.bayID,
+    hardwareModel = "ESP32-HC-SR04-Node2",
+    distanceReadingCm = 25,
+    beaconNodeKey = "Node_02"
+}
                     );
                     await _context.SaveChangesAsync();
                 }
@@ -155,29 +167,91 @@ namespace backend2.Controllers
         }
 
         // GET: api/Parking/beacon/Node_01
-[HttpGet("beacon/{nodeKey}")]
-public async Task<IActionResult> GetBayFromBeacon(string nodeKey)
-{
-    var sensor = await _context.Sensors
-        .Include(s => s.ParkingBay)
-        .ThenInclude(b => b!.ParkingSection)
-        .FirstOrDefaultAsync(s => s.beaconNodeKey == nodeKey);
+        [HttpGet("beacon/{nodeKey}")]
+        public async Task<IActionResult> GetBayFromBeacon(string nodeKey)
+        {
+            var sensor = await _context.Sensors
+                .Include(s => s.ParkingBay)
+                .ThenInclude(b => b!.ParkingSection)
+                .FirstOrDefaultAsync(s => s.beaconNodeKey == nodeKey);
 
-    if (sensor == null || sensor.ParkingBay == null)
-    {
-        return NotFound("No parking bay is linked to this beacon.");
+            if (sensor == null || sensor.ParkingBay == null)
+            {
+                return NotFound("No parking bay is linked to this beacon.");
+            }
+
+            return Ok(new BeaconBayDto
+            {
+                NodeKey = sensor.beaconNodeKey!,
+                BayID = sensor.ParkingBay.bayID,
+                BayNumber = sensor.ParkingBay.bayNumber,
+                SectionName = sensor.ParkingBay.ParkingSection?.sectionName ?? "",
+                IsOccupied = sensor.ParkingBay.isOccupied
+            });
+        }
+
+        // POST: api/Parking/park
+        [HttpPost("park")]
+        public async Task<IActionResult> ParkVehicle([FromBody] ParkVehicleDto dto)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.FirebaseUid == dto.FirebaseUid);
+
+            if (user == null)
+            {
+                return NotFound("User was not found.");
+            }
+
+            var bay = await _context.ParkingBays
+                .FirstOrDefaultAsync(b => b.bayID == dto.BayID);
+
+            if (bay == null)
+            {
+                return NotFound("Parking bay was not found.");
+            }
+
+            if (bay.isOccupied)
+            {
+                return Conflict("This parking bay is already occupied.");
+            }
+
+            // Prevent the same user from having multiple active parking sessions
+            var existingSession = await _context.ParkingSessions
+                .FirstOrDefaultAsync(s =>
+                    s.userID == user.UserId &&
+                    s.endDate == null);
+
+            if (existingSession != null)
+            {
+                return Conflict("You already have an active parking session.");
+            }
+
+            var session = new ParkingSession
+            {
+                userID = user.UserId,
+                bayID = bay.bayID,
+                startDate = DateTime.UtcNow
+            };
+
+            bay.isOccupied = true;
+            user.IsParked = true;
+
+            _context.ParkingSessions.Add(session);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Parking session started successfully.",
+                bayID = bay.bayID,
+                bayNumber = bay.bayNumber,
+                sessionID = session.sessionID,
+                startDate = session.startDate
+            });
+        }
     }
 
-    return Ok(new BeaconBayDto
-    {
-        NodeKey = sensor.beaconNodeKey!,
-        BayID = sensor.ParkingBay.bayID,
-        BayNumber = sensor.ParkingBay.bayNumber,
-        SectionName = sensor.ParkingBay.ParkingSection?.sectionName ?? "",
-        IsOccupied = sensor.ParkingBay.isOccupied
-    });
-}
-    }
+
 
 }
 

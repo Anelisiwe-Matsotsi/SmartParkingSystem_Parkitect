@@ -120,10 +120,8 @@ CREATE TABLE Permissions (
     permissionsID INT PRIMARY KEY IDENTITY(1,1),
     userID INT NOT NULL,
     bluetooth BIT NOT NULL,
-    notifications BIT NOT NULL,
     location BIT NOT NULL,
     ruleAlerts BIT NOT NULL,
-    emailNotifications BIT NOT NULL,
      CONSTRAINT FK_Permissions_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
 );
 

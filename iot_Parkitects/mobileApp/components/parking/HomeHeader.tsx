@@ -21,6 +21,8 @@ import {
   scanNearbyNodes,
 } from '@/utils/ble';
 import SearchBar from "./SearchBar";
+import { getBayFromBeacon, parkVehicle } from "@/utils/parkingApi";
+import { auth } from "@/config/firebaseConfig";
 
 // 1. ADD PROPS SO IT CAN RECEIVE THE LIVE COUNT
 type Props = {
@@ -124,13 +126,65 @@ export default function HomeHeader({ availableSpaces }: Props) {
 
     const nodes = await scanNearbyNodes();
 
-    if (nodes.length === 0) {
-      Alert.alert(
-        'No parking bays found',
-        'We could not detect a nearby parking beacon. Try moving closer to your parking bay and scan again.'
-      );
-      return;
-    }
+if (nodes.length === 0) {
+  Alert.alert(
+    "No parking bays found",
+    "We could not detect a nearby parking beacon. Try moving closer to your parking bay and scan again."
+  );
+  return;
+}
+
+const nearestNode = nodes[0];
+
+const bay = await getBayFromBeacon(nearestNode.nodeKey);
+
+Alert.alert(
+  "Parking bay detected",
+  `You appear to be near ${bay.bayNumber}.\n\nSignal strength: ${nearestNode.rssi.toFixed(
+    1
+  )} dBm`,
+  [
+    {
+      text: "Cancel",
+      style: "cancel",
+    },
+    {
+      text: `Park in ${bay.bayNumber}`,
+      onPress: async () => {
+        try {
+          const firebaseUid = auth.currentUser?.uid;
+
+          if (!firebaseUid) {
+            Alert.alert(
+              "Not signed in",
+              "Please sign in before saving your parking bay."
+            );
+            return;
+          }
+
+          const result = await parkVehicle(
+            firebaseUid,
+            bay.bayID
+          );
+
+          Alert.alert(
+            "You're parked!",
+            `Your parking session has started in ${result.bayNumber}.`
+          );
+        } catch (error) {
+          console.error("[Parking] Failed to save parking:", error);
+
+          Alert.alert(
+            "Could not save parking",
+            error instanceof Error
+              ? error.message
+              : "Something went wrong."
+          );
+        }
+      },
+    },
+  ]
+);
 
     const message = nodes
       .map(
