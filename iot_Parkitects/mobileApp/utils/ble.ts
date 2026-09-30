@@ -11,7 +11,7 @@ import { PermissionsAndroid, Platform } from 'react-native';
 import { BleManager, State } from 'react-native-ble-plx';
 
 // The ESP32 advertises as PARK_BEACON_NODE_1, PARK_BEACON_NODE_2, ...
-const BEACON_PREFIX = 'PARK_BEACON_NODE_';
+const BEACON_PREFIX = 'Parkitects Beacon';
 
 // Ignore beacons weaker than this (very far away). Tune it while testing in the lot.
 const MIN_RSSI = -90;
