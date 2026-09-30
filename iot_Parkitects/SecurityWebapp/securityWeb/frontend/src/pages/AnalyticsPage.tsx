@@ -1,5 +1,5 @@
 //(rudderz243,2026)
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -19,120 +19,38 @@ interface ParkingHistory {
   status: string;
 }
 
-const rows: ParkingHistory[] = [
-  {
-    bay: "A01",
-    user: "Student #1024",
-    userType: "Student",
-    timeIn: "08:02 AM",
-    timeOut: "08:47 AM",
-    duration: "45 min",
-    status: "Completed",
-  },
-  {
-    bay: "A01",
-    user: "Student #1842",
-    userType: "Student",
-    timeIn: "09:03 AM",
-    timeOut: "10:21 AM",
-    duration: "1h 18m",
-    status: "Completed",
-  },
-  {
-    bay: "A02",
-    user: "Lecturer #018",
-    userType: "Lecturer",
-    timeIn: "08:15 AM",
-    timeOut: "12:10 PM",
-    duration: "3h 55m",
-    status: "Completed",
-  },
-  {
-    bay: "A03",
-    user: "Student #0931",
-    userType: "Student",
-    timeIn: "08:31 AM",
-    timeOut: "09:42 AM",
-    duration: "1h 11m",
-    status: "Completed",
-  },
-  {
-    bay: "B01",
-    user: "Student #3312",
-    userType: "Student",
-    timeIn: "08:45 AM",
-    timeOut: "10:12 AM",
-    duration: "1h 27m",
-    status: "Completed",
-  },
-  {
-    bay: "B04",
-    user: "Visitor #042",
-    userType: "Visitor",
-    timeIn: "09:10 AM",
-    timeOut: "09:55 AM",
-    duration: "45 min",
-    status: "Completed",
-  },
-  {
-    bay: "B07",
-    user: "Student #2214",
-    userType: "Student",
-    timeIn: "09:22 AM",
-    timeOut: "—",
-    duration: "Active",
-    status: "Parked",
-  },
-  {
-    bay: "C02",
-    user: "Lecturer #031",
-    userType: "Lecturer",
-    timeIn: "07:54 AM",
-    timeOut: "01:05 PM",
-    duration: "5h 11m",
-    status: "Completed",
-  },
-  {
-    bay: "C07",
-    user: "Student #1187",
-    userType: "Student",
-    timeIn: "10:14 AM",
-    timeOut: "11:03 AM",
-    duration: "49 min",
-    status: "Completed",
-  },
-  {
-    bay: "D01",
-    user: "Student #4421",
-    userType: "Student",
-    timeIn: "10:32 AM",
-    timeOut: "—",
-    duration: "Active",
-    status: "Parked",
-  },
-  {
-    bay: "D05",
-    user: "Visitor #019",
-    userType: "Visitor",
-    timeIn: "11:02 AM",
-    timeOut: "12:15 PM",
-    duration: "1h 13m",
-    status: "Completed",
-  },
-  {
-    bay: "D22",
-    user: "Student #3021",
-    userType: "Student",
-    timeIn: "11:25 AM",
-    timeOut: "12:40 PM",
-    duration: "1h 15m",
-    status: "Completed",
-  },
-];
+
 
 export const AnalyticsPage: React.FC = () => {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
+  // state to hold the dynamic data
+  const [rows, setRows] = useState<ParkingHistory[]>([]);
+  const [summary, setSummary] = useState({ issued: 0, resolved: 0, avgTime: 0 });
+
+  // fetch data from the C# backend on page load (Mozilla, 2026)
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      try {
+        const historyResponse = await fetch("https://localhost:7001/api/analytics/history");
+        const historyData = await historyResponse.json();
+        setRows(historyData);
+
+        const summaryResponse = await fetch("https://localhost:7001/api/analytics/summary");
+        const summaryData = await summaryResponse.json();
+        setSummary({
+            issued: summaryData.ticketsIssued,
+            resolved: summaryData.ticketsResolved,
+            avgTime: summaryData.avgResolutionTimeHours.toFixed(1)
+        });
+      } catch (error) {
+        console.error("Failed to fetch analytics data:", error);
+      }
+    };
+
+    fetchAnalyticsData();
+  }, []);
 
   const handleChangePage = (
     _event: unknown,
@@ -182,60 +100,20 @@ export const AnalyticsPage: React.FC = () => {
 
       {/* INSIGHT CARDS */}
       <div className="insight-strip">
-
-        <article
-          className="searchable"
-          data-search="tickets issued parking violations"
-        >
-          <span>
-            Tickets issued
-          </span>
-
-          <strong>
-            42
-          </strong>
-
-          <small className="change up">
-            ↑ 12.4%
-          </small>
+        <article className="searchable" data-search="tickets issued parking violations">
+          <span>Tickets issued</span>
+          <strong>{summary.issued}</strong> 
         </article>
 
-
-        <article
-          className="searchable"
-          data-search="tickets resolved completed"
-        >
-          <span>
-            Tickets resolved
-          </span>
-
-          <strong>
-            31
-          </strong>
-
-          <small className="change up">
-            ↑ 8.7%
-          </small>
+        <article className="searchable" data-search="tickets resolved completed">
+          <span>Tickets resolved</span>
+          <strong>{summary.resolved}</strong> 
         </article>
 
-
-        <article
-          className="searchable"
-          data-search="ticket resolution time"
-        >
-          <span>
-            Avg. resolution time
-          </span>
-
-          <strong>
-            2.4 hrs
-          </strong>
-
-          <small className="change down">
-            ↓ 14.2%
-          </small>
+        <article className="searchable" data-search="ticket resolution time">
+          <span>Avg. resolution time</span>
+          <strong>{summary.avgTime} hrs</strong> 
         </article>
-
       </div>
 
 
@@ -549,7 +427,8 @@ export const AnalyticsPage: React.FC = () => {
 export default AnalyticsPage;
 
 {/*References
-        Material UI.2026. Table. (Version 2.0) [Source code] . Available at: <https://mui.com/material-ui/react-table/ > [Accessed 12 Aug. 2026]. 
+    Material UI.2026. Table. (Version 2.0) [Source code] . Available at: <https://mui.com/material-ui/react-table/ > [Accessed 12 Aug. 2026]. 
+    Mozilla. 2026. Using the Fetch API - Web APIs | MDN. [Online] Available at: <https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch> [Accessed 30 Sep. 2026].
     realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026].        
-        rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
-           */}
+    rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
+*/}

@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend2.Models
 {
-    // Maps to the ParkingSession table in the SQL database
     [Table("ParkingSession")]
     public class ParkingSession
     {
