@@ -23,6 +23,8 @@ namespace backend2.Data
         public DbSet<PushToken> PushToken { get; set; }
         public DbSet<Notifications> Notifications { get; set; }
 
+        public DbSet<Permissions> Permissions {get; set;}
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
