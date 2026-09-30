@@ -57,11 +57,8 @@ export default function HomeHeader({ availableSpaces }: Props) {
           {availableSpaces} Bays Left
         </Text>
 
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Go to Moffet and main
-        </Text>
-  <TouchableOpacity
+       
+  <TouchableOpacity style={styles.parkingButton}
   onPress={async () => {
     const mapsUrl =
       "https://maps.app.goo.gl/rJiNs9tSvVf75Tqf9?g_st=aw";
@@ -76,14 +73,21 @@ export default function HomeHeader({ availableSpaces }: Props) {
         "Something went wrong while opening the parking location."
       );
     }
+
   }}
-  style={styles.headerAction}
->
-  <Feather
-    color="#e2f1f3"
-    name="arrow-right"
-    size={24}
-  />
+
+><Feather name="alert-octagon" size={18} color="#ff0000" />
+
+  <View style={styles.parkingButtonText}>
+   <Text style={styles.parkingButtonTitle} >
+ low on bays
+</Text>
+
+    <Text style={styles.parkingButtonSubtitle}>
+      Go to Moffet And Main
+    </Text>
+  </View>
+    <Feather name="chevron-right" size={20} color="#FFFFFF" />
 </TouchableOpacity>
 
           <TouchableOpacity
@@ -210,7 +214,7 @@ Alert.alert(
   }
 }}
 >
-  <Feather name="map-pin" size={18} color="#FFFFFF" />
+  <Feather name="map-pin" size={18} color="#1fc919" />
 
   <View style={styles.parkingButtonText}>
    <Text style={styles.parkingButtonTitle}>
@@ -320,10 +324,10 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 26,
     fontWeight: "800", // Strong heavy title weight
-    color: "#b11010",
+    color: "#fdfafa",
     letterSpacing: -0.5,
     alignItems:'center',
-    marginLeft:100,
+    marginLeft:75,
   },
 
   subtitle: {
@@ -373,6 +377,12 @@ avatarText: {
       marginTop: 1,
       marginLeft:135,
   },
+
+  moffetButtonTitle: {
+  fontSize: 15,
+  fontWeight: "700",
+  color: "#c12525",
+},
   parkingButton: {
   flexDirection: "row",
   alignItems: "center",
