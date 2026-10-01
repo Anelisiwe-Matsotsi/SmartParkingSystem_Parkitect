@@ -15,8 +15,8 @@
 #include "addons/RTDBHelper.h"
 
 // Wifi credentials (will have to update to varsity wifi/personal hotspot at a later stage when testing live in parking lot)
-#define WIFI_SSID "HUAWEI-B525-B6DF"
-#define WIFI_PASSWORD "0L659M2Y403"
+#define WIFI_SSID "anique"
+#define WIFI_PASSWORD "anique:)"
 
 // Firebase Project Credentials
 #define API_KEY "AIzaSyDbL55frdOhcMZPmW3HiUFhBb7AWbj6Nwg"
@@ -91,7 +91,8 @@ void setup() {
   // Bluetooth beacon section
   // BLE Setup (Espressif Systems, 2023a)
   Serial.println("Initializing BLE Server...");
-  BLEDevice::init("Parkitects Beacon");
+  BLEDevice::init("Parkitects Beacon 1");
+  Serial.println("BLE Broadcasting Started: Parkitects Beacon 1");
   BLEServer *pServer = BLEDevice::createServer();
 
   // BLE broadcasting section (Espressif Systems, 2023a)
@@ -185,6 +186,7 @@ void processBay(int trigPin, int echoPin, int redPin, int greenPin, String bayId
   // Determines if the parking status changed or if distance just shifted by at least 4cm
   bool stateChanged = (isCurrentlyOccupied != lastState);
   bool distanceShifted = (abs(currentDistance - lastDist) >= 4);
+  bool firstRun = (lastDist == -1);
 
   if ((stateChanged || distanceShifted) && Firebase.ready()) 
   {
@@ -199,13 +201,9 @@ void processBay(int trigPin, int echoPin, int redPin, int greenPin, String bayId
     json.set("isLive", true);
 
     // Leaves user identifier ready for mobile app handshake
-    if (isCurrentlyOccupied) 
+    if (stateChanged || firstRun) 
     {
-      json.set("occupiedByUserId", "Anonymous"); // anonymous if the user refuses to use the mobile app and connect to the BLE linking their user account details
-    } 
-    else 
-    {
-      json.set("occupiedByUserId", "None");
+      json.set("occupiedByUserId", isCurrentlyOccupied ? "Anonymous" : "None");
     }
 
     // Pushes all fields in one single network packet to avoid ESP32 freezing (Mobizt, 2023)
