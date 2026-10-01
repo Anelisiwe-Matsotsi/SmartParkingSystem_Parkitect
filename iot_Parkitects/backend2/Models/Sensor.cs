@@ -24,5 +24,9 @@ namespace backend2.Models
 
         [ForeignKey("bayID")]
         public ParkingBay? ParkingBay { get; set; }
+
+        public string? firebaseBayKey {get; set; }
     }
+
+
 }
