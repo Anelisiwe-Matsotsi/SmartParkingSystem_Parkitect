@@ -166,32 +166,29 @@ new Sensor
             }
         }
 
-        // GET: api/Parking/beacon/Node_01
-        [HttpGet("beacon/{nodeKey}")]
-        public async Task<IActionResult> GetBayFromBeacon(string nodeKey)
+     // GET: api/Parking/beacon/Node_01
+[HttpGet("beacon/{nodeKey}")]
+public async Task<IActionResult> GetBaysFromBeacon(string nodeKey)
+{
+    var bays = await _context.Sensors
+        .Where(s => s.beaconNodeKey == nodeKey && s.ParkingBay != null)
+        .OrderBy(s => s.ParkingBay!.bayID)
+        .Select(s => new BeaconBayDto
         {
-             Console.WriteLine($"[Beacon] lookup for '{nodeKey}'");
-            var sensor = await _context.Sensors
-                .Include(s => s.ParkingBay)
-                .ThenInclude(b => b!.ParkingSection)
-                .FirstOrDefaultAsync(s => s.beaconNodeKey == nodeKey);
+            NodeKey = nodeKey,
+            BayID = s.ParkingBay!.bayID,
+            BayNumber = s.ParkingBay.bayNumber,
+            SectionName = s.ParkingBay.ParkingSection != null
+                ? s.ParkingBay.ParkingSection.sectionName : "",
+            IsOccupied = s.ParkingBay.isOccupied
+        })
+        .ToListAsync();
 
-            if (sensor == null || sensor.ParkingBay == null)
-            {
-                return NotFound("No parking bay is linked to this beacon.");
-            }
+    if (bays.Count == 0)
+        return NotFound("No parking bays are linked to this beacon.");
 
-            return Ok(new BeaconBayDto
-            {
-                NodeKey = sensor.beaconNodeKey!,
-                BayID = sensor.ParkingBay.bayID,
-                BayNumber = sensor.ParkingBay.bayNumber,
-                SectionName = sensor.ParkingBay.ParkingSection?.sectionName ?? "",
-                IsOccupied = sensor.ParkingBay.isOccupied
-            });
-            
-        }
-
+    return Ok(bays);
+}
         // POST: api/Parking/park
         [HttpPost("park")]
         public async Task<IActionResult> ParkVehicle([FromBody] ParkVehicleDto dto)

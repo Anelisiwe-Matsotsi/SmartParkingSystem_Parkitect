@@ -116,12 +116,12 @@ export type NearbyNode = {
   rssi: number;    // averaged signal strength in dBm, closer to 0 = closer
 };
 
-// "PARK_BEACON_NODE_1" -> "Node_01"
-export const toFirebaseNodeKey = (name: string) =>
-  `Node_${name.split('_').pop()!.padStart(2, '0')}`;
+const beaconNumber = (name: string) => name.match(/(\d+)\s*$/)?.[1] ?? '0';
 
-// "PARK_BEACON_NODE_1" -> "Node 1"
-export const toNodeLabel = (name: string) => `Node ${name.split('_').pop()}`;
+export const toFirebaseNodeKey = (name: string) =>
+  `Node_${beaconNumber(name).padStart(2, '0')}`;
+
+export const toNodeLabel = (name: string) => `Node ${Number(beaconNumber(name))}`;
 
 export function stopScan() {
   getBleManager().stopDeviceScan();

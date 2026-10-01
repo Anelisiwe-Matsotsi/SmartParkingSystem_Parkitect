@@ -240,7 +240,7 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
     try {
       //fetching network if network does not match network API it will give an error alert on the network
-      const response = await fetch('http://192.168.0.183:8080/api/Tickets',// BASE API URL at the moment it is YOUR wifi network:8000
+      const response = await fetch(`${API_BASE_URL}/api/Tickets`,// BASE API URL at the moment it is YOUR wifi network:8000
         {
           method: 'POST',
           headers: {

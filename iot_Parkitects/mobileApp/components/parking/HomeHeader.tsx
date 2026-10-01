@@ -21,7 +21,7 @@ import {
   scanNearbyNodes,
 } from '@/utils/ble';
 import SearchBar from "./SearchBar";
-import { getBayFromBeacon, parkVehicle } from "@/utils/parkingApi";
+import { getBaysForNode, claimBay } from "@/utils/parkingFirebase";
 import { auth } from "@/config/firebaseConfig";
 
 // 1. ADD PROPS SO IT CAN RECEIVE THE LIVE COUNT
@@ -140,67 +140,50 @@ if (nodes.length === 0) {
 
 const nearestNode = nodes[0];
 
-const bay = await getBayFromBeacon("Node_01");
-
-Alert.alert(
-  "Parking bay detected",
-  `You appear to be near ${bay.bayNumber}.\n\nSignal strength: ${nearestNode.rssi.toFixed(
-    1
-  )} dBm`,
-  [
-    {
-      text: "Cancel",
-      style: "cancel",
-    },
-    {
-      text: `Park in ${bay.bayNumber}`,
-      onPress: async () => {
-        try {
-          const firebaseUid = auth.currentUser?.uid;
-
-          if (!firebaseUid) {
-            Alert.alert(
-              "Not signed in",
-              "Please sign in before saving your parking bay."
-            );
-            return;
-          }
-
-          const result = await parkVehicle(
-            firebaseUid,
-            bay.bayID
-          );
-
-          Alert.alert(
-            "You're parked!",
-            `Your parking session has started in ${result.bayNumber}.`
-          );
-        } catch (error) {
-          console.error("[Parking] Failed to save parking:", error);
-
-          Alert.alert(
-            "Could not save parking",
-            error instanceof Error
-              ? error.message
-              : "Something went wrong."
-          );
-        }
-      },
-    },
-  ]
+const bays = await getBaysForNode(nearestNode.nodeKey);
+const claimable = bays.filter(
+  b => b.status === 'Occupied' && b.occupiedByUserId === 'Anonymous'
 );
 
-    const message = nodes
-      .map(
-        node =>
-          `${node.label}\nRSSI: ${node.rssi.toFixed(1)} dBm`
-      )
-      .join('\n\n');
+if (claimable.length === 0) {
+  Alert.alert(
+    "No occupied bays found",
+    "The sensors don't show an unclaimed car near this beacon. Make sure you've parked and try again."
+  );
+  return;
+}
 
+const firebaseUid = auth.currentUser?.uid;
+if (!firebaseUid) {
+  Alert.alert("Not signed in", "Please sign in before saving your parking bay.");
+  return;
+}
+
+const saveParking = async (bayId: string) => {
+  try {
+    const ok = await claimBay(nearestNode.nodeKey, bayId, firebaseUid);
     Alert.alert(
-      'Nearby parking bays',
-      message
+      ok ? "You're parked!" : "Bay no longer available",
+      ok ? `Saved: ${bayId.replace('Bay', 'Bay ')}.` : "Someone else claimed it, or the car has left."
     );
+  } catch (error) {
+    console.error("[Parking] claim failed:", error);
+    Alert.alert("Could not save parking", "Something went wrong.");
+  }
+};
+
+Alert.alert(
+  "Which bay are you in?",
+  "These bays are occupied near you.",
+  [
+    ...claimable.slice(0, 2).map(b => ({
+      text: b.bayId.replace('Bay', 'Bay '),
+      onPress: () => saveParking(b.bayId),
+    })),
+    { text: "Cancel", style: "cancel" as const },
+  ]
+);
+    
 
   } catch (error) {
     console.error('[BLE] Scan failed:', error);
