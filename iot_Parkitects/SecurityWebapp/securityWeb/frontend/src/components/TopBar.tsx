@@ -1,10 +1,47 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../config/firebase";
+
 export const TopBar: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() =>{
+    return localStorage.getItem("theme") === "dark";
+  });
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
 
+  const navigate = useNavigate();
+
+  //gets the logged in users details
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (!currentUser){
+        setUserName("");
+        setUserEmail("");
+        return;
+      }
+
+      setUserName(
+        currentUser.displayName || "");
+
+      setUserEmail(currentUser.email || "");
+    });
+
+    return () => unsubscribe();
+  },[]);
+
+  //this applies the dark theme across the entire website using the toggle at the top
+  useEffect(() => {
+    const theme = darkMode ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", theme);
+
+    //saves the theme so it stays the same throught all the pages
+    localStorage.setItem("theme", theme);
+  },[darkMode]);
+
+  //changes between dark mode and light mode when the toggle is clicked
   const toggleDarkMode = () => {
     setDarkMode((current) => !current);
   };
@@ -19,7 +56,18 @@ export const TopBar: React.FC = () => {
     setShowNotifications(false);
   };
 
-  const navigate = useNavigate();
+  //gets the user's initials for the avatar
+  const getInitials = () => {
+    if(!userName) {
+      return "SG";
+    }
+    return userName
+    .split(" ")
+    .map((name) => name[0]).join("").substring(0, 2).toUpperCase();
+  }
+
+  
+
   return (
     <header className={`topbar ${darkMode ? "dark-mode" : ""}`}>
 
@@ -198,11 +246,12 @@ export const TopBar: React.FC = () => {
             onClick={toggleProfile}
           >
             <span className="avatar">
-              SG
+              {getInitials()}
             </span>
 
             <span className="profile-name">
-              Security
+              <strong>{userName || "" }</strong>
+              <small>{userEmail}</small>
             </span>
 
             <i
@@ -219,12 +268,12 @@ export const TopBar: React.FC = () => {
               <div className="profile-summary">
 
                 <span className="avatar large">
-                  SG
+                  {getInitials()}
                 </span>
 
                 <span>
-                  <strong>Security</strong>
-                  <small>security@parkitects.co.za</small>
+                  <strong>{userName || ""}</strong>
+                  <small>{userEmail}</small>
                 </span>
 
               </div>

@@ -543,9 +543,25 @@ a:focus-visible {
 }
 
 .profile-name {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    line-height: 1.2;
+    text-align: left;
     color: var(--text);
     font-size: 12px;
     font-weight: 700;
+}
+
+.profile-name small {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 400;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .menu-wrap {
