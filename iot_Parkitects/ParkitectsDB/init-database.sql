@@ -104,6 +104,7 @@ CREATE TABLE Sensor (
     hardwareModel NVARCHAR(255) NOT NULL,
     location GEOGRAPHY NULL,
     beaconNodeKey NVARCHAR(100) NULL,
+    firebaseBayKey NVARCHAR(100) NULL,
     CONSTRAINT FK_Sensor_ParkingBay FOREIGN KEY (bayID) REFERENCES ParkingBay(bayID) ON DELETE CASCADE
 );
 

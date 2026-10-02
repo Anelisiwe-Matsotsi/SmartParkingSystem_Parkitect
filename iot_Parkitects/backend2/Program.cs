@@ -23,7 +23,7 @@ namespace backend2
             builder.Services.AddHttpClient("ExpoPush", client =>
             {
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
-                client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
+              //  client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
             });
             builder.Services.AddScoped<IExpoPushService, ExpoPushService>();
 

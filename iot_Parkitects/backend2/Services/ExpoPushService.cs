@@ -21,28 +21,41 @@ namespace backend2.Services
 
         //method to send a notification- to put a notification in a json object
         //(Bravo, 2021)
-        public async Task SendAsync (string expoPushToken, string title, string body, object? data = null)
+        public async Task SendAsync(string expoPushToken, string title, string body, object? data = null)
         {
-            if (string.IsNullOrEmpty(expoPushToken)|| !expoPushToken.StartsWith("ExpoPushToken"))
+            if (string.IsNullOrEmpty(expoPushToken) ||
+      !(expoPushToken.StartsWith("ExponentPushToken[") || expoPushToken.StartsWith("ExpoPushToken[")))
             {
+                Console.WriteLine($"[Push] Skipping invalid token: {expoPushToken}");
                 return;
             }
 
             //object to store the notification message to json
-            var payload = new {to = expoPushToken, title, body, data, sound = "default",
-             _displayInForeground = true};//makes sure that notification pops up when app is open
+            var payload = new
+            {
+                to = expoPushToken,
+                title,
+                body,
+                data,
+                sound = "default",
+                channelId = "default",   
+                priority = "high"
+
+            };//makes sure that notification pops up when app is open
             //(Glyph, Putten and Nasstrom,2022)
             var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-            await _httpClient.PostAsync(ExpoPushUrl, content);
+           var response = await _httpClient.PostAsync(ExpoPushUrl, content);
+           var result = await response.Content.ReadAsStringAsync();
+           Console.WriteLine($"[Push] {(int)response.StatusCode}: {result}"); 
         }
 
         //sends the message from the json object to the specific firebase user ID
-        public async Task NotifyUserAsync (string userID, string title, string body, object? data = null)
+        public async Task NotifyUserAsync(string userID, string title, string body, object? data = null)
         {
             //find token for specific user in the PushToken table
             var tokens = await _context.PushToken.Where(t => t.userID == userID)
                         .Select(t => t.token).ToListAsync();
-            
+
             foreach (var token in tokens)
             {
                 await SendAsync(token, title, body, data);
