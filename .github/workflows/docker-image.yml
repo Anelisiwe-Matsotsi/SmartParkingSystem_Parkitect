@@ -1,0 +1,97 @@
+name: Advanced CI/CD Integration Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  # JOB 1: Evaluates codebase syntax layout, configurations, and warnings early
+  code-quality:
+    name: 🛡️ Code Quality & Formatting
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+        cache: true
+        cache-dependency-path: '**/*.csproj'
+
+    - name: Verify Code Formatting
+      run: dotnet format --verify-no-changes --severity warn
+
+    - name: Static Code Analysis
+      run: dotnet build --configuration Release /warnaserror
+
+  # JOB 2: Validates compile capability within runner environments
+  compile-and-build:
+    name: 🏗️ Docker Build & Package
+    runs-on: ubuntu-latest
+    needs: code-quality
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+        cache: true
+        cache-dependency-path: '**/*.csproj'
+
+    - name: Build Application Containers
+      run: docker compose build
+
+  # JOB 3: Launches local dependency topologies and handles cross-integration validations
+  integration-testing:
+    name: 🧪 System Integration Verification
+    runs-on: ubuntu-latest
+    needs: compile-and-build
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+        cache: true
+        cache-dependency-path: '**/*.csproj'
+
+    - name: Build and Launch Application Mesh
+      run: docker compose up --build -d
+
+    - name: Grace Period for Database Boot
+      run: |
+        echo "Giving ParkitectsDB SQL Server 25 seconds to complete table setups..."
+        sleep 25
+
+    - name: Wait for API Readiness
+      run: |
+        echo "Waiting for backend2 API to wake up at http://localhost:8080..."
+        timeout 60s sh -c 'until curl -sSf http://localhost:8080/api/Tickets > /dev/null; do sleep 2; done'
+        echo "backend2 API is up and running!"
+
+    - name: Integration Step 1 - Verify Tickets Endpoint
+      run: |
+        echo "Querying the tickets index from the database..."
+        curl -X GET http://localhost:8080/api/Tickets --fail --verbose
+
+    - name: Tear Down Mesh and Logs
+      if: always()
+      run: |
+        docker compose logs backend2 > backend2-container-debug.log
+        docker compose logs db > db-debug.log
+        docker compose down --volumes
