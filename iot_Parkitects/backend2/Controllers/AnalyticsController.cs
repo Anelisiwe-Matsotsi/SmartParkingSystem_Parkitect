@@ -21,22 +21,33 @@ namespace backend2.Controllers
         [HttpGet("history")]
         public async Task<IActionResult> GetParkingHistory()
         {
-            // Joins ParkingSessions, Users, and ParkingBays tables to construct the table rows in the analytics page on the web app
-            var history = await _context.ParkingSessions
+            // Query the raw data from the database using primitive types (Microsoft, 2026)
+            var rawHistory = await _context.ParkingSessions
                 .Join(_context.Users, session => session.userID, user => user.UserId, (session, user) => new { session, user })
-                .Join(_context.ParkingBays, combined => combined.session.bayID, bay => bay.bayID, (combined, bay) => new ParkingHistory
+                .Join(_context.ParkingBays, combined => combined.session.bayID, bay => bay.bayID, (combined, bay) => new 
                 {
-                    Bay = bay.bayNumber,
-                    User = combined.user.Name,
-                    UserType = combined.user.UserRole,
-                    TimeIn = combined.session.startDate.ToString("hh:mm tt"),
-                    TimeOut = combined.session.endDate.HasValue ? combined.session.endDate.Value.ToString("hh:mm tt") : "—",
-                    Duration = combined.session.endDate.HasValue ? 
-                        $"{(combined.session.endDate.Value - combined.session.startDate).Hours}h {(combined.session.endDate.Value - combined.session.startDate).Minutes}m" : "Active",
-                    Status = combined.session.endDate.HasValue ? "Completed" : "Parked"
+                    BayNumber = bay.bayNumber,
+                    UserName = combined.user.Name,
+                    UserRole = combined.user.UserRole,
+                    StartDate = combined.session.startDate,
+                    EndDate = combined.session.endDate
                 })
-                .OrderByDescending(h => h.TimeIn) // Show newest first
-                .ToListAsync();
+                // Order by the actual DateTime object before converting it to a string
+                .OrderByDescending(h => h.StartDate) 
+                .ToListAsync(); // Executes the SQL query and pulls the raw data into server memory
+
+            // Format the data into strings
+            var history = rawHistory.Select(h => new ParkingHistory
+            {
+                Bay = h.BayNumber,
+                User = h.UserName,
+                UserType = h.UserRole,
+                TimeIn = h.StartDate.ToString("hh:mm tt"),
+                TimeOut = h.EndDate.HasValue ? h.EndDate.Value.ToString("hh:mm tt") : "—",
+                Duration = h.EndDate.HasValue ? 
+                    $"{(h.EndDate.Value - h.StartDate).Hours}h {(h.EndDate.Value - h.StartDate).Minutes}m" : "Active",
+                Status = h.EndDate.HasValue ? "Completed" : "Parked"
+            }).ToList();
 
             return Ok(history);
         }

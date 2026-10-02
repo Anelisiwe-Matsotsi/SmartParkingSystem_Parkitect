@@ -33,11 +33,11 @@ export const AnalyticsPage: React.FC = () => {
   useEffect(() => {
     const fetchAnalyticsData = async () => {
       try {
-        const historyResponse = await fetch("https://localhost:7001/api/analytics/history");
+        const historyResponse = await fetch("http://localhost:8080/api/analytics/history");
         const historyData = await historyResponse.json();
         setRows(historyData);
 
-        const summaryResponse = await fetch("https://localhost:7001/api/analytics/summary");
+        const summaryResponse = await fetch("http://localhost:8080/api/analytics/summary");
         const summaryData = await summaryResponse.json();
         setSummary({
             issued: summaryData.ticketsIssued,

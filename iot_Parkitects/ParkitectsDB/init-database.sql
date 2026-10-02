@@ -178,3 +178,35 @@ CREATE TABLE Ratings (
     CONSTRAINT FK_AppRating_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
 );
 GO
+
+-- Insert statements below to test the analytics web page
+
+-- Insert Test Users
+INSERT INTO [User] (firebaseUid, userNumber, name, email, userRole, isParked)
+VALUES 
+('xEaaEghMnbhIRlIUZPk6Gz0JSjQ2', 'ST10433896', 'Kyle Daniels', 'kyle140403@gmail.com', 'Student', 0),
+('VkitpMBTTLYA78Tejov0i0T0BRq1', 'LR12345678', 'Natasha Afonso', 'natty.yo24@gmail.comn', 'Lecturer', 0),
+('sqAJGSuOQXgTQ7vAmkSPpCJxRSJ2', 'ST12345687', 'Natheer Jardien', 'nj@gmail.com', 'Student', 0);
+
+-- Insert the Parking Lot
+INSERT INTO ParkingLot (lotName, campusLocation, totalCapacity)
+VALUES ('Lot_A', 'Main Campus North', 50);
+
+-- Insert the Parking Layout (Node)
+INSERT INTO ParkingLayout (parkingID, sectionName)
+VALUES (1, 'Node_01');
+
+-- Insert the Parking Bays
+INSERT INTO ParkingBay (layoutID, bayNumber, isOccupied)
+VALUES 
+(1, 'Bay3', 0),
+(1, 'Bay4', 0),
+(1, 'Bay5', 0);
+
+-- 5. Insert mock tickets to test the Analytics summary cards
+INSERT INTO Tickets (userID, bayID, bayNumber, sectionID, reason, status, createdAt, updatedAt)
+VALUES 
+('xEaaEghMnbhIRlIUZPk6Gz0JSjQ2', '3', 'Bay3', 'Node_01', 'Restricted parking', 'Resolved', DATEADD(hour, -5, GETDATE()), DATEADD(hour, -2, GETDATE())),
+('VkitpMBTTLYA78Tejov0i0T0BRq1', '4', 'Bay4', 'Node_01', 'Overstayed parking', 'Pending', DATEADD(hour, -1, GETDATE()), NULL),
+('sqAJGSuOQXgTQ7vAmkSPpCJxRSJ2', '5', 'Bay5', 'Node_01', 'Incorrect bay', 'Resolved', DATEADD(hour, -10, GETDATE()), DATEADD(hour, -8, GETDATE()));
+GO

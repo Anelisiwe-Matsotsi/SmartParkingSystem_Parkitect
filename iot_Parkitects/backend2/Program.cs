@@ -28,10 +28,10 @@ namespace backend2
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // This allows our Expo mobile app to send POST requests to this backend (Microsoft, 2026)
+            // This allows our Expo mobile app and web app to send POST requests to this backend (Microsoft, 2026)
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowMobileApp", policy =>
+                options.AddPolicy("AllowAllClients", policy =>
                 {
                     policy.AllowAnyOrigin()
                           .AllowAnyMethod()
@@ -54,7 +54,8 @@ namespace backend2
             }
 
 
-            app.UseCors("AllowMobileApp");
+            app.UseCors("AllowAllClients");
+
 
             app.UseHttpsRedirection();
 
