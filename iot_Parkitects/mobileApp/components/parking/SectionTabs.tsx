@@ -9,7 +9,6 @@ import {
 } from "react-native";
 
 const tabs = [
-  { name: "U-View" },
   { name: "Section A" },
   { name: "Section B" },
   { name: "Section C" },

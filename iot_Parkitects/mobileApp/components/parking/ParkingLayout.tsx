@@ -1,93 +1,88 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import ParkingBay from './ParkingBay';
 import SectionTabs from './SectionTabs';
 
+// Each number in "groups" is a block of bays; an aisle is drawn between blocks
+const SECTIONS: Record<string, { prefix: string; title: string; groups: number[] }> = {
+  'Section A': { prefix: 'A', title: 'Building A', groups: [16, 16] },
+  'Section B': { prefix: 'B', title: 'Building B', groups: [62] },
+  'Section C': { prefix: 'C', title: 'Building C', groups: [20, 19] },
+  'Section D': { prefix: 'D', title: 'Building D', groups: [24, 23] },
+  'Section E': { prefix: 'E', title: 'Building E', groups: [40, 40] },
+};
+
+// "A-03", "A03" and "a3" all become "A3" so they match the generated ids
+const normalize = (raw: string) => {
+  const m = String(raw ?? '').trim().match(/^([A-Za-z])\s*-?\s*0*(\d+)$/);
+  return m ? `${m[1].toUpperCase()}${m[2]}` : String(raw ?? '').toUpperCase();
+};
+
 export default function ParkingLayout({ mapData }: { mapData: any }) {
-  const [activeSection, setActiveSection] = useState('U-View');
+  const [activeSection, setActiveSection] = useState('Section A');
+  const config = SECTIONS[activeSection];
 
-  const getSection = (name: string) => {
-    return mapData?.sections?.find((s: any) => s.sectionName?.toUpperCase().includes(name.toUpperCase()));
+  const section = mapData?.sections?.find((s: any) =>
+    s.sectionName?.toUpperCase().includes(activeSection.toUpperCase())
+  );
+
+  // Look up bays by normalized number instead of searching the array for every bay
+  const bayLookup = useMemo(() => {
+    const map = new Map<string, any>();
+    section?.bays?.forEach((b: any) => map.set(normalize(b.bayNumber), b));
+    return map;
+  }, [section]);
+
+  const isOccupied = (i: number) => {
+    const realBay = bayLookup.get(`${config.prefix}${i}`);
+    return realBay ? realBay.isOccupied : i % 6 === 0; // live data fallback
   };
 
-  // Renders an exact horizontal row of bays for the blueprint
-  const renderRow = (sectionData: any, prefix: string, startIndex: number, count: number) => {
-    const bays = [];
-    for (let i = startIndex; i < startIndex + count; i++) {
-      const realBay = sectionData?.bays?.find((b: any) => b.bayNumber === `${prefix}${i}` || b.bayNumber === `${prefix}-${i}`);
-      bays.push(
-        <ParkingBay
-          key={`${prefix}-${i}`}
-          id={`${prefix}-${i}`}
-          occupied={realBay ? realBay.isOccupied : i % 6 === 0} // Live data fallback
-        />
-      );
-    }
-    return <View style={styles.parkingRow}>{bays}</View>;
-  };
+  const total = config.groups.reduce((a, b) => a + b, 0);
+  let freeCount = 0;
+  for (let i = 1; i <= total; i++) if (!isOccupied(i)) freeCount++;
+
+  let nextBay = 1;
 
   return (
     <View style={styles.container}>
-      {/* THE ONLY TAB BAR */}
       <SectionTabs selectedSection={activeSection} onSelectSection={setActiveSection} />
 
-      {/* HORIZONTAL SCROLL ALLOWS THE MAP TO BE WIDE LIKE A REAL BLUEPRINT */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-        <View style={styles.blueprintCanvas}>
-          
-          {/* E, D, C STACKED IN THE CENTER */}
-          {(activeSection === 'U-View' || activeSection === 'Section E') && (
-            <View style={styles.buildingBlock}>
-              <Text style={styles.buildingTitle}>BUILDING E (~80 BAYS)</Text>
-              {renderRow(getSection('SECTION E'), 'E', 1, 20)}
-              {renderRow(getSection('SECTION E'), 'E', 21, 20)}
-              <View style={styles.aisle}><Text style={styles.aisleText}>AISLE</Text></View>
-              {renderRow(getSection('SECTION E'), 'E', 41, 20)}
-              {renderRow(getSection('SECTION E'), 'E', 61, 20)}
-            </View>
-          )}
-
-          {(activeSection === 'U-View' || activeSection === 'Section D') && (
-            <View style={styles.buildingBlock}>
-              <Text style={styles.buildingTitle}>BUILDING D (47 BAYS)</Text>
-              {renderRow(getSection('SECTION D'), 'D', 1, 24)}
-              <View style={styles.aisle}><Text style={styles.aisleText}>AISLE</Text></View>
-              {renderRow(getSection('SECTION D'), 'D', 25, 23)}
-            </View>
-          )}
-
-          {(activeSection === 'U-View' || activeSection === 'Section C') && (
-            <View style={styles.buildingBlock}>
-              <Text style={styles.buildingTitle}>BUILDING C (39 BAYS)</Text>
-              {renderRow(getSection('SECTION C'), 'C', 1, 20)}
-              <View style={styles.aisle}><Text style={styles.aisleText}>AISLE</Text></View>
-              {renderRow(getSection('SECTION C'), 'C', 21, 19)}
-            </View>
-          )}
-
-          {/* BOTTOM SECTION: B ON LEFT, A ON RIGHT */}
-          <View style={styles.bottomCampus}>
-            {(activeSection === 'U-View' || activeSection === 'Section B') && (
-              <View style={styles.buildingBlockSide}>
-                <Text style={styles.buildingTitle}>BUILDING B (62 BAYS)</Text>
-                {renderRow(getSection('SECTION B'), 'B', 1, 21)}
-                {renderRow(getSection('SECTION B'), 'B', 22, 21)}
-                {renderRow(getSection('SECTION B'), 'B', 43, 20)}
-              </View>
-            )}
-
-            {(activeSection === 'U-View' || activeSection === 'Section A') && (
-              <View style={[styles.buildingBlockSide, { marginLeft: activeSection === 'U-View' ? 120 : 0 }]}>
-                <Text style={styles.buildingTitle}>BUILDING A (32 BAYS)</Text>
-                {renderRow(getSection('SECTION A'), 'A', 1, 16)}
-                <View style={styles.aisle}><Text style={styles.aisleText}>AISLE</Text></View>
-                {renderRow(getSection('SECTION A'), 'A', 17, 16)}
-              </View>
-            )}
+      <View style={styles.sectionCard}>
+        <View style={styles.header}>
+          <Text style={styles.title}>{config.title}</Text>
+          <View style={styles.pill}>
+            <Text style={styles.pillText}>{freeCount} of {total} free</Text>
           </View>
-
         </View>
-      </ScrollView>
+
+        {config.groups.map((count, groupIndex) => {
+          const start = nextBay;
+          nextBay += count;
+
+          return (
+            <View key={groupIndex}>
+              {groupIndex > 0 && (
+                <View style={styles.aisle}>
+                  <Text style={styles.aisleText}>AISLE</Text>
+                </View>
+              )}
+              <View style={styles.bayGrid}>
+                {Array.from({ length: count }, (_, k) => {
+                  const i = start + k;
+                  return (
+                    <ParkingBay
+                      key={`${config.prefix}-${i}`}
+                      id={`${config.prefix}-${i}`}
+                      occupied={isOccupied(i)}
+                    />
+                  );
+                })}
+              </View>
+            </View>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -98,55 +93,56 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     marginTop: 10,
     marginHorizontal: 10,
-    paddingBottom: 20,
-    overflow: 'hidden'
+    paddingBottom: 12,
+    overflow: 'hidden',
   },
-  blueprintCanvas: {
-    padding: 20,
-    // Forces the canvas to be wide enough to fit 24 horizontal bays (24 * ~55px)
-    width: 1400, 
-    alignItems: 'center',
+  sectionCard: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 12,
+    borderRadius: 14,
+    marginHorizontal: 8,
+    padding: 12,
   },
-  buildingBlock: {
-    alignItems: 'center',
-    marginBottom: 30,
-    width: '100%',
-  },
-  bottomCampus: {
+  header: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    width: '100%',
-    marginTop: 20,
-  },
-  buildingBlockSide: {
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  parkingRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  buildingTitle: {
-    fontSize: 14,
+  title: {
+    fontSize: 15,
     fontWeight: '800',
     color: '#0B5D6B',
-    marginBottom: 10,
-    letterSpacing: 1,
+    letterSpacing: 0.5,
+  },
+  pill: {
+    backgroundColor: '#E8F7F7',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  pillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0B5D6B',
+  },
+  bayGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 4,
   },
   aisle: {
-    width: '80%',
-    height: 30,
+    height: 26,
     backgroundColor: '#E2E8F0',
-    borderRadius: 4,
+    borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 6,
+    marginVertical: 10,
   },
   aisleText: {
     color: '#94A3B8',
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 6,
-  }
+  },
 });
