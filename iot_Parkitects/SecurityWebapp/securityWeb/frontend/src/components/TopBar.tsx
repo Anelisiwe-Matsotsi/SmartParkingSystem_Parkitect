@@ -32,6 +32,28 @@ export const TopBar: React.FC = () => {
     return () => unsubscribe();
   },[]);
 
+  //(Akbulut, 2022)
+  useEffect(() => {
+    const onLoad = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+        setUserName(detail.name);
+        setUserEmail(detail.email);
+      };
+      const onUnload = () => {
+        const u =auth.currentUser;
+        setUserName(u?.displayName || "");
+        setUserEmail(u?.email || "");
+      };
+
+    window.addEventListener("profileLoad", onLoad);
+    window.addEventListener("profileUnload", onUnload);
+    return () => {
+      window.removeEventListener("profileLoad", onLoad);
+      window.removeEventListener("profileUnload", onUnload);
+    };
+  }, []);
+
+
   //this applies the dark theme across the entire website using the toggle at the top
   useEffect(() => {
     const theme = darkMode ? "dark" : "light";
@@ -310,6 +332,7 @@ export const TopBar: React.FC = () => {
 
 export default TopBar;
 {/*References
+  Akbulut, U. 2022. JavaScript: Understanding CustomEvent and dispatchEvent. (Version 2.0) [Source Code] Available at:<https://medium.com/cstech/javascript-understanding-customevent-and-dispatchevent-a33d10075818> [Accessed 1 October 2026].
  realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
                
  */}

@@ -39,6 +39,7 @@ namespace backend2.Controllers
             
             if (preferences == null) //default settings for new users
             {
+                settings.settingsID = 0; 
                 settings.userID = userID;
                 _context.Settings.Add(settings);
                 await _context.SaveChangesAsync(); //changes are saved to the DB

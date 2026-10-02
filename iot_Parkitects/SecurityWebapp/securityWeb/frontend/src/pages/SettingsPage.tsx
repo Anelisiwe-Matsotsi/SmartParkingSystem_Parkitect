@@ -14,6 +14,7 @@ export const SettingsPage: React.FC = () => {
   //Stores the loggd in user's details
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
 
   //Web security settings
@@ -71,11 +72,59 @@ export const SettingsPage: React.FC = () => {
       setUserName(currentUser.displayName || "");
       //get's the user's email from firebase
       setUserEmail(currentUser.email || "");
+      setProfileLoaded(true);
+      
     });
 
     return() => unsubscribe();
 
   }, []);
+
+  //(Akbulut, 2022)
+  //This sends the user's details to the top bar so it can be displayed in the profile section
+  useEffect(() => {
+    if(!profileLoaded) return;
+    window.dispatchEvent(
+      new CustomEvent("profileLoad", {
+        detail: { 
+          name: userName,
+          email: userEmail
+        },
+      })
+    );
+  }, [profileLoaded, userName, userEmail]);
+
+
+  useEffect(() => {
+    return () => {
+      window.dispatchEvent(new CustomEvent("profileUnload"));
+    };
+  }, []);
+
+   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) return;
+      try {
+        const response = await fetch(`/api/Settings/user/${currentUser.uid}`);
+        if (!response.ok) throw new Error("Failed to load settings.");
+        const settings = await response.json();
+
+        setNotifications({
+          ticketUpdates: settings.ticketUpdates ?? true,
+          parkingAlerts: settings.parkingAlerts ?? true,
+          systemAlerts: settings.systemAlerts ?? true,
+        });
+        setPreferences((current) => ({
+          darkMode: current.darkMode,
+          compactTables: settings.compactTables ?? false,
+        }));
+      } catch (error) {
+        console.error("Error loading settings:", error);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
 
   //loads the user's settings from the backend
   useEffect(() => {
@@ -90,12 +139,8 @@ export const SettingsPage: React.FC = () => {
 
       try{
 
-        const response = await fetch(`api/Settings/user/${currentUser.uid}`);
+        const response = await fetch(`/api/Settings/user/${currentUser.uid}`);
 
-
-        if (!response.ok){
-          throw new Error("Failed to load settings.");
-        }
         const settings = await response.json();
 
         //load the notification settings
@@ -142,6 +187,7 @@ export const SettingsPage: React.FC = () => {
           userEmail.trim()
         );
       }
+      
       //saves the settings to the backend
       const response = await fetch(
         `/api/Settings/user/${currentUser.uid}`,
@@ -507,6 +553,7 @@ export const SettingsPage: React.FC = () => {
 
 export default SettingsPage;
 {/*References
+  Akbulut, U. 2022. JavaScript: Understanding CustomEvent and dispatchEvent. (Version 2.0) [Source Code] Available at:<https://medium.com/cstech/javascript-understanding-customevent-and-dispatchevent-a33d10075818> [Accessed 1 October 2026].
   Firebase. 2026. Manage Users in Firebase. (Version 2.0) [Source Code] Available at:<https://firebase.google.com/docs/auth/web/manage-users> [Accessed 27 September 2026].
   Leiberman, L. 2021. Dark Mode 2.0 : With Local Storage. (Version 2.0) [Source Code] Available at:<https://dr-lucasleibs.medium.com/dark-mode-2-0-with-local-storage-6f992683204d> [Accessed 27 September 2026].
   Mustafamulla. 2024. How to Implement Dark Mode in React with Tailwind CSS. (Version 2.0) [Source Code] Available at:<https://medium.com/@mustafamulla765/how-to-implement-dark-mode-in-react-with-tailwind-css-94df7522ed82> [Accessed 25 September 2026].
