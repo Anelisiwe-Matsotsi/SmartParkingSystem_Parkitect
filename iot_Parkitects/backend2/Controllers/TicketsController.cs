@@ -15,13 +15,15 @@ namespace backend2.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly IExpoPushService _pushService;//(Expo Docs, 2026)
+        private readonly IEmailService _emailService;
 
-        public TicketsController(ApplicationDbContext context, IConfiguration config, IExpoPushService pushService)
+        public TicketsController(ApplicationDbContext context, IConfiguration config, IExpoPushService pushService, IEmailService emailService)
         {
             _context = context;
             _configuration = config;
             _pushService = pushService;
-        }
+            _emailService = emailService;
+        
 
         // GET: api/Ticket
         [HttpGet]
@@ -120,39 +122,49 @@ private async Task<string?> FindOccupantUidAsync(string? bayNumber)
         }
 
 
- //PUT: api/Tickets/5 Update
-[HttpPut("{id}")]
-public async Task<IActionResult> Update(int id, [FromBody] Ticket ticket)
-{
-    if (id != ticket.ticketID) return BadRequest();
+        //PUT: api/Tickets/5 Update
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] Ticket ticket)
+        {
+            if (id != ticket.ticketID) return BadRequest();
 
-    var existing = await _context.Tickets.FindAsync(id);
-    if (existing == null) return NotFound();
+            var existing = await _context.Tickets.FindAsync(id);
+            if (existing == null) return NotFound();
 
-//gets the status of the ticket for the ticket response workflow
-    var previousStatus = existing.status;
-    existing.status = ticket.status;
-    existing.response = ticket.response;
-    existing.updatedAt = DateTime.UtcNow;//time updated
-    await _context.SaveChangesAsync();
+            //gets the status of the ticket for the ticket response workflow
+            var previousStatus = existing.status;
+            existing.status = ticket.status;
+            existing.response = ticket.response;
+            existing.updatedAt = DateTime.UtcNow;//time updated
+            await _context.SaveChangesAsync();
 
 
-//(Expo Docs, 2026)
-            //notify user based on ticket status for expo push service
-    if (existing.status == "Notified" && previousStatus == "Pending")
-    {
-        await _pushService.NotifyUserAsync(existing.userID, "Parking ticket issued",
-            $"Ticket #{existing.ticketID} - {existing.reason}", new { ticketId = existing.ticketID });
-    }
-      //if the user does not solve the ticket properly they will be notified again
-    else if (existing.status == "Notified" && previousStatus == "Awaiting review")
-    {
-        await _pushService.NotifyUserAsync(existing.userID, "Ticket needs to be reviewed again",
-            "Security says violation has not been resolved. Please fix it properly.", new { ticketId = existing.ticketID });
-    }
+        //(Expo Docs, 2026)
+        //notify user based on ticket status for expo push service
+        
+            if (existing.status == "Notified" && previousStatus == "Pending")
+            {
+                await _pushService.NotifyUserAsync(existing.userID, "Parking ticket issued",
+                    $"Ticket #{existing.ticketID} - {existing.reason}", new { ticketId = existing.ticketID });
+                
+                //getting the users email address through firebase in users table
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == ticket.userID);
+                if (user != null)
+                {
+                    //message that get sent via email to the user
+                    await _emailService.SendTicketEmailAsync(user.Email, $"Parking Ticket Issued - #{existing.ticketID}",
+                            $"A parking ticket has been issued against your vehicle.\n\nBay: {existing.bayNumber}\nReason: {existing.reason} \n\nPlease check the notifications sent in the Parkitech Mobile App for more details (enable your push notifications if not on).");
+                }    
+            }
+            //if the user does not solve the ticket properly they will be notified again
+            else if (existing.status == "Notified" && previousStatus == "Awaiting review")
+            {
+                await _pushService.NotifyUserAsync(existing.userID, "Ticket needs to be reviewed again",
+                    "Security says violation has not been resolved. Please fix it properly.", new { ticketId = existing.ticketID });
+            }
 
-    return NoContent();
-}
+            return NoContent();
+        }
 
 
        
