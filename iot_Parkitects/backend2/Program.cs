@@ -20,6 +20,9 @@ namespace backend2
             builder.Services.AddHttpClient();
             builder.Services.AddOpenApi(); // Keeps the native engine
 
+            // Allows the Firebase Sync Service to run as a singleton background process
+            builder.Services.AddHostedService<Services.FirebaseSyncService>();
+
             // DB configuration
             // This connects our app to the SQL db using the connection string in appsettings.json (Microsoft, 2026)
             builder.Services.AddDbContext<ApplicationDbContext>(options =>

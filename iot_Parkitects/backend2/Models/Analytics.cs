@@ -19,4 +19,12 @@ namespace backend2.Models
         public string? Duration { get; set; }
         public string? Status { get; set; }
     }
+
+    public class FirebaseBayData
+    {
+        public int distanceCm { get; set; }
+        public bool isLive { get; set; }
+        public string? occupiedByUserId { get; set; }
+        public string? status { get; set; }
+    }
 }
