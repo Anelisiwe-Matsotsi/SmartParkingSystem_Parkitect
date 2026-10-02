@@ -57,14 +57,47 @@ namespace backend2.Controllers
         public async Task<IActionResult> GetSummaryStats()
         {
             var tickets = await _context.Tickets.ToListAsync();
+            var totalTickets = tickets.Count;
+
+            // Calculate Bar Chart Heights 
+            var weeklyCounts = new int[7];
+
+            foreach (var ticket in tickets)
+            {
+                // DayOfWeek starts at Sunday (0). We shift it so Monday is 0 and Sunday is 6.
+                int dayIndex = ((int)ticket.createdAt.DayOfWeek + 6) % 7;
+                weeklyCounts[dayIndex]++;
+            }
+
+            // Convert raw counts to percentages relative to the busiest day so the CSS bars scale correctly
+            var maxDayCount = weeklyCounts.Max() == 0 ? 1 : weeklyCounts.Max();
+            var weeklyChart = weeklyCounts.Select(count => (int)Math.Round((double)count / maxDayCount * 100)).ToArray();
+
+            // Calculate the percentages for the violation chart
+            int getPercentage(string reason) => totalTickets == 0 ? 0 : 
+                (int)Math.Round((double)tickets.Count(t => t.reason == reason) / totalTickets * 100);
+
+            int rpPercent = getPercentage("Restricted parking");
+            int vbPercent = getPercentage("Vehicle outside bay"); 
+            int ibPercent = getPercentage("Incorrect bay");
+            int otherPercent = 100 - (rpPercent + vbPercent + ibPercent); // Remainder
             
+            // Create a variable to hold all the summary data to be returned
             var summary = new AnalyticsSummary
             {
                 TicketsIssued = tickets.Count,
                 TicketsResolved = tickets.Count(t => t.status == "Resolved"),
                 AvgResolutionTimeHours = tickets
                     .Where(t => t.status == "Resolved" && t.updatedAt.HasValue)
-                    .Average(t => (t.updatedAt.Value - t.createdAt).TotalHours)
+                    .Average(t => (t.updatedAt.Value - t.createdAt).TotalHours),
+                WeeklyChart = weeklyChart,
+                ViolationBreakdown = new Dictionary<string, int>
+                {
+                    { "RP", rpPercent },
+                    { "VB", vbPercent },
+                    { "IB", ibPercent },
+                    { "OT", otherPercent < 0 ? 0 : otherPercent } // Ensures that there are no negative values
+                }
             };
 
             return Ok(summary);

@@ -27,29 +27,56 @@ export const AnalyticsPage: React.FC = () => {
 
   // state to hold the dynamic data
   const [rows, setRows] = useState<ParkingHistory[]>([]);
-  const [summary, setSummary] = useState({ issued: 0, resolved: 0, avgTime: 0 });
+  const [summary, setSummary] = useState({ issued: 0, resolved: 0, avgTime: 0, 
+    weeklyChart: [0, 0, 0, 0, 0, 0, 0], // Set the default chart values to 0
+    breakdown: { RP: 0, VB: 0, IB: 0, OT: 0 }  // Set the default violation report values to 0
+  });
 
-  // fetch data from the C# backend on page load (Mozilla, 2026)
+  const[isLoading, setIsLoading] = useState(true);
+
+  // Function to extract the fetch logic 
+  const fetchAnalyticsData = async (isPolling = false) => {
+
+    if(!isPolling) {
+      setIsLoading(true);
+    }
+
+    try {
+      const historyResponse = await fetch("http://localhost:8080/api/Analytics/history");
+      const historyData = await historyResponse.json();
+      setRows(historyData);
+
+      const summaryResponse = await fetch("http://localhost:8080/api/Analytics/summary");
+      const summaryData = await summaryResponse.json();
+      setSummary({
+          issued: summaryData.ticketsIssued,
+          resolved: summaryData.ticketsResolved,
+          avgTime: summaryData.avgResolutionTimeHours.toFixed(1),
+          weeklyChart: summaryData.weeklyChart,
+          breakdown: summaryData.violationBreakdown
+      });
+    } catch (error) {
+      console.error("Failed to fetch analytics data:", error);
+    } finally {
+      setIsLoading(false); // Stop loading whether it succeeds or fails
+    }
+  };
+  
+
+  // (Meta Platforms, Inc., 2026)
   useEffect(() => {
-    const fetchAnalyticsData = async () => {
-      try {
-        const historyResponse = await fetch("http://localhost:8080/api/analytics/history");
-        const historyData = await historyResponse.json();
-        setRows(historyData);
+    fetchAnalyticsData();
 
-        const summaryResponse = await fetch("http://localhost:8080/api/analytics/summary");
-        const summaryData = await summaryResponse.json();
-        setSummary({
-            issued: summaryData.ticketsIssued,
-            resolved: summaryData.ticketsResolved,
-            avgTime: summaryData.avgResolutionTimeHours.toFixed(1)
-        });
-      } catch (error) {
-        console.error("Failed to fetch analytics data:", error);
-      }
+    // Set up the polling interval every 30 seconds
+    const intervalId = setInterval(() => {
+      fetchAnalyticsData(true); // Pass true to indicate this is a background poll
+    }, 30000);
+
+    // Cleanup function runs when the component unmounts to stop the interval
+    return () => {
+      clearInterval(intervalId);
     };
 
-    fetchAnalyticsData();
   }, []);
 
   const handleChangePage = (
@@ -89,12 +116,23 @@ export const AnalyticsPage: React.FC = () => {
           </p>
         </div>
 
-        <button
-          className="button primary"
-          type="button"
-        >
-          Download Report
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {/* Button to refresh the data */}
+          <button 
+            className="button secondary" 
+            type="button" 
+            onClick={() => fetchAnalyticsData()}
+          >
+            {isLoading ? "Refreshing..." : "Refresh Data"}
+          </button>
+
+          <button
+            className="button primary"
+            type="button"
+          >
+            Download Report
+          </button>
+        </div>
       </div>
 
 
@@ -144,39 +182,16 @@ export const AnalyticsPage: React.FC = () => {
           </div>
 
 
-          <div
-            className="bar-chart"
-            aria-label="Parking tickets issued throughout the week"
-          >
-            <span style={{ height: "45%" }}>
-              <i>Mon</i>
-            </span>
-
-            <span style={{ height: "62%" }}>
-              <i>Tue</i>
-            </span>
-
-            <span style={{ height: "54%" }}>
-              <i>Wed</i>
-            </span>
-
-            <span style={{ height: "76%" }}>
-              <i>Thu</i>
-            </span>
-
-            <span style={{ height: "92%" }}>
-              <i>Fri</i>
-            </span>
-
-            <span style={{ height: "68%" }}>
-              <i>Sat</i>
-            </span>
-
-            <span style={{ height: "58%" }}>
-              <i>Sun</i>
-            </span>
+          <div className="bar-chart" aria-label="Parking tickets issued throughout the week">
+            {/* Maps the calculated height percentages to the bar styles dynamically */}
+            <span style={{ height: `${summary.weeklyChart[0]}%` }}><i>Mon</i></span>
+            <span style={{ height: `${summary.weeklyChart[1]}%` }}><i>Tue</i></span>
+            <span style={{ height: `${summary.weeklyChart[2]}%` }}><i>Wed</i></span>
+            <span style={{ height: `${summary.weeklyChart[3]}%` }}><i>Thu</i></span>
+            <span style={{ height: `${summary.weeklyChart[4]}%` }}><i>Fri</i></span>
+            <span style={{ height: `${summary.weeklyChart[5]}%` }}><i>Sat</i></span>
+            <span style={{ height: `${summary.weeklyChart[6]}%` }}><i>Sun</i></span>
           </div>
-
         </article>
 
 
@@ -202,51 +217,25 @@ export const AnalyticsPage: React.FC = () => {
 
 
           <div className="region-list">
-
             <div>
-              <span>
-                <i>RP</i>
-                Restricted parking
-              </span>
-
-              <strong>
-                42%
-              </strong>
+              <span><i>RP</i>Restricted parking</span>
+              <strong>{summary.breakdown.RP}%</strong>
             </div>
 
             <div>
-              <span>
-                <i>OT</i>
-                Overstayed parking
-              </span>
-
-              <strong>
-                27%
-              </strong>
+              <span><i>VB</i>Vehicle outside bay</span>
+              <strong>{summary.breakdown.VB}%</strong>
             </div>
 
             <div>
-              <span>
-                <i>IB</i>
-                Incorrect bay
-              </span>
-
-              <strong>
-                18%
-              </strong>
+              <span><i>IB</i>Incorrect bay</span>
+              <strong>{summary.breakdown.IB}%</strong>
             </div>
 
             <div>
-              <span>
-                <i>OT</i>
-                Other
-              </span>
-
-              <strong>
-                13%
-              </strong>
+              <span><i>OT</i>Other</span>
+              <strong>{summary.breakdown.OT}%</strong>
             </div>
-
           </div>
 
         </article>
@@ -427,8 +416,8 @@ export const AnalyticsPage: React.FC = () => {
 export default AnalyticsPage;
 
 {/*References
-    Material UI.2026. Table. (Version 2.0) [Source code] . Available at: <https://mui.com/material-ui/react-table/ > [Accessed 12 Aug. 2026]. 
-    Mozilla. 2026. Using the Fetch API - Web APIs | MDN. [Online] Available at: <https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch> [Accessed 30 Sep. 2026].
-    realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026].        
-    rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
+    Material UI.2026. Table. (Version 2.0) [Source code] . Available at: <https://mui.com/material-ui/react-table/> [Accessed 12 August 2026]. 
+    Meta Platforms, Inc. 2026. Synchronizing with Effects – React. [Online] Available at: <https://react.dev/learn/synchronizing-with-effects> [Accessed 2 October 2026].
+    realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 August 2026].        
+    rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 August 2026].
 */}

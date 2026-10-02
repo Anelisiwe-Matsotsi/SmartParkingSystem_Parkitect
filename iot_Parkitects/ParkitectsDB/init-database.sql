@@ -207,6 +207,7 @@ VALUES
 INSERT INTO Tickets (userID, bayID, bayNumber, sectionID, reason, status, createdAt, updatedAt)
 VALUES 
 ('xEaaEghMnbhIRlIUZPk6Gz0JSjQ2', '3', 'Bay3', 'Node_01', 'Restricted parking', 'Resolved', DATEADD(hour, -5, GETDATE()), DATEADD(hour, -2, GETDATE())),
-('VkitpMBTTLYA78Tejov0i0T0BRq1', '4', 'Bay4', 'Node_01', 'Overstayed parking', 'Pending', DATEADD(hour, -1, GETDATE()), NULL),
-('sqAJGSuOQXgTQ7vAmkSPpCJxRSJ2', '5', 'Bay5', 'Node_01', 'Incorrect bay', 'Resolved', DATEADD(hour, -10, GETDATE()), DATEADD(hour, -8, GETDATE()));
+('VkitpMBTTLYA78Tejov0i0T0BRq1', '4', 'Bay4', 'Node_01', 'Vehicle outside bay', 'Pending', DATEADD(hour, -1, GETDATE()), NULL),
+('sqAJGSuOQXgTQ7vAmkSPpCJxRSJ2', '5', 'Bay5', 'Node_01', 'Incorrect bay', 'Resolved', DATEADD(hour, -10, GETDATE()), DATEADD(hour, -8, GETDATE())),
+('xEaaEghMnbhIRlIUZPk6Gz0JSjQ2', '3', 'Bay3', 'Node_01', 'Vehicle outside bay', 'Pending', DATEADD(hour, -5, GETDATE()), NULL);
 GO

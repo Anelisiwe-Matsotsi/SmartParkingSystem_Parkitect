@@ -3,12 +3,17 @@ namespace backend2.Models
     // Formats the response for the frontend insight cards
     public class AnalyticsSummary
     {
+        // Fields for the ticket summary
         public int TicketsIssued { get; set; }
         public int TicketsResolved { get; set; }
         public double AvgResolutionTimeHours { get; set; }
+
+        // Fields for the violation breakdown and charts
+        public int[] WeeklyChart { get; set; } 
+        public Dictionary<string, int> ViolationBreakdown { get; set; }
     }
 
-    // Formats the response for the frontend table rows
+    // Formats the response for the parking history table
     public class ParkingHistory
     {
         public string? Bay { get; set; }
@@ -20,6 +25,7 @@ namespace backend2.Models
         public string? Status { get; set; }
     }
 
+    // Fields to receive the data from Firebase 
     public class FirebaseBayData
     {
         public int distanceCm { get; set; }
