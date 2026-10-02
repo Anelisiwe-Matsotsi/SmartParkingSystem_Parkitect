@@ -24,6 +24,10 @@
 #define API_KEY "AIzaSyDbL55frdOhcMZPmW3HiUFhBb7AWbj6Nwg"
 #define DATABASE_URL "https://wil-smartparking-default-rtdb.firebaseio.com"
 
+// API
+#include <HTTPClient.h>
+#define API_BASE "http://10.115.234.12:8080"
+
 // BLE unique id for the mobile app link
 #define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 
@@ -140,6 +144,19 @@ void setup() {
   delay(1000); 
   Serial.println("Starting Distance Test with Bay 1 & 2's sensors...");
 
+}
+
+void postTelemetry(int sensorId, int distanceCm, bool occupied) {
+  if (WiFi.status() != WL_CONNECTED) return;
+  HTTPClient http;
+  http.begin(String(API_BASE) + "/api/Parking/sensor/telemetry");
+  http.addHeader("Content-Type", "application/json");
+  String body = "{\"sensorID\":" + String(sensorId) +
+                ",\"distanceReadingCm\":" + String(distanceCm) +
+                ",\"isOccupied\":" + (occupied ? "true" : "false") + "}";
+  int code = http.POST(body);
+  Serial.printf("[API] sensor %d -> HTTP %d\n", sensorId, code);
+  http.end();
 }
 
 // Created this function to trigger, read and display the occupancy status for either of the 2 bays
