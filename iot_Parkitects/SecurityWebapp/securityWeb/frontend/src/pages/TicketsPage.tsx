@@ -1,5 +1,5 @@
- {/* Material UI,2026*/}
- //(rudderz243,2026)
+{/* Material UI,2026*/ }
+//(rudderz243,2026)
 import React, { useEffect, useRef, useState } from "react";
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -16,8 +16,7 @@ import FormLabel from "@mui/material/FormLabel";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
 import type { Ticket } from "../models/ticket";
-import { getTickets, createTicket, uploadTicketImage, updateTicket, deleteTicket } from "../services/api";
-
+import { getTickets, createTicket, uploadTicketImage, updateTicket, deleteTicket, getOccupiedBays } from "../services/api";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -31,6 +30,7 @@ const VisuallyHiddenInput = styled("input")({
   width: 1,
 });
 
+
 export const TicketsPage: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [activeTicket, setActiveTicket] = useState<number | null>(null);
@@ -41,6 +41,11 @@ export const TicketsPage: React.FC = () => {
   const [reason, setReason] = useState("");
   const [description, setDescription] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+
+  const [occupiedBays, setOccupiedBays] = useState<{ bayID: number; bayNumber: string }[]>([]);
+
+
+
 
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -63,9 +68,16 @@ export const TicketsPage: React.FC = () => {
     loadTickets();
   }, []);
 
-  const handleClickOpen = () => {
+  const handleClickOpen = async () => {
+    try {
+      setOccupiedBays(await getOccupiedBays());
+    } catch (error) {
+      console.error("Failed to load occupied bays", error);
+      setOccupiedBays([]);
+    }
     setOpen(true);
   };
+
 
   const handleClose = () => {
     setOpen(false);
@@ -128,27 +140,27 @@ export const TicketsPage: React.FC = () => {
   };
 
   //handles the approve button for tickets that are valid
-  const handleApprove= async (ticket: Ticket) => {
+  const handleApprove = async (ticket: Ticket) => {
     try {
-      await updateTicket({...ticket, status: "Notified"}, ticket.ticketID);
-      setTickets((prev) => prev.map((t) => (t.ticketID == ticket.ticketID? { ...t, status:"Notified"} : t)));
+      await updateTicket({ ...ticket, status: "Notified" }, ticket.ticketID);
+      setTickets((prev) => prev.map((t) => (t.ticketID == ticket.ticketID ? { ...t, status: "Notified" } : t)));
     }
-    catch(error) {
+    catch (error) {
       console.error("Failed to approve ticket", error);
-    } finally{
+    } finally {
       setActiveTicket(null);
     }
   };
 
   //handles the reject button to delete the ticket
-  const handleReject= async (ticketID: number) => {
+  const handleReject = async (ticketID: number) => {
     try {
       await deleteTicket(ticketID);
       setTickets((prev) => prev.filter((t) => t.ticketID !== ticketID));
     }
-    catch(error) {
+    catch (error) {
       console.error("Failed to reject ticket", error);
-    } finally{
+    } finally {
       setActiveTicket(null);
     }
   };
@@ -326,13 +338,12 @@ export const TicketsPage: React.FC = () => {
             </div>
 
             <span
-              className={`status ${
-                ticket.status === "Pending"
+              className={`status ${ticket.status === "Pending"
                   ? "pending"
                   : ticket.status === "Resolved"
                     ? "success"
                     : "review"
-              }`}
+                }`}
             >
               {ticket.status}
             </span>
@@ -439,24 +450,11 @@ export const TicketsPage: React.FC = () => {
               }}
             >
               <option value="" disabled>
-                Select a parking bay
+                {occupiedBays.length ? "Select a parking bay" : "No occupied bays right now"}
               </option>
-
-              <option value="A01">A01</option>
-              <option value="A02">A02</option>
-              <option value="A03">A03</option>
-
-              <option value="B01">B01</option>
-              <option value="B04">B04</option>
-              <option value="B07">B07</option>
-              <option value="B14">B14</option>
-
-              <option value="C02">C02</option>
-              <option value="C07">C07</option>
-
-              <option value="D01">D01</option>
-              <option value="D05">D05</option>
-              <option value="D22">D22</option>
+              {occupiedBays.map((b) => (
+                <option key={b.bayID} value={b.bayNumber}>{b.bayNumber}</option>
+              ))}
             </NativeSelect>
           </FormControl>
 
@@ -580,9 +578,8 @@ export default TicketsPage;
 
 
 
-  {/*References
+{/*References
            realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
             Material UI.2026.Dialog. (Version 2.0) [Source code] . Available at: < https://mui.com/material-ui/react-dialog/#scrolling-long-content> [Accessed 12 Aug. 2026]. 
   rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
            */}
- 

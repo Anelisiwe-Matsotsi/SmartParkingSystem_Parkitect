@@ -102,3 +102,9 @@ export async function uploadTicketImage(
 
   return data.imageUrl;
 }
+
+export async function getOccupiedBays(): Promise<{ bayID: number; bayNumber: string }[]> {
+  const response = await fetch(`${API_URL}/Parking/occupied`);
+  if (!response.ok) throw new Error("Failed to fetch occupied bays");
+  return response.json();
+}

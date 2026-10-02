@@ -1,5 +1,6 @@
 export interface Ticket {
     ticketID: number;
+    reportingUserID?: string | null;
     userID: string;
     bayID: string;
     bayNumber: string;

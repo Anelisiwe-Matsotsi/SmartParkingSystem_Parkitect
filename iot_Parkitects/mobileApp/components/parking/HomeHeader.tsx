@@ -23,8 +23,9 @@ import {
 import SearchBar from "./SearchBar";
 import { getBaysForNode, claimBay } from "@/utils/parkingFirebase";
 import { auth } from "@/config/firebaseConfig";
+import { startSession } from "@/utils/parkingApi"
 
-// 1. ADD PROPS SO IT CAN RECEIVE THE LIVE COUNT
+// props to recieve live count
 type Props = {
   availableSpaces: number;
 };
@@ -162,6 +163,14 @@ if (!firebaseUid) {
 const saveParking = async (bayId: string) => {
   try {
     const ok = await claimBay(nearestNode.nodeKey, bayId, firebaseUid);
+    
+if (ok) {
+  try {
+    await startSession(firebaseUid, nearestNode.nodeKey, bayId);
+  } catch (e) {
+    console.log("[SQL] session start failed:", e);
+  }
+}
     Alert.alert(
       ok ? "You're parked!" : "Bay no longer available",
       ok ? `Saved: ${bayId.replace('Bay', 'Bay ')}.` : "Someone else claimed it, or the car has left."

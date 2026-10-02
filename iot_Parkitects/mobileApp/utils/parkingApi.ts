@@ -37,3 +37,13 @@ export async function parkVehicle(
 
   return await response.json();
 }
+
+export async function startSession(firebaseUid: string, nodeKey: string, bayKey: string) {
+  const response = await fetch(`${API_URL}/api/Parking/session/start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ firebaseUid, nodeKey, bayKey }),
+  });
+  if (!response.ok) throw new Error((await response.text()) || "Could not start session.");
+  return await response.json();
+}

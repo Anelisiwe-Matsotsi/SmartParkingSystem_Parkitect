@@ -14,7 +14,7 @@ export default function ParkingLayout({ mapData }: { mapData: any }) {
   const renderRow = (sectionData: any, prefix: string, startIndex: number, count: number) => {
     const bays = [];
     for (let i = startIndex; i < startIndex + count; i++) {
-      const realBay = sectionData?.bays?.find((b: any) => b.bayNumber === `${prefix}-${i}`);
+      const realBay = sectionData?.bays?.find((b: any) => b.bayNumber === `${prefix}${i}` || b.bayNumber === `${prefix}-${i}`);
       bays.push(
         <ParkingBay
           key={`${prefix}-${i}`}

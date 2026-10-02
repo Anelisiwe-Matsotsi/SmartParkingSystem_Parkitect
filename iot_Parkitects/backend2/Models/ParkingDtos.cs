@@ -33,6 +33,8 @@ namespace backend2.Models
     {
         public int SensorID { get; set; }
         public int DistanceReadingCm { get; set; }
+
+        public bool? IsOccupied { get; set;}
     }
 
 

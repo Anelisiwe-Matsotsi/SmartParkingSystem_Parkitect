@@ -70,18 +70,28 @@ namespace backend2.Controllers
                 .Include(s => s.ParkingBay)
                 .FirstOrDefaultAsync(s => s.sensorID == dto.SensorID);
 
-            if (sensor == null)
-            {
-                return NotFound($"Sensor {dto.SensorID} not found.");
-            }
-
             sensor.distanceReadingCm = dto.DistanceReadingCm;
 
-            // Standard ultrasonic threshold: vehicle present within 50 cm
-            if (sensor.ParkingBay != null)
-            {
-                sensor.ParkingBay.isOccupied = dto.DistanceReadingCm > 0 && dto.DistanceReadingCm <= 50;
-            }
+if (sensor.ParkingBay != null)
+{
+    // Trust the sensor's own verdict; fall back to distance if it isn't sent
+    var occupied = dto.IsOccupied ?? (dto.DistanceReadingCm > 0 && dto.DistanceReadingCm <= 60);
+    sensor.ParkingBay.isOccupied = occupied;
+
+    if (!occupied)
+    {
+        var open = await _context.ParkingSessions
+            .Where(s => s.bayID == sensor.ParkingBay.bayID && s.endDate == null)
+            .ToListAsync();
+
+        foreach (var s in open)
+        {
+            s.endDate = DateTime.UtcNow;
+            var u = await _context.Users.FindAsync(s.userID);
+            if (u != null) u.IsParked = false;
+        }
+    }
+}
 
             await _context.SaveChangesAsync();
             return Ok(new { message = "Sensor telemetry updated successfully.", isOccupied = sensor.ParkingBay?.isOccupied });
@@ -248,6 +258,61 @@ public async Task<IActionResult> GetBaysFromBeacon(string nodeKey)
                 startDate = session.startDate
             });
         }
+
+        //POST: api/Parking/session/start
+        [HttpPost("session/start")]
+public async Task<IActionResult> StartSession([FromBody] StartSessionDto dto)
+{
+    var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == dto.FirebaseUid);
+    if (user == null) return NotFound("User was not found.");
+
+    var sensor = await _context.Sensors
+        .Include(s => s.ParkingBay)
+        .FirstOrDefaultAsync(s => s.beaconNodeKey == dto.NodeKey && s.firebaseBayKey == dto.BayKey);
+    if (sensor?.ParkingBay == null) return NotFound("No bay is linked to this sensor.");
+    var bay = sensor.ParkingBay;
+
+    var open = await _context.ParkingSessions
+        .Where(s => s.userID == user.UserId && s.endDate == null)
+        .ToListAsync();
+
+    if (open.Any(s => s.bayID == bay.bayID))
+        return Ok(new { message = "Session already active." });
+
+    // A user can only be in one bay, so close any stale session
+    foreach (var s in open) s.endDate = DateTime.UtcNow;
+
+    var session = new ParkingSession
+    {
+        userID = user.UserId,
+        bayID = bay.bayID,
+        startDate = DateTime.UtcNow
+    };
+
+    bay.isOccupied = true;
+    user.IsParked = true;
+    _context.ParkingSessions.Add(session);
+    await _context.SaveChangesAsync();
+
+    return Ok(new { sessionID = session.sessionID, bayNumber = bay.bayNumber, startDate = session.startDate });
+}
+
+// GET: api/Parking/occupied  (bays that currently have a registered driver)
+        [HttpGet("occupied")]
+        public async Task<IActionResult> GetBaysWithDrivers()
+        {
+            var bays = await (
+                from s in _context.ParkingSessions
+                where s.endDate == null
+                join b in _context.ParkingBays on s.bayID equals b.bayID
+                select new { bayID = b.bayID, bayNumber = b.bayNumber })
+                .Distinct()
+                .OrderBy(x => x.bayNumber)
+                .ToListAsync();
+
+            return Ok(bays);
+        }
+
     }
 
 

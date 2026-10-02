@@ -148,6 +148,7 @@ CREATE TABLE Preferences (
 -- Create the Tickets table
 CREATE TABLE Tickets (
     ticketID INT PRIMARY KEY IDENTITY(1,1),
+    reportingUserID NVARCHAR(128) NULL, -- user that reports ticket 
     userID NVARCHAR(128) NOT NULL, --stores firebase user uid
     bayID NVARCHAR(50) NOT NULL,
     bayNumber NVARCHAR(50) NOT NULL,

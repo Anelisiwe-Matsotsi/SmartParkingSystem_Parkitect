@@ -37,17 +37,53 @@ namespace backend2.Controllers
             var ticket = await _context.Tickets.FindAsync(id);
 
             if (ticket == null)
-            
+
                 return NotFound();
-            
+
 
             return ticket;
         }
+
+
+// Turns "A01", "A-1", "a1" into "A1" to match ParkingBay.bayNumber
+private static string NormalizeBay(string? raw)
+{
+    var m = System.Text.RegularExpressions.Regex.Match(raw ?? "", @"^\s*([A-Za-z])\s*-?\s*0*(\d+)\s*$");
+    return m.Success ? $"{char.ToUpper(m.Groups[1].Value[0])}{m.Groups[2].Value}" : (raw ?? "").Trim();
+}
+
+//find uuid of whoever is parked at reported bay
+private async Task<string?> FindOccupantUidAsync(string? bayNumber)
+{
+    var normalized = NormalizeBay(bayNumber);
+    var bay = await _context.ParkingBays.FirstOrDefaultAsync(b => b.bayNumber == normalized);
+    if (bay == null) return null;
+
+    var session = await _context.ParkingSessions
+        .Where(s => s.bayID == bay.bayID && s.endDate == null)
+        .OrderByDescending(s => s.startDate)
+        .FirstOrDefaultAsync();
+    if (session == null) return null;
+
+    var user = await _context.Users.FindAsync(session.userID);
+    return user?.FirebaseUid;
+}
 
         // POST: api/Tickets
         [HttpPost]
         public async Task<ActionResult<Ticket>> Create([FromBody] Ticket ticket)
         {
+            if (string.IsNullOrEmpty(ticket.reportingUserID) && !string.IsNullOrEmpty(ticket.userID))
+                ticket.reportingUserID = ticket.userID;
+
+            //the person being reported
+            var driverUid = await FindOccupantUidAsync(ticket.bayNumber);
+            if (driverUid == null)
+                return Conflict("There is no one parked it that bay at the moment");
+
+                
+
+            ticket.userID = driverUid;
             ticket.createdAt = DateTime.UtcNow;
             ticket.status = "Pending";
 
@@ -63,19 +99,19 @@ namespace backend2.Controllers
         {
             ////Emeris School of Computer Science, 2025b
             if (file == null || file.Length == 0)
-               return BadRequest("No image provided");
+                return BadRequest("No image provided");
 
-               string connectionString = _configuration.GetConnectionString("AzureBlobStorage");
-               string containerName = "complaint-image";
+            string connectionString = _configuration.GetConnectionString("AzureBlobStorage");
+            string containerName = "complaint-image";
 
-               BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
-               BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-               await containerClient.CreateIfNotExistsAsync(Azure.Storage.Blobs.Models.PublicAccessType.Blob);
+            BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+            await containerClient.CreateIfNotExistsAsync(Azure.Storage.Blobs.Models.PublicAccessType.Blob);
 
-               string fileName = $"{Guid.NewGuid()}_{file.FileName}";
-               BlobClient blobClient =containerClient.GetBlobClient(fileName);
+            string fileName = $"{Guid.NewGuid()}_{file.FileName}";
+            BlobClient blobClient = containerClient.GetBlobClient(fileName);
 
-               using (var stream = file.OpenReadStream())
+            using (var stream = file.OpenReadStream())
             {
                 await blobClient.UploadAsync(stream, true);
             }
@@ -83,53 +119,43 @@ namespace backend2.Controllers
             return Ok(new { imageUrl = blobClient.Uri.ToString() });
         }
 
-        //PUT: api/Tickets/5 Update
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id,[FromBody] Ticket ticket)
-        {
-            if (id != ticket.ticketID)
-            
-                return BadRequest();
-            
-            //gets the status of the ticket for the ticket response workflow
-            var previousStatus = await _context.Tickets.Where(t => t.ticketID == id)
-                                .Select(t=> t.status)
-                                .FirstOrDefaultAsync();
 
-              ticket.updatedAt = DateTime.UtcNow; //time updated
-            _context.Entry(ticket).State = EntityState.Modified;
+ //PUT: api/Tickets/5 Update
+[HttpPut("{id}")]
+public async Task<IActionResult> Update(int id, [FromBody] Ticket ticket)
+{
+    if (id != ticket.ticketID) return BadRequest();
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Tickets.Any(e => e.ticketID == id))
-                
-                    return NotFound();
-                
-                
-                
-                    throw;
-            }
+    var existing = await _context.Tickets.FindAsync(id);
+    if (existing == null) return NotFound();
 
-            //(Expo Docs, 2026)
+//gets the status of the ticket for the ticket response workflow
+    var previousStatus = existing.status;
+    existing.status = ticket.status;
+    existing.response = ticket.response;
+    existing.updatedAt = DateTime.UtcNow;//time updated
+    await _context.SaveChangesAsync();
+
+
+//(Expo Docs, 2026)
             //notify user based on ticket status for expo push service
-            if (ticket.status == "Notified" && previousStatus == "Pending")
-            {
-                await _pushService.NotifyUserAsync(ticket.userID, "Parking ticket issued",
-                    $"Ticket #{ticket.ticketID} - {ticket.reason}", new {ticketId = ticket.ticketID});
-            }
-            //if the user does not solve the ticket properly they will be notified again
-            else if (ticket.status == "Notified" && previousStatus == "Awaiting review")
-            {
-                await _pushService.NotifyUserAsync(ticket.userID, "Ticket needs to be reviewed again",
-                    "Security says violation has not been resolved. Please fix it properly.", new {ticketId = ticket.ticketID});
-            }
+    if (existing.status == "Notified" && previousStatus == "Pending")
+    {
+        await _pushService.NotifyUserAsync(existing.userID, "Parking ticket issued",
+            $"Ticket #{existing.ticketID} - {existing.reason}", new { ticketId = existing.ticketID });
+    }
+      //if the user does not solve the ticket properly they will be notified again
+    else if (existing.status == "Notified" && previousStatus == "Awaiting review")
+    {
+        await _pushService.NotifyUserAsync(existing.userID, "Ticket needs to be reviewed again",
+            "Security says violation has not been resolved. Please fix it properly.", new { ticketId = existing.ticketID });
+    }
 
-            return NoContent();
-        }
+    return NoContent();
+}
+
+
+       
 
         // DELETE: api/Tickets/5
         [HttpDelete("{id}")]
@@ -138,13 +164,16 @@ namespace backend2.Controllers
             var ticket = await _context.Tickets.FindAsync(id);
             if (ticket == null)
                 return NotFound();
-            
+
 
             _context.Tickets.Remove(ticket);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
+
+        
     }
 }
 /** 
