@@ -3,6 +3,7 @@
 // This is our pin setup. We are using the DFRobot Firebeetle 2 ESP32-C6 board on port 7 to flash the esp
 #include <Arduino.h>
 #include <WiFi.h> // ESP32 wifi driver library (Espressif Systems, 2023b)
+#include "esp_wpa2.h" // WPA2 Enterprise Library
 #include <Firebase_ESP_Client.h> // Firebase RTDB Client (Mobizt, 2023)
 
 // BLE Headers that will be needed for our FindMyCar feature (Espressif Systems, 2023a)
@@ -14,9 +15,10 @@
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 
-// Wifi credentials (will have to update to varsity wifi/personal hotspot at a later stage when testing live in parking lot)
-#define WIFI_SSID "anique"
-#define WIFI_PASSWORD "anique:)"
+// Wifi credentials (now uses campus wifi)
+#define WIFI_SSID "Edu-WiFi"
+#define EAP_IDENTITY "st10435542@myemeris.edu.za"
+#define EAP_PASSWORD "Happydays@22"
 
 // Firebase Project Credentials
 #define API_KEY "AIzaSyDbL55frdOhcMZPmW3HiUFhBb7AWbj6Nwg"
@@ -75,8 +77,15 @@ void setup() {
   // Wifi section
   // Connects ESP32 Station mode to the local Wi-Fi router (Espressif Systems, 2023b)
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Connecting to Wifi");
+
+  // Feeds the credentials to the ESP32 authentication client
+  esp_eap_client_set_identity((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY));
+  esp_eap_client_set_username((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY));
+  esp_eap_client_set_password((uint8_t *)EAP_PASSWORD, strlen(EAP_PASSWORD));
+  esp_wifi_sta_enterprise_enable();
+
+  WiFi.begin(WIFI_SSID);
+  Serial.print("Connecting to Campus Wifi");
 
   while (WiFi.status() != WL_CONNECTED) 
   {
@@ -84,7 +93,7 @@ void setup() {
     Serial.print(".");
   }
 
-  Serial.println("\nWifi Connected successfully.");
+  Serial.println("\nCampus Wifi Connected successfully.");
   Serial.print("ESP32 IP Address: ");
   Serial.println(WiFi.localIP());
 
