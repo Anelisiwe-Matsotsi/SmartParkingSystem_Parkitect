@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { AccessibilityProvider, useAccessibility } from '../context/accessibilityContext';
+import { LanguageProvider } from '../context/languageContext';
 
 function RootLayoutNav() {
   const { colorMode } = useAccessibility();
@@ -21,7 +22,9 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AccessibilityProvider>
-      <RootLayoutNav />
+      <LanguageProvider>
+        <RootLayoutNav />
+      </LanguageProvider>
     </AccessibilityProvider>
   );
 }
