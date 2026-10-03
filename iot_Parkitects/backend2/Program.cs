@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore; // Added for Database
 using backend2.Data; // Added for ApplicationDbContext
 using backend2.Services;
+using Azure.Storage.Blobs;
 
 namespace backend2
 {
@@ -22,6 +23,13 @@ namespace backend2
 
           builder.Services.AddDbContext<ApplicationDbContext>(options =>
           options.UseSqlServer(connectionString));
+
+            // Configure Azure Blob Storage
+            builder.Services.AddSingleton(sp =>
+            {
+                var config = sp.GetRequiredService<IConfiguration>();
+                return new BlobServiceClient(config["AzureBlobStorage:ConnectionString"]);
+            });
 
           //prints the server and database name on startup
           var csb = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
