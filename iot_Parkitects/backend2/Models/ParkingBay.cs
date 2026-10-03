@@ -25,6 +25,9 @@ namespace backend2.Models
         public ParkingSection? ParkingSection { get; set; }
 
         public Sensor? Sensor { get; set; }
+
+        public double? latitude { get; set; }
+        public double? longitude { get; set; }
     }
 }
 
