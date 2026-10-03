@@ -54,7 +54,10 @@
       [
         "react-native-ble-plx",
         {
-          "bluetoothAlwaysPermission": "Parkitech uses Bluetooth to confirm which bay you parked in."
+          "isBackgroundEnabled": true,
+          "modes": ["central"],
+          "bluetoothAlwaysPermission": "Parkitech uses Bluetooth to confirm which bay you parked in.",
+          "bluetoothPeripheralPermission": "Allow Parkitects to connect to parking sensors."
         }
       ],
       [
