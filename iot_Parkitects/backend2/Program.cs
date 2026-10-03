@@ -29,7 +29,11 @@ namespace backend2
 
             //register the email service
             builder.Services.AddScoped<IEmailService, EmailService>();
-           
+            
+            //(Jovanovic, 2022)
+            //configure the background task to send rule notifications.
+            builder.Services.AddHostedService<RulesAlerts>(); 
+
             builder.Services.AddOpenApi(); // Keeps the native engine
 
             // DB configuration
@@ -80,6 +84,7 @@ namespace backend2
 /* Reference list:
 
 Bravo, R., 2021. expo push notifications helper.cs. (Version 10.0) [Source Code]. Available at: < https://gist.github.com/rbravo/092dda13daf769b031c70d363aaf738d > [Accessed 25 September 2026]
-   Microsoft, 2026. Enable Cross-Origin Requests (CORS) in ASP.NET Core. [online] Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/cors> [Accessed 30 August 2026].
+Jovanovic, M., 2022. Running Background Task in ASP.NET Core. (Version 10.0) [Source Code]. Available at: < https://milanjovanovic.tech/blog/running-background-tasks-in-asp-net-core > [Accessed 2 October 2026]
+Microsoft, 2026. Enable Cross-Origin Requests (CORS) in ASP.NET Core. [online] Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/cors> [Accessed 30 August 2026].
 
 */
