@@ -1,12 +1,4 @@
 //(Withfra.me, 2022)
-/**
- *
- * Shown straight after sign-in. 
- *  1. The switches show the REAL state of the phone (asked fresh every time the
- *     screen opens, the app returns from Settings, or Bluetooth changes).
- *  2. A returning user who already confirmed once, and has Bluetooth ready, is
- *     forwarded to the tabs without seeing this screen at all.
- */
 import React, { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -37,7 +29,7 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function Permissions() {
   const router = useRouter();
-
+//  (kumar.2023)
   // Settings opens this screen with ?from=settings so it doesn't auto-skip
   const { from } = useLocalSearchParams<{ from?: string }>();
   const fromSettings = from === 'settings';
@@ -159,7 +151,6 @@ export default function Permissions() {
     // Saves what the phone granted plus the rule-alerts choice. Same URL style as the
     // Settings and Preferences endpoints: the controller turns the Firebase UID into
     // User.userID (Permissions.userID is an INT foreign key).
-    // Push and email notifications are controlled from the Settings screen, not here.
     if (uid) {
       try {
         const res = await fetch(`${API_BASE_URL}/api/Permissions/user/${uid}`, {
@@ -374,7 +365,7 @@ const styles = StyleSheet.create({
     color: '#889797',
     marginTop: 4,
   },
-  /** Button */
+
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -398,6 +389,5 @@ const styles = StyleSheet.create({
 /**
  * References
  * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
-       https://www.spritle.com/blog/react-native-expo-app-gateway-to-connect-and-communicate-with-ble-devices/
-
+   kumar.2023. React Native Expo App: Gateway to Connect & Communicate BLE. [online] Spritle software. Available at: < https://www.spritle.com/blog/react-native-expo-app-gateway-to-connect-and-communicate-with-ble-devices/ > [Accessed 3 October 2026].
 */
