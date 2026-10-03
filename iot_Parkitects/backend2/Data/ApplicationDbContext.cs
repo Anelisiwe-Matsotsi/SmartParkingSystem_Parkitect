@@ -12,7 +12,7 @@ namespace backend2.Data
        // // public DbSet<FindMyCar> FindMyCar { get; set; }
       //  // public DbSet<Notifications> Notifications { get; set; }
       //  // public DbSet<Parking> Parking { get; set; }
-        public DbSet<Settings> Settings { get; set; }
+        public DbSet<Settings> Preferences { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
 
         public DbSet<User> Users { get; set; }
@@ -60,6 +60,7 @@ namespace backend2.Data
             
             // Forces EF Core to map inheritance to separate tables linked by primary keys (Microsoft, 2026)
             modelBuilder.Entity<User>().UseTptMappingStrategy();
+            modelBuilder.Entity<Settings>().ToTable("Preferences");
             modelBuilder.Entity<WebSettings>().ToTable("Settings");
         }
     }
