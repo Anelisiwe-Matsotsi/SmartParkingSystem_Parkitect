@@ -185,11 +185,7 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
     try {
       // BASE API URL at the moment it is YOUR wifi network:8000
-// <<<<<<< Updated upstream
-//       const response = await fetch(`${API_BASE_URL}/api/Tickets/upload-image`, {
-// =======
-      const response = await fetch('http://172.20.10.6:8080/api/Tickets/upload-image', {
-// >>>>>>> Stashed changes
+      const response = await fetch(`${API_BASE_URL}/api/Tickets/upload-image`, {
         method: 'POST',
         headers: {
           'Content-Type': 'multipart/form-data',

@@ -5,10 +5,11 @@ import { useNavigate } from "react-router-dom";
 
 // Firebase imports for authentication
 /* Firebase, 2026 */
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "../config/firebase";
 
 export const Register: React.FC = () => {
+  const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,27 +20,28 @@ export const Register: React.FC = () => {
   const navigate = useNavigate();
 
   // Password requirements 
-  const passwordRequirements = { 
+  const passwordRequirements = {
     minLength: password.length >= 8,
-     uppercase: /[A-Z]/.test(password), 
-     lowercase: /[a-z]/.test(password), 
-     number: /[0-9]/.test(password), 
-     special: /[!@#$%^&*(),.?":{}|<>[\]\\/'`~;_+=-]/.test(password), }; 
-     
-     // Password is valid only when ALL requirements are met 
-     const isPasswordValid = 
-     passwordRequirements.minLength && 
-     passwordRequirements.uppercase && 
-     passwordRequirements.lowercase && 
-     passwordRequirements.number && 
-     passwordRequirements.special; 
-     
-     // Confirm password is valid only when it matches the password 
-     const isConfirmPasswordValid = 
-     confirmPassword.length > 0 && 
-     password === confirmPassword && 
-     isPasswordValid;
-  
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[!@#$%^&*(),.?":{}|<>[\]\\/'`~;_+=-]/.test(password),
+  };
+
+  // Password is valid only when ALL requirements are met 
+  const isPasswordValid =
+    passwordRequirements.minLength &&
+    passwordRequirements.uppercase &&
+    passwordRequirements.lowercase &&
+    passwordRequirements.number &&
+    passwordRequirements.special;
+
+  // Confirm password is valid only when it matches the password 
+  const isConfirmPasswordValid =
+    confirmPassword.length > 0 &&
+    password === confirmPassword &&
+    isPasswordValid;
+
   // Handles registration and authentication
   const handleSubmit = async (
     event: React.FormEvent<HTMLFormElement>
@@ -49,15 +51,15 @@ export const Register: React.FC = () => {
     setError("");
 
     // Check that all fields have been completed
-    if (!username || !password || !confirmPassword) {
+    if (!fullName || !username || !password || !confirmPassword) {
       setError("Please complete all fields.");
       return;
     }
 
     // Check password requirements 
-    if (!isPasswordValid) { 
-    setError( "Password does not meet all the required security requirements." ); 
-    return; 
+    if (!isPasswordValid) {
+      setError("Password does not meet all the required security requirements.");
+      return;
     }
 
     // Check that passwords match
@@ -76,6 +78,10 @@ export const Register: React.FC = () => {
       );
 
       const user = userCredential.user;
+      //Saves the user's name to their firebase account
+      await updateProfile(user, {
+        displayName: fullName.trim(),
+      });
 
       console.log("Registration successful:", user);
 
@@ -124,10 +130,36 @@ export const Register: React.FC = () => {
         {/* Registration Form */}
         <form onSubmit={handleSubmit} className="login-form">
 
+          {/* Full Name */}
+          <div className="login-field">
+
+            <label htmlFor="fullName">
+              Full Name
+
+              {fullName && (
+                <i
+                  className="fa fa-check login-check"
+                  aria-hidden="true"
+                />
+              )}
+            </label>
+
+            <input
+              id="fullName"
+              className="login-input"
+              type="text"
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              autoComplete="name"
+              placeholder="Enter your full name"
+            />
+
+          </div>
+
           {/* Username / Email */}
           <div className="login-field">
             <label htmlFor="username">
-              Username
+              Email
               {username && (
                 <i
                   className="fa fa-check login-check"
@@ -159,19 +191,19 @@ export const Register: React.FC = () => {
               )}
             </label>
 
-        <div className="password-input-container">
-            <input
-              id="password"
-              className="login-input"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="new-password"
-              placeholder="Enter your password"
-            />
+            <div className="password-input-container">
+              <input
+                id="password"
+                className="login-input"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="new-password"
+                placeholder="Enter your password"
+              />
 
-            {/* Show password while button is held (W3Schools, 2026).*/}
-            <button
+              {/* Show password while button is held (W3Schools, 2026).*/}
+              <button
                 type="button"
                 className="password-toggle"
                 onMouseDown={() => setShowPassword(true)}
@@ -185,102 +217,102 @@ export const Register: React.FC = () => {
                   className="fa fa-eye"
                   aria-hidden="true"
                 />
-            </button>
-          </div>
-          </div>
-
-        {/* Password requirements */}
-        {password.length > 0 && (
-          <div className="password-requirements">
-            <p>Password requirements:</p>
-
-            <div
-              className={
-                passwordRequirements.minLength
-                  ? "requirement requirement-valid"
-                  : "requirement"
-              }
-            >
-          <span className="requirement">
-              {passwordRequirements.minLength ? (
-                <i className="fa fa-check login-check" aria-hidden="true" />
-              ) : (
-                "•"
-              )}
-          </span>
-
-              <span>At least 8 characters</span>
-            </div>
-
-            <div
-              className={
-                passwordRequirements.uppercase
-                  ? "requirement requirement-valid"
-                  : "requirement"
-              }
-            >
-              <span className="requirement-icon">
-        {passwordRequirements.uppercase ? (
-          <i className="fa fa-check login-check" aria-hidden="true" />
-        ) : (
-          "•"
-        )}
-      </span>
-              <span>One uppercase letter</span>
-            </div>
-
-            <div
-              className={
-                passwordRequirements.lowercase
-                  ? "requirement requirement-valid"
-                  : "requirement"
-              }
-            >
-              <span className="requirement-icon">
-        {passwordRequirements.lowercase ? (
-          <i className="fa fa-check login-check" aria-hidden="true" />
-        ) : (
-          "•"
-        )}
-      </span>
-              <span>One lowercase letter</span>
-            </div>
-
-            <div
-              className={
-                passwordRequirements.number
-                  ? "requirement requirement-valid"
-                  : "requirement"
-              }
-            >
-              <span className="requirement-icon">
-        {passwordRequirements.number ? (
-          <i className="fa fa-check login-check" aria-hidden="true" />
-        ) : (
-          "•"
-        )}
-      </span>
-              <span>One number</span>
-            </div>
-
-            <div
-              className={
-                passwordRequirements.special
-                  ? "requirement requirement-valid"
-                  : "requirement"
-              }
-            >
-              <span className="requirement-icon">
-        {passwordRequirements.special ? (
-          <i className="fa fa-check login-check" aria-hidden="true" />
-        ) : (
-          "•"
-        )}
-      </span>
-              <span>One special character</span>
+              </button>
             </div>
           </div>
-        )}
+
+          {/* Password requirements */}
+          {password.length > 0 && (
+            <div className="password-requirements">
+              <p>Password requirements:</p>
+
+              <div
+                className={
+                  passwordRequirements.minLength
+                    ? "requirement requirement-valid"
+                    : "requirement"
+                }
+              >
+                <span className="requirement">
+                  {passwordRequirements.minLength ? (
+                    <i className="fa fa-check login-check" aria-hidden="true" />
+                  ) : (
+                    "•"
+                  )}
+                </span>
+
+                <span>At least 8 characters</span>
+              </div>
+
+              <div
+                className={
+                  passwordRequirements.uppercase
+                    ? "requirement requirement-valid"
+                    : "requirement"
+                }
+              >
+                <span className="requirement-icon">
+                  {passwordRequirements.uppercase ? (
+                    <i className="fa fa-check login-check" aria-hidden="true" />
+                  ) : (
+                    "•"
+                  )}
+                </span>
+                <span>One uppercase letter</span>
+              </div>
+
+              <div
+                className={
+                  passwordRequirements.lowercase
+                    ? "requirement requirement-valid"
+                    : "requirement"
+                }
+              >
+                <span className="requirement-icon">
+                  {passwordRequirements.lowercase ? (
+                    <i className="fa fa-check login-check" aria-hidden="true" />
+                  ) : (
+                    "•"
+                  )}
+                </span>
+                <span>One lowercase letter</span>
+              </div>
+
+              <div
+                className={
+                  passwordRequirements.number
+                    ? "requirement requirement-valid"
+                    : "requirement"
+                }
+              >
+                <span className="requirement-icon">
+                  {passwordRequirements.number ? (
+                    <i className="fa fa-check login-check" aria-hidden="true" />
+                  ) : (
+                    "•"
+                  )}
+                </span>
+                <span>One number</span>
+              </div>
+
+              <div
+                className={
+                  passwordRequirements.special
+                    ? "requirement requirement-valid"
+                    : "requirement"
+                }
+              >
+                <span className="requirement-icon">
+                  {passwordRequirements.special ? (
+                    <i className="fa fa-check login-check" aria-hidden="true" />
+                  ) : (
+                    "•"
+                  )}
+                </span>
+                <span>One special character</span>
+              </div>
+            </div>
+          )}
 
           {/* Confirm Password */}
           <div className="login-field">
@@ -296,33 +328,33 @@ export const Register: React.FC = () => {
               )}
             </label>
 
-        <div className="password-input-container">
-            <input
-              id="confirmPassword"
-              className="login-input"
-              type={showConfirmPassword ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(event) =>
-                setConfirmPassword(event.target.value)
-              }
-              autoComplete="new-password"
-              placeholder="Confirm your password"
-            />
-                <button
-                    type="button"
-                    className="password-toggle"
-                    onMouseDown={() => setShowConfirmPassword(true)}
-                    onMouseUp={() => setShowConfirmPassword(false)}
-                    onMouseLeave={() => setShowConfirmPassword(false)}
-                    onTouchStart={() => setShowConfirmPassword(true)}
-                    onTouchEnd={() => setShowConfirmPassword(false)}
-                    aria-label="Hold to show password"
-                  >
-                    <i
-                      className="fa fa-eye"
-                      aria-hidden="true"
-                    />
-                </button>
+            <div className="password-input-container">
+              <input
+                id="confirmPassword"
+                className="login-input"
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(event) =>
+                  setConfirmPassword(event.target.value)
+                }
+                autoComplete="new-password"
+                placeholder="Confirm your password"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onMouseDown={() => setShowConfirmPassword(true)}
+                onMouseUp={() => setShowConfirmPassword(false)}
+                onMouseLeave={() => setShowConfirmPassword(false)}
+                onTouchStart={() => setShowConfirmPassword(true)}
+                onTouchEnd={() => setShowConfirmPassword(false)}
+                aria-label="Hold to show password"
+              >
+                <i
+                  className="fa fa-eye"
+                  aria-hidden="true"
+                />
+              </button>
             </div>
           </div>
 
@@ -339,7 +371,7 @@ export const Register: React.FC = () => {
           <button
             className="login-button"
             type="submit"
-            disabled={!username || !password || !confirmPassword}
+            disabled={!fullName || !username || !password || !confirmPassword}
           >
             REGISTER
           </button>
