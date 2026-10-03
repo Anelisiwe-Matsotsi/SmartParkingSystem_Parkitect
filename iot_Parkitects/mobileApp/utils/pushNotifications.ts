@@ -1,3 +1,4 @@
+//git dont play
 //(Expo Docs, 2026a)
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';

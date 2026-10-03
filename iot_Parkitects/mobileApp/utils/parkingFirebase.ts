@@ -1,3 +1,4 @@
+//for the main
 import { getApp } from 'firebase/app';
 import { getDatabase, ref, get, runTransaction } from 'firebase/database';
 

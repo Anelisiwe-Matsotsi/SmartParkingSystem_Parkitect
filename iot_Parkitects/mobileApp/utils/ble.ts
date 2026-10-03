@@ -12,7 +12,7 @@ const BEACON_PREFIX = 'Parkitects Beacon';
 const MIN_RSSI = -90;
 
 //A single, lazily created BleManager
-
+//need this in the main
 //(Ankara, 2025)
 let manager: BleManager | null = null;
 
