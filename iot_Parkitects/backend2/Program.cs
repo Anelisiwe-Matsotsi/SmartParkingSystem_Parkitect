@@ -14,8 +14,18 @@ namespace backend2
             //Chandra, S 2026.
             // Add services to the container.
 
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-               options.UseSqlServer(Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING")));
+ // DB configuration
+            // This connects our app to the SQL db using the connection string in appsettings.json (Microsoft, 2026)
+         
+          var connectionString = Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING")
+          ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
+          builder.Services.AddDbContext<ApplicationDbContext>(options =>
+          options.UseSqlServer(connectionString));
+
+          //prints the server and database name on startup
+          var csb = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
+          Console.WriteLine($"[DB] Using {csb.DataSource} / {csb.InitialCatalog}");
 
             builder.Services.AddControllers();
 
@@ -36,10 +46,7 @@ namespace backend2
 
             builder.Services.AddOpenApi(); // Keeps the native engine
 
-            // DB configuration
-            // This connects our app to the SQL db using the connection string in appsettings.json (Microsoft, 2026)
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+           
 
             // This allows our Expo mobile app to send POST requests to this backend (Microsoft, 2026)
             builder.Services.AddCors(options =>
