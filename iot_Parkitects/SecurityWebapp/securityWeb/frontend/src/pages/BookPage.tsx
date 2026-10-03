@@ -1,13 +1,67 @@
 //(rudderz243,2026)
-import React, { useState} from "react";
+import React, { useState, useEffect} from "react";
 import ParkingLayout from "../components/ParkingLayout.tsx";
 import { useNavigate } from "react-router-dom";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../config/firebase";
+import { getTickets } from "../services/api";
 
+
+//(paul2009, 2021)
+const greeting = () => {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+};
+
+
+const toDate = (iso: string) =>
+  new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`);
 
 export const BookPage: React.FC = () => {
  
   const [selectedBay, setSelectedBay] = useState<string | null>(null);
+  const [ticketsToday, setTicketsToday] = useState(0);
+  const [userName, setUserName] = useState("");
   const navigate = useNavigate();
+
+  // logged in user's name for the greeting
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (u) => setUserName(u?.displayName?.split(" ")[0] || ""),
+      (err) => {
+        console.error("Auth state error:", err);
+        setUserName("");
+      }
+    );
+    return unsubscribe;
+  }, []);
+
+  // tickets reported today
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const tickets = await getTickets();
+        const today = new Date().toDateString();
+        const count = tickets.filter(
+          (t) => toDate(t.createdAt).toDateString() === today
+        ).length;
+        if (active) setTicketsToday(count);
+      } catch (err) {
+        console.error("Failed to load tickets:", err);
+      }
+    };
+    load();
+    const id = setInterval(load, 30000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, []);
+
   // where return starts = the actual HTML/display area
   return (
 
@@ -28,7 +82,7 @@ export const BookPage: React.FC = () => {
           </p>
 
           <h1 id="dashboardTitle">
-            Good morning
+            {greeting()}{userName ? `, ${userName}` : ""}
           </h1>
 
           <p>
@@ -168,7 +222,7 @@ export const BookPage: React.FC = () => {
           <p>Tickets today</p>
 
           <strong className="stat-value">
-            0
+            {ticketsToday}
           </strong>
 
           <small>
@@ -546,6 +600,7 @@ export const BookPage: React.FC = () => {
 };
 
 {/*References
-           realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
-               rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
+paul2009. 2021. Time-based headings. (Version 2.0) [Source code] Available at:<https://forum.squarespace.com/topic/207309-time-based-headings/> [Accessed 3 October 2026].
+realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
+rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
            */}  
