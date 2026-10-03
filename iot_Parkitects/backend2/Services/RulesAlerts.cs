@@ -60,7 +60,7 @@ namespace backend2.Services
 
         //(Dotnet Perls, 2026)
         //time of day the notification gets sent at 12
-        private static readonly TimeSpan SendTime = new TimeSpan(12, 0, 0);
+        private static readonly TimeSpan SendTime = new TimeSpan(9, 30, 0);
 
         //(Adediran, 2025)
         //works out how long to wait until the next 12:00pm Send Time
