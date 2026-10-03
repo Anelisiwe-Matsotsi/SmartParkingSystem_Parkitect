@@ -17,7 +17,8 @@
         "foregroundImage": "./assets/images/parki-logo.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.MobileApp"
     },
     "web": {
       "output": "static",

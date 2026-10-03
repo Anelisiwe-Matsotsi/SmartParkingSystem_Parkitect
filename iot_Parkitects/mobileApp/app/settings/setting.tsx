@@ -1,13 +1,14 @@
-//(Withfra.me, 2022)
+// UI Component base layout adapted from WithFrame library (Withfra.me, 2022)
 import React, { useState, useRef } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter } from 'expo-router'; // Routing via Expo Router (Expo Documentation, 2026)
 import { useEffect } from 'react';
-import * as Location from 'expo-location' //(CoddyKit, 2026)
-import { useFocusEffect } from '@react-navigation/native';
+import * as Location from 'expo-location' // Accessing device location via Expo Location (Expo Documentation, 2026)
+import { useFocusEffect } from '@react-navigation/native'; // React Navigation focus lifecycle hook (React Navigation, 2026)
 import { useCallback } from 'react';
-
+import { useLanguage } from '../../context/languageContext';
 // importing our custom auth setup
 import { auth } from '../../config/firebaseConfig';
+import { signOut } from 'firebase/auth'; // Firebase authentication sign out function (Firebase, 2026)
 import {
   StyleSheet,
   SafeAreaView,
@@ -37,8 +38,13 @@ const OPTION_SIZE = 52;
 export default function SettingsScreen() {
   const [value, setValue] = useState(4);
   const sheet = useRef<any>(null);
-  const router = useRouter();
+  const languageSheet = useRef<any>(null);
+  const router = useRouter(); // Initialize navigation controller (Expo Documentation, 2026)
+  const { language, setLanguage, t } = useLanguage();
   const[locationDisplay, setLocationDisplay] = useState('');
+
+  const [profileName, setProfileName] = useState('');
+  const [profileUserNumber, setProfileUserNumber] = useState('');
 
   const { theme } = useAccessibility();
 
@@ -47,27 +53,63 @@ export default function SettingsScreen() {
     pushNotifications: false,
   });
 
-  //Displaying the location
-  useFocusEffect( //(Kumaar, 2025)
+  // Updates application language state and closes selection modal (React Docs, 2026)
+  const handleLanguageChange = async (newLanguage: 'en' | 'af' | 'xh') => {
+  await setLanguage(newLanguage);
+  languageSheet.current?.close();
+};
+
+// Fetches current user profile from backend database using RESTful fetch API (Fahim, 2026)
+  const loadUserProfile = async () => {
+  const currentUser = auth.currentUser;
+
+  if (!currentUser) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.EXPO_PUBLIC_API_URL}/api/User/profile/${currentUser.uid}`
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch user profile.');
+    }
+
+    const data = await response.json();
+
+    setProfileName(data.name || 'User');
+    setProfileUserNumber(data.userNumber || '');
+  } catch (error) {
+    console.error('Profile loading error:', error);
+    Alert.alert(
+      'Error',
+      'Unable to load your account details.'
+    );
+  }
+};
+
+  // Automatically fetches and updates physical location when screen gains active focus (Kumaar, 2025)
+  useFocusEffect( 
     useCallback(() => {
       const currentLocation = async () => {
         const currentUser = auth.currentUser;
         if(!currentUser) {
           return;
         }
-          //(Singh, 2024)
+          // Check for device location permission grant (Singh, 2024)
         const {status} = await Location.getForegroundPermissionsAsync();
         if (status !== 'granted') {
           return; //does not reprompt the user- this can be linked to the permissions screen or some sort of notification prompt idea
         }
         
         try {
-          //gets the current position
+          // Retrieve current GPS coordinate position (CoddyKit, 2026)
           const position = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.Balanced,
           });
 
-          //provide the latitude and longitude to get the actual address
+          // Convert geographic coordinates to human-readable address location (Singh, 2024)
           const geocode = await Location.reverseGeocodeAsync({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
@@ -80,6 +122,7 @@ export default function SettingsScreen() {
             const existingPreference = await fetch (`${API_BASE_URL}/api/Preferences/user/${currentUser.uid}`);
             const existing = existingPreference.ok ? await existingPreference.json() : {};
 
+            // Save user location preference via HTTP PUT request (Fahim, 2026)
             await fetch(`${API_BASE_URL}/api/Preferences/user/${currentUser.uid}`, {
               method: 'PUT',
               headers: {'Content-Type': 'application/json'},
@@ -88,7 +131,7 @@ export default function SettingsScreen() {
 
             setForm((prev) => ({ ...prev }))
 
-            setLocationDisplay(locationLabel) //location gets stored locally-better approach since it refreshes when user goes to settings screen only not always syncing in the background
+            setLocationDisplay(locationLabel) // Store updated location locally for display
           }
         } catch (error) { }
       };
@@ -96,11 +139,17 @@ export default function SettingsScreen() {
     }, [])
   );
 
-    //loads default settings values
-//(Spencer,2024)
+  // Refresh user account profile each time settings screen opens (Kumaar, 2025)
+  useFocusEffect(
+  useCallback(() => {
+    loadUserProfile();
+  }, [])
+);
+
+    // Loads default user settings preferences on initial component render (Spencer, 2024)
     useEffect(() => {
         const fetchSettings = async () => {
-            const currentUser = auth.currentUser //identifies the user from firebase authentication
+            const currentUser = auth.currentUser // Identify authenticated user context (Firebase, 2026)
             if (!currentUser) {
                 return;
             }
@@ -124,13 +173,12 @@ export default function SettingsScreen() {
         fetchSettings();
     }, []);
 
-    //(Syed, 2023)
+    // Saves updated user notification preferences to backend server (Syed, 2023)
     const savePreferences = async (updated: Partial<typeof form>) => {
         const currentUser = auth.currentUser;
         if (!currentUser) return;
 
-        //(Holeczek, 2023)
-        //merging the state so that updates to the users selected preferences
+        // Merge existing setting state with updated values using object spread operator (Holeczek, 2023)
         const merged = { ...form, ...updated };
         setForm(merged);
 
@@ -138,7 +186,7 @@ export default function SettingsScreen() {
             const existingPreferences = await fetch(`${API_BASE_URL}/api/Preferences/user/${currentUser.uid}`);
             const existing = existingPreferences.ok ? await existingPreferences.json() : {};
 
-            //(Fahim, 2026)
+            // Send merged preferences payload to server endpoint (Fahim, 2026)
             await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -153,6 +201,7 @@ export default function SettingsScreen() {
     sheet.current?.open();
   };
 
+  // Submits user experience feedback rating to API endpoint (Fahim, 2026)
     const handleCloseSheet = async () => {
         const currentUser = auth.currentUser;
         if (currentUser) {
@@ -175,6 +224,22 @@ export default function SettingsScreen() {
     sheet.current?.close();
         }
   };
+
+  // Handles user sign out via Firebase auth session termination and screen redirection (Firebase, 2026)
+  const handleLogout = async () => {
+  try {
+    await signOut(auth);
+
+    router.replace('/auth/sign_in' as any); // Redirect user to authentication screen (Expo Documentation, 2026)
+  } catch (error) {
+    console.error('Logout error:', error);
+
+    Alert.alert(
+      'Logout Failed',
+      'Unable to log out. Please try again.'
+    );
+  }
+};
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
@@ -203,7 +268,9 @@ export default function SettingsScreen() {
 
         {/* ACCOUNT SECTION */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>ACCOUNT</ThemedText>
+          <ThemedText style={styles.sectionTitle}>
+            {t('account')}
+          </ThemedText>
           <View style={styles.sectionBody}>
             <TouchableOpacity
               onPress={() => router.push('/settings/profie')}
@@ -211,8 +278,13 @@ export default function SettingsScreen() {
               activeOpacity={0.7}
             >
               <View style={styles.profileBody}>
-                <ThemedText style={styles.profileName}>Marcus Aimes</ThemedText>
-                <ThemedText style={styles.profileHandle}>ST1289066</ThemedText>
+                <ThemedText style={styles.profileName}>
+                    {profileName || 'Loading...'}
+                  </ThemedText>
+
+                  <ThemedText style={styles.profileHandle}>
+                    {profileUserNumber || 'Loading...'}
+                  </ThemedText>
               </View>
               <FeatherIcon color="#94A3B8" name="chevron-right" size={20} />
             </TouchableOpacity>
@@ -221,13 +293,46 @@ export default function SettingsScreen() {
 
         {/* PREFERENCES SECTION */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Preferences</ThemedText>
+          <ThemedText style={styles.sectionTitle}>
+            {t('preferences')}
+          </ThemedText>
           <View style={styles.sectionBody}>
             <View style={[styles.rowWrapper, styles.rowFirst]}>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7}>
-                <ThemedText style={styles.rowLabel}>Language</ThemedText>
+              <TouchableOpacity
+                style={styles.row}
+                activeOpacity={0.7}
+                onPress={() => languageSheet.current?.open()}
+              >
+    <ThemedText style={styles.rowLabel}>
+      {t('language')}
+    </ThemedText>
+
+    <View style={styles.rowSpacer} />
+
+    <ThemedText style={styles.rowValue}>
+      {language === 'en'
+        ? 'English'
+        : language === 'af'
+        ? 'Afrikaans'
+        : 'isiXhosa'}
+    </ThemedText>
+
+    <FeatherIcon
+      color="#94A3B8"
+      name="chevron-right"
+      size={18}
+    />
+  </TouchableOpacity>
+</View>
+
+                        <View style={styles.rowWrapper}>
+              <TouchableOpacity
+                onPress={() => router.push('/permissions')}
+                style={styles.row}
+                activeOpacity={0.7}
+              >
+                <ThemedText style={styles.rowLabel}>Permissions</ThemedText>
                 <View style={styles.rowSpacer} />
-                <ThemedText style={styles.rowValue}>English</ThemedText>
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
@@ -290,7 +395,14 @@ export default function SettingsScreen() {
             </View>
 
             <View style={styles.rowWrapper}>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7}>
+              <TouchableOpacity
+                onPress={() => {
+                  console.log('REPORT BUG PRESSED');
+                  router.push('/settings/reportBug' as any);
+                }}
+                style={styles.row}
+                activeOpacity={0.7}
+              >
                 <ThemedText style={styles.rowLabel}>Report Bug</ThemedText>
                 <View style={styles.rowSpacer} />
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
@@ -321,9 +433,13 @@ export default function SettingsScreen() {
         </View>
 
         {/* LOGOUT */}
-        <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.8}>
-          <ThemedText style={styles.logoutText}>Log Out</ThemedText>
-        </TouchableOpacity>
+        <TouchableOpacity
+  style={styles.logoutBtn}
+  activeOpacity={0.8}
+  onPress={handleLogout}
+>
+  <ThemedText style={styles.logoutText}>Log Out</ThemedText>
+</TouchableOpacity>
       </ScrollView>
 
       {/* BOTTOM SHEET */}
@@ -376,6 +492,80 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
       </RBSheet>
+      <RBSheet
+  ref={languageSheet}
+  height={250}
+  openDuration={250}
+  customStyles={{
+    container: styles.sheetContainer,
+    wrapper: {
+      backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    },
+  }}
+>
+  <View style={styles.sheetHeader}>
+    <ThemedText style={styles.sheetHeaderTitle}>
+      {t('selectLanguage')}
+    </ThemedText>
+
+    <ThemedText style={styles.sheetHeaderSubtitle}>
+      {t('chooseLanguage')}
+    </ThemedText>
+  </View>
+
+  <View style={{ padding: 24 }}>
+    <TouchableOpacity
+      style={styles.languageOption}
+      onPress={() => handleLanguageChange('en')}
+    >
+      <ThemedText style={styles.languageOptionText}>
+        English
+      </ThemedText>
+
+      {language === 'en' && (
+        <FeatherIcon
+          name="check"
+          size={20}
+          color="#0D5265"
+        />
+      )}
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={styles.languageOption}
+      onPress={() => handleLanguageChange('af')}
+    >
+      <ThemedText style={styles.languageOptionText}>
+        Afrikaans
+      </ThemedText>
+
+      {language === 'af' && (
+        <FeatherIcon
+          name="check"
+          size={20}
+          color="#0D5265"
+        />
+      )}
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={styles.languageOption}
+      onPress={() => handleLanguageChange('xh')}
+    >
+      <ThemedText style={styles.languageOptionText}>
+        isiXhosa
+      </ThemedText>
+
+      {language === 'xh' && (
+        <FeatherIcon
+          name="check"
+          size={20}
+          color="#0D5265"
+        />
+      )}
+    </TouchableOpacity>
+  </View>
+</RBSheet>
     </SafeAreaView>
   );
 }
@@ -582,6 +772,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
+  languageOption: {
+  height: 50,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  paddingHorizontal: 16,
+  borderBottomWidth: 1,
+  borderBottomColor: '#F1F5F9',
+},
+
+languageOptionText: {
+  fontSize: 16,
+  color: '#0F172A',
+},
 });
 /*
 *
@@ -590,8 +794,11 @@ const styles = StyleSheet.create({
 * CoddyKit, 2026. Reading GPS Location with expo location. (Version 10.0) [Source Code] Available at: < https://www.coddykit.com/courses/learn_react_native/reading-gps-location-with-expo-location-10687394 > [Accessed 2 Septemeber 2026]
 * Expo Documentation, 2026. Expo Location. (Version 10.0) [Source Code] Available at:< https://docs.expo.dev/versions/latest/sdk/location/ > [Accessed 2 September 2026]
 * Fahim, M., 2026. Mastering the Fetch API with real-life javascript examples. (Version 2.0) [Source Code] Available at: < https://dev.to/mdfahim18/mastering-the-fetch-api-with-real-life-javascript-examples-eke > [Accessed 3 September 2026]
+* Firebase, 2026. Manage Users in Firebase Authentication. [Documentation] Available at: < https://firebase.google.com/docs/auth/web/manage-users > [Accessed 2 September 2026]
 * Holeczek, K., 2023. Mastering the spread operator ('...') in react.js. (Version 2.0) [Source Code] Available at: < https://coreui.io/blog/draft-how-to-replace-all-occurrences-of-a-string-in-javascript/ > [Accessed 3 September 2026] 
 * Kumaar, A., 2025. When to use useEffect and UseFocusEffect in React or React Native: A deep dive. (Version 10.0) [Source Code] Available at: < https://blog.stackademic.com/when-to-use-useeffect-and-usefocuseffect-in-react-or-react-native-a-deep-dive-a02f8df7131c > [Accessed 2 September 2026]
+* React Docs, 2026. Managing State. [Documentation] Available at: < https://react.dev/learn/managing-state > [Accessed 2 September 2026]
+* React Navigation, 2026. useFocusEffect. [Documentation] Available at: < https://reactnavigation.org/docs/use-focus-effect/ > [Accessed 2 September 2026]
 * Singh, A., 2024. Expo Location: How to get the location in adnroid and ios using reverse Geo location. (Version 10.0) [Source Code] Available at: < https://medium.com/@ashu6530/expo-location-how-to-get-the-location-in-android-and-ios-using-reverse-geo-location-5f40a3b19e3b > [Accessed 2 September 2026]
 * Spencer,P., 2024. The Full stack (React & ASP.NET)- 12 - UseEffect.[video online] (Version 10.0) [Source Code] Available at: < https://youtu.be/tJxBtmg-92w?si=NYNfh-oL9nZO0EFb > [Accessed 30 August 2026]
 * Syed, A.B., 2023. Using built-in utility types in typescript. (Version 2.0) [Source Code] Available at: < https://blog.logrocket.com/using-built-in-utility-types-typescript/ > [Accessed 4 September 2026]

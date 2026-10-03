@@ -22,7 +22,7 @@ services:
         dockerfile: ./SecurityWebapp/securityWeb/frontend/Dockerfile           
       container_name: parkitects-frontend
       ports:
-        - "8081:8080"                             # <-- Droplet port 80 routes to container 8080
+        - "8082:8080"                             # <-- Droplet port 80 routes to container 8080
       depends_on:
         - backend2-service
       restart: unless-stopped
