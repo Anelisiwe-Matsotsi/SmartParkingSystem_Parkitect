@@ -21,6 +21,64 @@
     --radius: 18px;
     --sidebar: 248px;
 }
+[data-text-size="large"] {
+    font-size: 16px;
+}
+
+[data-text-size="large"] .page-heading h1 {
+    font-size: clamp(30px, 3.2vw, 38px);
+}
+
+[data-text-size="large"] .page-heading p {
+    font-size: 14px;
+}
+
+[data-text-size="large"] .panel-heading h2,
+[data-text-size="large"] .project-card h2,
+[data-text-size="large"] .setting-group h2 {
+    font-size: 18px;
+}
+
+[data-text-size="large"] .setting-group > p {
+    font-size: 14px;
+}
+
+[data-text-size="large"] .setting-line {
+    font-size: 15px;
+}
+
+[data-text-size="large"] .setting-line small {
+    font-size: 12px;
+}
+
+[data-text-size="large"] .nav-item {
+    font-size: 14px;
+}
+
+[data-text-size="large"] .button {
+    font-size: 14px;
+}
+
+[data-reduce-motion="true"] *,
+[data-reduce-motion="true"] *::before,
+[data-reduce-motion="true"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+}
+
+[data-reduce-motion="true"] .page.is-active {
+    animation: none !important;
+}
+
+[data-reduce-motion="true"] .button:hover,
+[data-reduce-motion="true"] .nav-item:hover,
+[data-reduce-motion="true"] .parking-bay:hover {
+    transform: none !important;
+}
+
+
 
 [data-theme="dark"] {
     --bg: #10131b;
@@ -1828,7 +1886,8 @@ tbody tr:last-child td {
     *, *::before, *::after {
         scroll-behavior: auto !important;
         animation-duration: .01ms !important;
-        transition-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }
 

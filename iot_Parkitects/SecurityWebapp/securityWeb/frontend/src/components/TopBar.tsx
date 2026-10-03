@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../config/firebase";
 
+const getUserSettingsKey = (uid: string, setting: string) => `parkitects_${uid}_${setting}`;
+
 export const TopBar: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(() =>{
-    return localStorage.getItem("theme") === "dark";
-  });
+  const [darkMode, setDarkMode] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [userName, setUserName] = useState("");
@@ -16,17 +16,78 @@ export const TopBar: React.FC = () => {
 
   //gets the logged in users details
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (!currentUser){
+    let active = true;
+
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) {
         setUserName("");
         setUserEmail("");
+        setDarkMode(false);
+
+        document.documentElement.setAttribute("data-theme", "light");
+        document.documentElement.setAttribute("data-compact", "false");
+        document.documentElement.setAttribute("data-larger-text", "false");
+        document.documentElement.setAttribute("data-reduced-motion", "false");
+
         return;
       }
 
-      setUserName(
-        currentUser.displayName || "");
+      const uid = currentUser.uid;
 
+      setUserName(currentUser.displayName || "");
       setUserEmail(currentUser.email || "");
+
+      // Apply this user's cached theme while settings load.
+      const cachedTheme = localStorage.getItem(
+        getUserSettingsKey(uid, "theme")
+      );
+
+      const cachedDarkMode = cachedTheme === "dark";
+
+      setDarkMode(cachedDarkMode);
+      document.documentElement.setAttribute(
+        "data-theme",
+        cachedDarkMode ? "dark" : "light"
+      );
+
+      try {
+        // Fetch the saved settings for this Firebase UID.
+        const response = await fetch(`/api/Settings/web/${uid}`);
+
+        if (!response.ok) {
+          throw new Error("Could not load the user's theme settings.");
+        }
+
+        const settings = await response.json();
+
+        // Ignore responses for an account that has changed or signed out.
+        if (!active || auth.currentUser?.uid !== uid) return;
+
+        const isDark = settings.darkMode ?? cachedDarkMode;
+
+        setDarkMode(isDark);
+
+        localStorage.setItem(
+          getUserSettingsKey(uid, "theme"),
+          isDark ? "dark" : "light"
+        );
+
+        document.documentElement.setAttribute(
+          "data-theme",
+          isDark ? "dark" : "light"
+        );
+
+        window.dispatchEvent(
+          new CustomEvent("themeChange", {
+            detail: {
+              darkMode: isDark,
+              uid,
+            },
+          })
+        );
+      } catch (error) {
+        console.error("Error loading the user's theme:", error);
+      }
     });
 
     return () => unsubscribe();
@@ -36,13 +97,13 @@ export const TopBar: React.FC = () => {
   useEffect(() => {
     const onLoad = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-        setUserName(detail.name);
-        setUserEmail(detail.email);
+        setUserName(detail.name || "");
+        setUserEmail(detail.email || "");
       };
       const onUnload = () => {
-        const u =auth.currentUser;
-        setUserName(u?.displayName || "");
-        setUserEmail(u?.email || "");
+        const user =auth.currentUser;
+        setUserName(user?.displayName || "");
+        setUserEmail(user?.email || "");
       };
 
     window.addEventListener("profileLoad", onLoad);
@@ -57,15 +118,62 @@ export const TopBar: React.FC = () => {
   //this applies the dark theme across the entire website using the toggle at the top
   useEffect(() => {
     const theme = darkMode ? "dark" : "light";
+    const uid = auth.currentUser?.uid;
     document.documentElement.setAttribute("data-theme", theme);
 
+    if(uid){
     //saves the theme so it stays the same throught all the pages
-    localStorage.setItem("theme", theme);
+    localStorage.setItem(getUserSettingsKey(uid,"theme"), theme);
+    }
   },[darkMode]);
+
+useEffect(() => {
+    const handleThemeChange = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      const currentUid = auth.currentUser?.uid;
+      const eventUid = detail?.uid;
+
+      if (eventUid && currentUid && eventUid !== currentUid) {
+        return;
+      }
+
+      setDarkMode(Boolean(detail?.darkMode));
+    };
+
+
+    window.addEventListener("themeChange", handleThemeChange);
+
+    return () => {
+      window.removeEventListener("themeChange", handleThemeChange);
+    };
+  }, []);
 
   //changes between dark mode and light mode when the toggle is clicked
   const toggleDarkMode = () => {
-    setDarkMode((current) => !current);
+    const uid = auth.currentUser?.uid;
+
+      if (!uid) {
+      alert("Please log in first.");
+      return;
+    }
+
+
+setDarkMode((current) => {
+      const newValue = !current;
+      const theme = newValue ? "dark" : "light";
+
+      localStorage.setItem(
+        getUserSettingsKey(uid, "theme"),
+        theme
+      );
+
+      document.documentElement.setAttribute("data-theme", theme);
+
+      window.dispatchEvent(new CustomEvent("themeChange", {
+        detail: { darkMode: newValue },
+      }));
+      return newValue;
+    });
   };
 
   const toggleNotifications = () => {
@@ -87,6 +195,7 @@ export const TopBar: React.FC = () => {
     .split(" ")
     .map((name) => name[0]).join("").substring(0, 2).toUpperCase();
   }
+  
 
   
 
