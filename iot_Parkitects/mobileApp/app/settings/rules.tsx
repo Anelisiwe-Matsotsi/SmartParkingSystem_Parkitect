@@ -10,8 +10,9 @@ import {
 //using a path alias to call files that have supporting code for accessibility functions to work
 import { useRouter } from 'expo-router';
 import FeatherIcon from '@expo/vector-icons/Feather';
-import { ThemedText } from '@/components/themed-text'
+import { ThemedText } from '@/components/themed-text';
 import { useAccessibility } from '@/context/accessibilityContext';
+const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
 
 //(StackOverflow, 2022)
 //the rule item interface is declared with attributes that the array will contain

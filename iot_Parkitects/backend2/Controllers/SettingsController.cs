@@ -130,7 +130,7 @@ namespace backend2.Controllers
 /*
  * References
  * 
- * Adeebabu, 2025. A comprehensive guide to C# .NET Web API: GET, POST, PUT, DELETE Methods. [online] Available at: <`https://medium.com/@adeebabu655/a-comprehensive-guide-to-c-net-web-api-get-post-put-delete-methods-40e60aff91be > [Accessed 30 August 2026]
+ * Adeebabu, 2025. A comprehensive guide to C# .NET Web API: GET, POST, PUT, DELETE Methods. [online] Available at: <https://medium.com/@adeebabu655/a-comprehensive-guide-to-c-net-web-api-get-post-put-delete-methods-40e60aff91be > [Accessed 30 August 2026]
  * Noble, A., 2024. C#, .NET Core Web API with React (TypeScript) Frontend. [online] Available at: < https://github.com/AbrahamNobleOX/React_dotNET_ASP.NETCore > [Accessed 30 August 2026]
  * 
  */

@@ -15,6 +15,9 @@ import { useRouter } from 'expo-router';
 import { auth } from '../../config/firebaseConfig';
 import { verifyBeforeUpdateEmail, EmailAuthProvider,
   reauthenticateWithCredential, updatePassword,} from 'firebase/auth';
+import { ThemedText } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
+const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
 
 export default function AccountScreen() {
   const router = useRouter();
