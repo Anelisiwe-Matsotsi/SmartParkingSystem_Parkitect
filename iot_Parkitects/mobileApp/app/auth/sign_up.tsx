@@ -24,6 +24,7 @@ import { auth } from '../../config/firebaseConfig';
 export default function SignUp() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false); // loading state for the registration process
+  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -159,16 +160,31 @@ export default function SignUp() {
           </View>
 
           <View style={styles.input}>
-            <TextInput
-              autoCorrect={false}
-              clearButtonMode="while-editing"
-              onChangeText={password => setForm({ ...form, password })}
-              placeholder="Password"
-              placeholderTextColor="#A5A5AE"
-              secureTextEntry={true}
-              style={styles.inputControl}
-              value={form.password} />
-          </View>
+  <View style={styles.passwordContainer}>
+    <TextInput
+      autoCorrect={false}
+      clearButtonMode="while-editing"
+      onChangeText={password => setForm({ ...form, password })}
+      placeholder="Password"
+      placeholderTextColor="#A5A5AE"
+      secureTextEntry={!showPassword}
+      style={styles.passwordInput}
+      value={form.password}
+    />
+
+    <TouchableOpacity
+      onPressIn={() => setShowPassword(true)}
+      onPressOut={() => setShowPassword(false)}
+      style={styles.eyeButton}
+    >
+      <MaterialCommunityIcons
+        name={showPassword ? 'eye' : 'eye-off'}
+        size={22}
+        color="#6b7280"
+      />
+    </TouchableOpacity>
+  </View>
+</View>
 
           <TouchableOpacity
           // routing through our new signup function (Firebase, 2026)
@@ -378,6 +394,31 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
+
+  passwordContainer: {
+  height: 44,
+  backgroundColor: '#EFF1F5',
+  borderRadius: 12,
+  flexDirection: 'row',
+  alignItems: 'center',
+},
+
+passwordInput: {
+  flex: 1,
+  height: 44,
+  paddingHorizontal: 16,
+  fontSize: 15,
+  fontWeight: '500',
+  color: '#222',
+},
+
+eyeButton: {
+  height: 44,
+  paddingHorizontal: 14,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
 });
 /**
  * References

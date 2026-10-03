@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { registerForPushNotificationsAsync } from '../../utils/pushNotifications';
+import FeatherIcon from '@expo/vector-icons/Feather';
 import {
   StyleSheet,
   View,
@@ -17,7 +18,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/theme';
 
 // importing the login function from firebase
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+} from 'firebase/auth';
 // importing our custom auth setup
 import { auth } from '../../config/firebaseConfig';
 
@@ -29,6 +32,7 @@ export default function SignIn() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
 
  
@@ -125,18 +129,33 @@ export default function SignIn() {
           </View>
 
           <View style={styles.input}>
-            <Text style={styles.inputLabel}>Password</Text>
+  <Text style={styles.inputLabel}>Password</Text>
 
-            <TextInput
-              autoCorrect={false}
-              clearButtonMode="while-editing"
-              onChangeText={password => setForm({ ...form, password })}
-              placeholder="********"
-              placeholderTextColor="#6b7280"
-              style={styles.inputControl}
-              secureTextEntry={true}
-              value={form.password} />
-          </View>
+  <View style={styles.passwordContainer}>
+    <TextInput
+      autoCorrect={false}
+      clearButtonMode="while-editing"
+      onChangeText={password => setForm({ ...form, password })}
+      placeholder="********"
+      placeholderTextColor="#6b7280"
+      style={styles.passwordInput}
+      secureTextEntry={!showPassword}
+      value={form.password}
+    />
+
+    <TouchableOpacity
+      onPressIn={() => setShowPassword(true)}
+      onPressOut={() => setShowPassword(false)}
+      style={styles.eyeButton}
+    >
+      <FeatherIcon
+        name={showPassword ? 'eye' : 'eye-off'}
+        size={22}
+        color="#6b7280"
+      />
+    </TouchableOpacity>
+  </View>
+</View>
 
           <View style={styles.formAction}>
             <TouchableOpacity
@@ -153,9 +172,9 @@ export default function SignIn() {
           </View>
 
           <TouchableOpacity
-            onPress={() => {
-              // handle link
-            }}>
+            onPress={() => router.push('/auth/forgot_password')}
+            activeOpacity={0.7}
+          >
             <Text style={styles.formLink}>Forgot password?</Text>
           </TouchableOpacity>
         </View>
@@ -281,6 +300,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
+
+  passwordContainer: {
+  height: 50,
+  backgroundColor: '#fff',
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: '#C9D3DB',
+  flexDirection: 'row',
+  alignItems: 'center',
+},
+
+passwordInput: {
+  flex: 1,
+  height: 50,
+  paddingHorizontal: 16,
+  fontSize: 15,
+  fontWeight: '500',
+  color: '#222',
+},
+
+eyeButton: {
+  paddingHorizontal: 14,
+  height: 50,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
 });
 /**
  * References

@@ -56,6 +56,13 @@ namespace backend2.Controllers
             preferences.screenReader = settings.screenReader;
             preferences.hapticFeedback = settings.hapticFeedback;
 
+            //Web security settings
+            preferences.darkMode = settings.darkMode;
+            preferences.compactTables = settings.compactTables;
+            preferences.ticketUpdates = settings.ticketUpdates;
+            preferences.parkingAlerts = settings.parkingAlerts;
+            preferences.systemAlerts = settings.systemAlerts;
+
             await _context.SaveChangesAsync(); //changes are saved to the DB
             return NoContent();
         }

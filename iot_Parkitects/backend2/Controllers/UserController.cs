@@ -28,6 +28,12 @@ namespace backend2.Controllers
             public string UserRole { get; set; } = "Student";
         }
 
+        public class UpdateProfileDto
+        {
+            public string Name { get; set; } = string.Empty;
+            public string Email { get; set; } = string.Empty;
+        }
+
         [HttpPost("sync")]
         public async Task<IActionResult> SyncUser([FromBody] UserSyncDto dto)
         {
@@ -96,17 +102,6 @@ namespace backend2.Controllers
 
             return Ok(new { email = user.Email, role = user.UserRole });
         }
-
-        [HttpGet("user/{firebaseUid}")]
-        public async Task<IActionResult> GetFirebaseUid(string firebaseUid)
-        {
-            //gets the user ID to find the users name for the tickets response page
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
-            if (user == null) return NotFound("User not found");
-
-            return Ok(new { name = user.Name });
-        }
-
     }
 }
 

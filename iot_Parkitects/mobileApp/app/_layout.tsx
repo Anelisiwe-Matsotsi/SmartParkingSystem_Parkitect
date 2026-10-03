@@ -5,6 +5,7 @@ import 'react-native-reanimated';
 import { AccessibilityProvider, useAccessibility } from '../context/accessibilityContext';
 import { useEffect } from 'react';
 import * as Notifications from 'expo-notifications';
+import { LanguageProvider } from '../context/languageContext';
 
 function RootLayoutNav() {
   const { colorMode } = useAccessibility();
@@ -33,7 +34,9 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AccessibilityProvider>
-      <RootLayoutNav />
+      <LanguageProvider>
+        <RootLayoutNav />
+      </LanguageProvider>
     </AccessibilityProvider>
   );
 }
