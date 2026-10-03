@@ -19,34 +19,41 @@ import { verifyBeforeUpdateEmail, EmailAuthProvider,
 export default function AccountScreen() {
   const router = useRouter();
 
+  // State variables for storing profile and account data (React, 2024)
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [userNumber, setUserNumber] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
+  // States to manage inline editing modes
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
 
+  // Temporary holding states while inputs are being modified
   const [editedName, setEditedName] = useState('');
   const [editedEmail, setEditedEmail] = useState('');
 
+  // Password confirmation and modal states (Firebase, 2024)
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
 
   const [newPassword, setNewPassword] = useState('');
-const [confirmNewPassword, setConfirmNewPassword] = useState('');
-const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
 
+// Visibility toggles for password fields
 const [showCurrentPassword, setShowCurrentPassword] = useState(false);
 const [showNewPassword, setShowNewPassword] = useState(false);
 const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
 
+  // Load profile data on component mount (React, 2024)
   useEffect(() => {
     loadUserProfile();
   }, []);
 
+  //Fetches user profile data from the RESTful backend API using the authenticated Firebase UID (React Native, 2024).
   const loadUserProfile = async () => {
     const currentUser = auth.currentUser;
 
@@ -90,6 +97,7 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     }
   };
 
+  // Inline editing controls for username and email fields
   const startEditingName = () => {
     setEditedName(userName);
     setIsEditingName(true);
@@ -110,6 +118,7 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     setIsEditingEmail(false);
   };
 
+  //Validates and updates the user's display name on the API backend.
   const saveName = async () => {
     if (!editedName.trim()) {
       Alert.alert('Invalid Name', 'Please enter your name.');
@@ -119,6 +128,7 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     await updateProfile(editedName.trim(), userEmail);
   };
 
+  //Validates target email and prompts for password re-authentication before updating (Firebase, 2024)
   const saveEmail = () => {
   const newEmail = editedEmail.trim().toLowerCase();
 
@@ -152,6 +162,7 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   setShowPasswordPrompt(true);
 };
 
+//Re-authenticates the user with current credentials and initiates the email verification flow (Firebase, 2024)
 const confirmEmailChange = async () => {
   if (!currentPassword.trim()) {
     Alert.alert(
@@ -183,8 +194,7 @@ const confirmEmailChange = async () => {
   setIsSaving(true);
 
   try {
-    // Creates Firebase credentials using the current email
-    // and the user's current password.
+    // Re-authenticate user credentials before applying email changes (Firebase, 2024)
     const credential = EmailAuthProvider.credential(
       currentUser.email || '',
       currentPassword
@@ -250,6 +260,7 @@ const confirmEmailChange = async () => {
   }
 };
 
+//Validates password rules, re-authenticates, and updates Firebase Auth password (Firebase, 2024)
 const changePassword = async () => {
   if (!currentPassword.trim()) {
     Alert.alert(
@@ -641,7 +652,6 @@ const changePassword = async () => {
               onPress={startEditingName}
             >
               <Text style={styles.rowLabel}>Name</Text>
-
               <View style={styles.rowRight}>
                 <Text style={styles.rowValue}>
                   {isLoading ? 'Loading...' : userName}
@@ -1000,3 +1010,12 @@ passwordEyeButton: {
 },
 
 });
+
+// Reference List
+// Firebase, 2024. Manage Users in Firebase Auth. Available at: https://firebase.google.com/docs/auth/web/manage-users [Accessed October 2026].
+
+// React, 2024. State: A Component's Memory. Available at: https://react.dev/learn/state-a-components-memory [Accessed October 2026].
+
+// React Native, 2024. Networking & Fetch API. Available at: https://reactnative.dev/docs/network [Accessed October 2026].
+
+// Withfra.me, 2022. React Native UI Templates and Account Settings Layouts. Available at: https://withfra.me [Accessed October 2026].

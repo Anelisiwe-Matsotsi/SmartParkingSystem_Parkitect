@@ -172,7 +172,7 @@ export default function SignIn() {
           </View>
 
           <TouchableOpacity
-            onPress={() => router.push('/auth/forgot_password')}
+            onPress={() => router.push('/auth/forgot_password' as any)}
             activeOpacity={0.7}
           >
             <Text style={styles.formLink}>Forgot password?</Text>
