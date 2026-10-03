@@ -24,6 +24,8 @@ import SearchBar from "./SearchBar";
 import { getBaysForNode, claimBay } from "@/utils/parkingFirebase";
 import { auth } from "@/config/firebaseConfig";
 import { startSession } from "@/utils/parkingApi"
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 // props to recieve live count
 type Props = {
@@ -167,6 +169,20 @@ const saveParking = async (bayId: string) => {
 if (ok) {
   try {
     await startSession(firebaseUid, nearestNode.nodeKey, bayId);
+
+    // Fetches coordinates from API
+        const API_URL = process.env.EXPO_PUBLIC_API_URL;
+        
+        // Finds the active beacon
+        const response = await axios.get(`${API_URL}/api/FindMyCar/active-bay`);
+        const lat = response.data.latitude;
+        const lon = response.data.longitude;
+        const label = response.data.formattedLocation;
+
+        // Save to phones local memory
+        await AsyncStorage.setItem('parkedLat', lat.toString());
+        await AsyncStorage.setItem('parkedLon', lon.toString());
+        await AsyncStorage.setItem('parkedLabel', label);
   } catch (e) {
     console.log("[SQL] session start failed:", e);
   }

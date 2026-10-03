@@ -21,29 +21,44 @@ namespace backend2.Controllers
         //Mobile app settings
 
         //Gets users saved preferences in settings
-        [HttpGet("user/{userID}")]
-        public async Task<ActionResult<Settings>> GetAllSettings(string userID)
+        [HttpGet("user/{firebaseUid}")]
+        public async Task<ActionResult<Settings>> GetAllSettings(string firebaseUid)
         {
-            var settings = await _context.Settings.FirstOrDefaultAsync(s => s.userID == userID);
+            var user = await _context.Users.FirstOrDefaultAsync(s => s.FirebaseUid == firebaseUid);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // Queries Preferences using the integer ID
+            var settings = await _context.Preferences.FirstOrDefaultAsync(s => s.userID == user.UserId);
+            
             if (settings == null)
             {
-                return Ok(new Settings { userID = userID }); //sets preferences to default values
+                return Ok(new Settings { userID = user.UserId }); //sets preferences to default values
             }
             return Ok(settings);
         }
 
         //Updates user preferences in settings
-        [HttpPut("user/{userID}")]
-        public async Task<ActionResult<Settings>> UpdateSettings(string userID, Settings settings)
+        [HttpPut("user/{firebaseUid}")]
+        public async Task<ActionResult<Settings>> UpdateSettings(string firebaseUid, Settings settings)
         {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
             //(Adeebabu, 2025)
-            var preferences = await _context.Settings.FirstOrDefaultAsync(s => s.userID == userID);
-            
+            var preferences = await _context.Preferences.FirstOrDefaultAsync(s => s.userID == user.UserId);
+
             if (preferences == null) //default settings for new users
             {
                 
-                settings.userID = userID;
-                _context.Settings.Add(settings);
+                settings.userID = user.UserId;
+                _context.Preferences.Add(settings);
                 await _context.SaveChangesAsync(); //changes are saved to the DB
                 return Ok(settings);
             }
@@ -65,30 +80,31 @@ namespace backend2.Controllers
 
             //Web app settings  
             //gets the user's web settigngs
-            [HttpGet("web/{userID}")]
-            public async Task<ActionResult<WebSettings>> GetWebSettings(string userID)
+            [HttpGet("web/{firebaseUid}")]
+            public async Task<ActionResult<WebSettings>> GetWebSettings(string firebaseUid)
             {
-                var settings = await _context.WebSettings.FirstOrDefaultAsync(s => s.userID == userID);
+                var settings = await _context.WebSettings.FirstOrDefaultAsync(s => s.userID == firebaseUid);
 
                 if(settings == null)
                 {
                     //returns default web settings for new users
-                    return Ok(new WebSettings { userID = userID });
+                    return Ok(new WebSettings { userID = firebaseUid });
                 }
                 return Ok(settings);
             }
 
             //updates user's settings
-            [HttpPut("web/{userID}")]
-            public async Task<ActionResult<WebSettings>> UpdateWebSettings(string userID, WebSettings settings)
+            [HttpPut("web/{firebaseUid}")]
+            public async Task<ActionResult<WebSettings>> UpdateWebSettings(string firebaseUid, WebSettings settings)
             {
-                 //(Adeebabu, 2025)
-                 var existingSettings = await _context.WebSettings.FirstOrDefaultAsync(s => s.userID == userID);
-                 if(existingSettings == null)
+                //(Adeebabu, 2025)
+                var existingSettings = await _context.WebSettings.FirstOrDefaultAsync(s => s.userID == firebaseUid);
+                
+                if(existingSettings == null)
                 {
                     //creates new web settings for new users
                     settings.settingsID = 0; 
-                    settings.userID = userID;
+                    settings.userID = firebaseUid;
                     _context.WebSettings.Add(settings);
                     await _context.SaveChangesAsync(); //changes are saved to the DB
                     return Ok(settings);

@@ -8,7 +8,7 @@ namespace backend2.Models
         public int settingsID { get; set; } //linked to preference table with settingsID
 
         [Required]
-        public string userID { get; set; } = string.Empty;
+        public int userID { get; set; }
 
         //(Noble, 2024)
         public string language { get; set; } = "English";
