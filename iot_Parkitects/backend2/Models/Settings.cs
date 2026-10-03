@@ -23,12 +23,6 @@ namespace backend2.Models
         public bool screenReader { get; set; } = true;
         public bool hapticFeedback { get; set; } = true;
 
-        //Security web app settings
-        public bool darkMode {get; set;} = false;
-        public bool compactTables {get; set;} = false;
-        public bool ticketUpdates {get; set;} = true;
-        public bool parkingAlerts {get; set;} = true;
-        public bool systemAlerts {get; set;} = true;
 
 
     }

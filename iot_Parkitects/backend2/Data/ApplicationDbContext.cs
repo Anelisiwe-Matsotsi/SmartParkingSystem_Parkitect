@@ -31,6 +31,7 @@ namespace backend2.Data
 
   public DbSet<ParkingSession> ParkingSessions { get; set; }
 
+        public DbSet<WebSettings> WebSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,6 +60,7 @@ namespace backend2.Data
             
             // Forces EF Core to map inheritance to separate tables linked by primary keys (Microsoft, 2026)
             modelBuilder.Entity<User>().UseTptMappingStrategy();
+            modelBuilder.Entity<WebSettings>().ToTable("Settings");
         }
     }
 }

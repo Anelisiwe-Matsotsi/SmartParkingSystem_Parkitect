@@ -18,6 +18,8 @@ namespace backend2.Controllers
             _context = context;
         }
 
+        //Mobile app settings
+
         //Gets users saved preferences in settings
         [HttpGet("user/{userID}")]
         public async Task<ActionResult<Settings>> GetAllSettings(string userID)
@@ -39,12 +41,13 @@ namespace backend2.Controllers
             
             if (preferences == null) //default settings for new users
             {
+                
                 settings.userID = userID;
                 _context.Settings.Add(settings);
                 await _context.SaveChangesAsync(); //changes are saved to the DB
                 return Ok(settings);
             }
-           
+                       
             //updated is user changes their preferences in settings
             preferences.language = settings.language;
             preferences.location = settings.location;
@@ -56,18 +59,58 @@ namespace backend2.Controllers
             preferences.screenReader = settings.screenReader;
             preferences.hapticFeedback = settings.hapticFeedback;
 
+            await _context.SaveChangesAsync(); //changes are saved to the DB
+            return Ok(preferences);
+        }
+
+            //Web app settings  
+            //gets the user's web settigngs
+            [HttpGet("web/{userID}")]
+            public async Task<ActionResult<WebSettings>> GetWebSettings(string userID)
+            {
+                var settings = await _context.WebSettings.FirstOrDefaultAsync(s => s.userID == userID);
+
+                if(settings == null)
+                {
+                    //returns default web settings for new users
+                    return Ok(new WebSettings { userID = userID });
+                }
+                return Ok(settings);
+            }
+
+            //updates user's settings
+            [HttpPut("web/{userID}")]
+            public async Task<ActionResult<WebSettings>> UpdateWebSettings(string userID, WebSettings settings)
+            {
+                 //(Adeebabu, 2025)
+                 var existingSettings = await _context.WebSettings.FirstOrDefaultAsync(s => s.userID == userID);
+                 if(existingSettings == null)
+                {
+                    //creates new web settings for new users
+                    settings.settingsID = 0; 
+                    settings.userID = userID;
+                    _context.WebSettings.Add(settings);
+                    await _context.SaveChangesAsync(); //changes are saved to the DB
+                    return Ok(settings);
+                }
+
             //Web security settings
-            preferences.darkMode = settings.darkMode;
-            preferences.compactTables = settings.compactTables;
-            preferences.ticketUpdates = settings.ticketUpdates;
-            preferences.parkingAlerts = settings.parkingAlerts;
-            preferences.systemAlerts = settings.systemAlerts;
+            existingSettings.darkMode = settings.darkMode;
+            existingSettings.compactTables = settings.compactTables;
+            existingSettings.ticketUpdates = settings.ticketUpdates;
+            existingSettings.parkingAlerts = settings.parkingAlerts;
+            existingSettings.systemAlerts = settings.systemAlerts;
+            existingSettings.alertSound = settings.alertSound;
+            existingSettings.rememberDevice = settings.rememberDevice;
+            existingSettings.largerText = settings.largerText;
+            existingSettings.reducedMotion = settings.reducedMotion;
 
             await _context.SaveChangesAsync(); //changes are saved to the DB
-            return NoContent();
+            return Ok(existingSettings);
+            }
         }
     }
-}
+
 /*
  * References
  * 
