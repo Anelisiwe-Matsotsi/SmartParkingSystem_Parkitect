@@ -78,7 +78,7 @@ namespace backend2.Services
         private async Task SendDailyRuleAsync()
         {
             //(Code Maze, 2024)
-            using var scope = _scopeFactory.CreateScope(); //scope is created everytime the user needs to get a notification
+            using var scope = _serviceProvider.CreateScope(); //scope is created everytime the user needs to get a notification
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(); //gets the database through ApplicationDbContext
             var pushService = scope.ServiceProvider.GetRequiredService<IExpoPushService>(); //push service is called to push to notification bar
 

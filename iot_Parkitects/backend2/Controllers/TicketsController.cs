@@ -23,7 +23,7 @@ namespace backend2.Controllers
             _configuration = config;
             _pushService = pushService;
             _emailService = emailService;
-        
+        }
 
         // GET: api/Ticket
         [HttpGet]

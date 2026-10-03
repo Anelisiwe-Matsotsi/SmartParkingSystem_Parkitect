@@ -38,6 +38,7 @@ services:
       - SQL_CONNECTION_STRING=Server=parkitects-db;Database=ParkitectsDB;Trusted_Connection=false;MultipleActiveResultSets=true;Encrypt=false;user id=sa;password=Password1!
       - ASPNETCORE_URLS=http://0.0.0.0:5000  # <-- FORCES C# TO LISTEN ON 5000 INTERNALLY
       - ASPNETCORE_ENVIRONMENT=Development
+      - TZ=Africa/Johannesburg # <-- Sets timezone to south africa to send rule push notifcations at noon (Pranjal, 2024)
     ports:
       - "8080:5000"
     depends_on:
@@ -52,3 +53,5 @@ networks:
 
 volumes:
   parkitects_db_data:
+#References
+#Pranjal, P., 2024. How to set timezone in docker container via docker compose. (Version 10.0) [Source Code]. Available at: < https://github.com/bluenviron/mediamtx/discussions/4083 > [Accessed 3 October 2026]]
