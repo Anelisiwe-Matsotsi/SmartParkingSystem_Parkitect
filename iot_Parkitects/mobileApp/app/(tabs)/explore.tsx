@@ -1,5 +1,5 @@
 //(Withfra.me, 2022)
-import React, { useState} from 'react';
+import React, { useState, useCallback} from 'react';
 import {
   StyleSheet,
   SafeAreaView,
@@ -18,7 +18,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import StatsCard from '@/components/ticket/StatsCard';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { auth } from '../../config/firebaseConfig';
 import DropDownPicker from 'react-native-dropdown-picker';
 
@@ -52,67 +52,7 @@ const cancellationReasons = [
 ];
 
 // Jayasekara, 2025- Dropdown array
-const bayItemsList = [
-  // Block A
-  { label: 'Bay A01 (A-Block)', value: 'A01', section: 'A-Block', number: 'A0-1' },
-  { label: 'Bay A02 (A-Block)', value: 'A02', section: 'A-Block', number: 'A0-2' },
-  { label: 'Bay A03 (A-Block)', value: 'A03', section: 'A-Block', number: 'A0-3' },
-  { label: 'Bay A04 (A-Block)', value: 'A04', section: 'A-Block', number: 'A0-4' },
-  { label: 'Bay A05 (A-Block)', value: 'A05', section: 'A-Block', number: 'A0-5' },
-  { label: 'Bay A06 (A-Block)', value: 'A06', section: 'A-Block', number: 'A0-6' },
-  { label: 'Bay A07 (A-Block)', value: 'A07', section: 'A-Block', number: 'A0-7' },
-  { label: 'Bay A08 (A-Block)', value: 'A08', section: 'A-Block', number: 'A0-8' },
-  { label: 'Bay A09 (A-Block)', value: 'A09', section: 'A-Block', number: 'A0-9' },
-  { label: 'Bay A10 (A-Block)', value: 'A10', section: 'A-Block', number: 'A0-10' },
-
-  // Block B
-  { label: 'Bay B01 (B-Block)', value: 'B01', section: 'B-Block', number: 'B0-1' },
-  { label: 'Bay B02 (B-Block)', value: 'B02', section: 'B-Block', number: 'B0-2' },
-  { label: 'Bay B03 (B-Block)', value: 'B03', section: 'B-Block', number: 'B0-3' },
-  { label: 'Bay B04 (B-Block)', value: 'B04', section: 'B-Block', number: 'B0-4' },
-  { label: 'Bay B05 (B-Block)', value: 'B05', section: 'B-Block', number: 'B0-5' },
-  { label: 'Bay B06 (B-Block)', value: 'B06', section: 'B-Block', number: 'B0-6' },
-  { label: 'Bay B07 (B-Block)', value: 'B07', section: 'B-Block', number: 'B0-7' },
-  { label: 'Bay B08 (B-Block)', value: 'B08', section: 'B-Block', number: 'B0-8' },
-  { label: 'Bay B09 (B-Block)', value: 'B09', section: 'B-Block', number: 'B0-9' },
-  { label: 'Bay B10 (B-Block)', value: 'B10', section: 'B-Block', number: 'B0-10' },
-
-  // Block C
-  { label: 'Bay C01 (C-Block)', value: 'C01', section: 'C-Block', number: 'C0-1' },
-  { label: 'Bay C02 (C-Block)', value: 'C02', section: 'C-Block', number: 'C0-2' },
-  { label: 'Bay C03 (C-Block)', value: 'C03', section: 'C-Block', number: 'C0-3' },
-  { label: 'Bay C04 (C-Block)', value: 'C04', section: 'C-Block', number: 'C0-4' },
-  { label: 'Bay C05 (C-Block)', value: 'C05', section: 'C-Block', number: 'C0-5' },
-  { label: 'Bay C06 (C-Block)', value: 'C06', section: 'C-Block', number: 'C0-6' },
-  { label: 'Bay C07 (C-Block)', value: 'C07', section: 'C-Block', number: 'C0-7' },
-  { label: 'Bay C08 (C-Block)', value: 'C08', section: 'C-Block', number: 'C0-8' },
-  { label: 'Bay C09 (C-Block)', value: 'C09', section: 'C-Block', number: 'C0-9' },
-  { label: 'Bay C10 (C-Block)', value: 'C10', section: 'C-Block', number: 'C0-10' },
-
-  // Block D
-  { label: 'Bay D01 (D-Block)', value: 'D01', section: 'D-Block', number: 'D0-1' },
-  { label: 'Bay D02 (D-Block)', value: 'D02', section: 'D-Block', number: 'D0-2' },
-  { label: 'Bay D03 (D-Block)', value: 'D03', section: 'D-Block', number: 'D0-3' },
-  { label: 'Bay D04 (D-Block)', value: 'D04', section: 'D-Block', number: 'D0-4' },
-  { label: 'Bay D05 (D-Block)', value: 'D05', section: 'D-Block', number: 'D0-5' },
-  { label: 'Bay D06 (D-Block)', value: 'D06', section: 'D-Block', number: 'D0-6' },
-  { label: 'Bay D07 (D-Block)', value: 'D07', section: 'D-Block', number: 'D0-7' },
-  { label: 'Bay D08 (D-Block)', value: 'D08', section: 'D-Block', number: 'D0-8' },
-  { label: 'Bay D09 (D-Block)', value: 'D09', section: 'D-Block', number: 'D0-9' },
-  { label: 'Bay D10 (D-Block)', value: 'D10', section: 'D-Block', number: 'D0-10' },
-
-  // Block E
-  { label: 'Bay E01 (E-Block)', value: 'E01', section: 'E-Block', number: 'E0-1' },
-  { label: 'Bay E02 (E-Block)', value: 'E02', section: 'E-Block', number: 'E0-2' },
-  { label: 'Bay E03 (E-Block)', value: 'E03', section: 'E-Block', number: 'E0-3' },
-  { label: 'Bay E04 (E-Block)', value: 'E04', section: 'E-Block', number: 'E0-4' },
-  { label: 'Bay E05 (E-Block)', value: 'E05', section: 'E-Block', number: 'E0-5' },
-  { label: 'Bay E06 (E-Block)', value: 'E06', section: 'E-Block', number: 'E0-6' },
-  { label: 'Bay E07 (E-Block)', value: 'E07', section: 'E-Block', number: 'E0-7' },
-  { label: 'Bay E08 (E-Block)', value: 'E08', section: 'E-Block', number: 'E0-8' },
-  { label: 'Bay E09 (E-Block)', value: 'E09', section: 'E-Block', number: 'E0-9' },
-  { label: 'Bay E10 (E-Block)', value: 'E10', section: 'E-Block', number: 'E0-10' },
-];
+type BayItem = { label: string; value: string; section: string; number: string };
 
 export default function Example() {
 
@@ -124,20 +64,50 @@ export default function Example() {
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState('A01');
-  const [items, setItems] = useState(bayItemsList);
+  const [value, setValue] = useState<string | null>(null);
+  const [items, setItems] = useState<BayItem[]>([]);
 
   //Adeoye,2024
   const [loading, setLoading] = useState(false);// updates the UI to show that the request is happening
   const [form, setForm] = useState({
     bio: "",
     reasonId: 0,
-    parkingBay: 'A0-1',
-    bayId: 'A01',
-    sectionId: 'A-Block',
+    parkingBay: '',
+    bayId: '',
+    sectionId: '',
     imageUri: null as string | null,
 
   });
+
+// Only bays that currently have a registered driver
+const loadOccupiedBays = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/Parking/occupied`);
+    if (!response.ok) throw new Error('Failed to load bays');
+    const bays: { bayID: number; bayNumber: string }[] = await response.json();
+
+    const list: BayItem[] = bays.map(b => ({
+      label: `Bay ${b.bayNumber}`,
+      value: b.bayNumber,
+      section: `${b.bayNumber.charAt(0)}-Block`,
+      number: b.bayNumber,
+    }));
+
+    setItems(list);
+    // If the selected bay is no longer occupied, clear the selection
+    setValue(prev => (prev && list.some(i => i.value === prev) ? prev : null));
+  } catch (error) {
+    console.error('Failed to load occupied bays', error);
+    setItems([]);
+  }
+};
+
+// Reload every time so that the list is up to date
+useFocusEffect(
+  useCallback(() => {
+    loadOccupiedBays();
+  }, [])
+);
 
 // Jayasekara, 2025 - handler keeping the form synced on value change
   const handleBayChange = (val: any) => {
@@ -218,6 +188,11 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
       return;
     }
 
+    if (!value) {
+  Alert.alert('Selection Required', 'Please select an occupied parking bay.');
+  return;
+}
+
     setLoading(true);
 
     let uploadedImageUrl = null;
@@ -228,7 +203,8 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
     const selectedReason = cancellationReasons.find(r => r.id === form.reasonId);
 
     const payload = {
-      userID: currentUser.uid, // Firebase String UID
+      reportingUserID: currentUser.uid, // Firebase String UID of person reporting
+      userID: "",
       bayID: form.bayId,
       bayNumber: form.parkingBay,
       sectionID: form.sectionId,
@@ -240,7 +216,7 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
     try {
       //fetching network if network does not match network API it will give an error alert on the network
-      const response = await fetch('http://192.168.0.183:8080/api/Tickets',// BASE API URL at the moment it is YOUR wifi network:8000
+      const response = await fetch(`${API_BASE_URL}/api/Tickets`,// BASE API URL at the moment it is YOUR wifi network:8000
         {
           method: 'POST',
           headers: {
@@ -322,6 +298,11 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
             style={styles.dropdown}
             dropDownContainerStyle={styles.dropdownContainer}
           />
+          {items.length === 0 && (
+  <Text style={[styles.sectionSubtitle, { marginTop: 8 }]}>
+    No occupied bays right now.
+  </Text>
+)}
         </View>
         <Text style={styles.sectionTitle}>Description (Optional)</Text>
         <View style={styles.formInput}>

@@ -6,7 +6,7 @@ namespace backend2.Models
     [Table("ParkingSession")]
     public class ParkingSession
     {
-        [Key] 
+        [Key]
         public int sessionID { get; set; }
 
         [Required]
@@ -19,5 +19,11 @@ namespace backend2.Models
         public DateTime startDate { get; set; }
 
         public DateTime? endDate { get; set; }
+
+        [ForeignKey("userID")]
+        public User? User { get; set; }
+
+        [ForeignKey("bayID")]
+        public ParkingBay? ParkingBay { get; set; }
     }
 }

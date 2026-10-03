@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  Image,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -26,6 +27,26 @@ const faqOptions = [
   "How does parking availability work?",
   "Report a parking problem",
 ];
+
+
+//icon
+function BotMessage({ text }: { text: string }) {
+  return (
+    <View style={styles.botRow}>
+      <View style={styles.botIcon}>
+        <Image
+          source={require("../../assets/images/byte-bot.png")}
+          style={styles.botImage}
+        />
+        {/* Later: swap for your bot <Image /> here */}
+      </View>
+      <View style={styles.botMessage}>
+        <Text style={styles.botMessageText}>{text}</Text>
+      </View>
+    </View>
+  );
+}
+
 
 export default function ChatbotScreen() {
   //This stores the question selected by the user
@@ -65,29 +86,20 @@ export default function ChatbotScreen() {
         <StatsCard/>
 
         {/*Chat Bot Message (need to put byte bot pic later) */}
-        <View style={styles.botMessage}>
-          <Text style={styles.botMessageText}>
-            Hi! I'm Parkitects' helper. Choose a question
-            below and I'll point you in the right direction.
-          </Text>
-        </View>
+       <BotMessage text="Hi! I'm Parkitects' helper. Choose a question below and I'll point you in the right direction." />
 
         {/* Stack Overflow, 2018 */}
         {/* Chat History */}
         {chatHistory.map((chat, index) => (
-          <View key={index}>
-            <View style={styles.selectedQuestionContainer}>
-              <Text style={styles.selectedQuestionText}>
-                {chat.question}
-              </Text>
-            </View>
-            <View style={styles.botMessage}>
-              <Text style={styles.botMessageText}>
-                {chat.answer}
-              </Text>
-            </View>
-          </View>
-        ))}
+  <View key={index}>
+    <View style={styles.selectedQuestionContainer}>
+      <Text style={styles.selectedQuestionText}>
+        {chat.question}
+      </Text>
+    </View>
+    <BotMessage text={chat.answer} />
+  </View>
+))}
 
         {/* FAQ Buttons */}
         {showOptions && (
@@ -173,10 +185,31 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 18,
     paddingVertical: 16,
-    marginBottom: 18,
-    alignSelf: "flex-start",
-    maxWidth: "90%",
+    flexShrink: 1,
   },
+
+  /* Bot message */
+botRow: {
+  flexDirection: "row",
+  alignItems: "flex-end",
+  marginBottom: 18,
+  maxWidth: "95%",
+},
+
+botIcon: {
+  width: 38,
+  height: 38,
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 8,
+},
+
+botImage: {
+  width: 48,
+  height: 48,
+  resizeMode: "contain",
+},
+
 
   botMessageText: {
     fontSize: 17,
@@ -217,6 +250,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     alignSelf: "flex-end",
     maxWidth: "90%",
+    borderRadius: 20,
   },
 
     selectedQuestionText: {

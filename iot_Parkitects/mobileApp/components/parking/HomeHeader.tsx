@@ -9,76 +9,217 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
-  Image
+  Image,
+  Alert,
+  Linking
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
-
+import {
+  requestBlePermissions,
+  isBluetoothOn,
+  tryEnableBluetooth,
+  scanNearbyNodes,
+} from '@/utils/ble';
 import SearchBar from "./SearchBar";
+import { getBaysForNode, claimBay } from "@/utils/parkingFirebase";
+import { auth } from "@/config/firebaseConfig";
+import { startSession } from "@/utils/parkingApi"
 
-export default function HomeHeader() {
+// props to recieve live count
+type Props = {
+  availableSpaces: number;
+};
+
+export default function HomeHeader({ availableSpaces }: Props) {
   const router = useRouter();
-  const availableSpaces = 3;
-  const [showAlert, setShowAlert] = useState(true);
+  const [scanning, setScanning] = useState(false);
+  
   return (
     <SafeAreaView style={styles.wrapper}>
       <View style={styles.container}>
-        
-   {/** * Header (Withfra.me, 2022) */}     
-<View style={styles.topRow}>
-  
+        <View style={styles.topRow}>
+          <TouchableOpacity style={styles.locationBadge}>
+            <View style={styles.locationDot} />
+            <Text style={styles.locationText}>LIVE</Text>
+          </TouchableOpacity>
 
- 
-  <TouchableOpacity style={styles.locationBadge}>
-    <View style={styles.locationDot} />
-    <Text style={styles.locationText}>LIVE</Text>
-  </TouchableOpacity>
+          <View style={styles.rightButtons}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/notifications')}>
+              <Feather name="bell" size={18} color="#111827" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.avatarButton} onPress={() => router.push('/settings/setting')}>
+              <Text style={styles.avatarText}>MA</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-
-  <View style={styles.rightButtons}>
-
-    {/* Notifications */}
-    <TouchableOpacity style={styles.iconButton}
-        onPress={() => router.push('/notifications')}>
-      <Feather name="bell" size={18} color="#111827" />
-      
-    </TouchableOpacity>
-
-    {/* User Initials */}
-    <TouchableOpacity
-      style={styles.avatarButton}
-      onPress={() => router.push('/settings/setting')}
-    >
-      <Text style={styles.avatarText}>MA</Text>
-    </TouchableOpacity>
-
-  </View>
-
-</View>
-
-       
-
-        {/* Heading */}
+        {/* 2. INJECT THE LIVE DATA HERE */}
         <Text style={styles.heading}>
           {availableSpaces} Bays Left
         </Text>
 
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Go to Moffet and main
-        </Text>
-   <TouchableOpacity
-            onPress={() => {
-              // handle onPress
-               router.push('/auth/sign_in');
-            }}
-            
-            style={styles.headerAction}>
-              
-            <Feather
-              color="#e2f1f3"
-              name="arrow-right"
-              size={24} />
-          </TouchableOpacity>
+       
+  <TouchableOpacity style={styles.parkingButton}
+  onPress={async () => {
+    const mapsUrl =
+      "https://maps.app.goo.gl/rJiNs9tSvVf75Tqf9?g_st=aw";
+
+    try {
+      await Linking.openURL(mapsUrl);
+    } catch (error) {
+      console.error("Could not open maps:", error);
+
+      Alert.alert(
+        "Unable to open maps",
+        "Something went wrong while opening the parking location."
+      );
+    }
+
+  }}
+
+><Feather name="alert-octagon" size={18} color="#ff0000" />
+
+  <View style={styles.parkingButtonText}>
+   <Text style={styles.parkingButtonTitle} >
+ low on bays
+</Text>
+
+    <Text style={styles.parkingButtonSubtitle}>
+      Go to Moffet And Main
+    </Text>
+  </View>
+    <Feather name="chevron-right" size={20} color="#FFFFFF" />
+</TouchableOpacity>
+
+          <TouchableOpacity
+  style={styles.parkingButton}
+ onPress={async () => {
+  try {
+    setScanning(true);
+
+    const permissionResult = await requestBlePermissions();
+
+    if (permissionResult === 'blocked') {
+      Alert.alert(
+        'Bluetooth permission blocked',
+        'Please enable Bluetooth permissions for Parkitects in your phone settings.'
+      );
+      return;
+    }
+
+    if (permissionResult === 'denied') {
+      Alert.alert(
+        'Bluetooth permission required',
+        'Parkitects needs Bluetooth permission to find your parking bay.'
+      );
+      return;
+    }
+
+    const bluetoothOn = await isBluetoothOn();
+
+    if (!bluetoothOn) {
+      const enabled = await tryEnableBluetooth();
+
+      if (!enabled) {
+        Alert.alert(
+          'Bluetooth is off',
+          'Please turn on Bluetooth and try again.'
+        );
+        return;
+      }
+    }
+
+    const nodes = await scanNearbyNodes();
+
+if (nodes.length === 0) {
+  Alert.alert(
+    "No parking bays found",
+    "We could not detect a nearby parking beacon. Try moving closer to your parking bay and scan again."
+  );
+  return;
+}
+
+const nearestNode = nodes[0];
+
+const bays = await getBaysForNode(nearestNode.nodeKey);
+const claimable = bays.filter(
+  b => b.status === 'Occupied' && b.occupiedByUserId === 'Anonymous'
+);
+
+if (claimable.length === 0) {
+  Alert.alert(
+    "No occupied bays found",
+    "The sensors don't show an unclaimed car near this beacon. Make sure you've parked and try again."
+  );
+  return;
+}
+
+const firebaseUid = auth.currentUser?.uid;
+if (!firebaseUid) {
+  Alert.alert("Not signed in", "Please sign in before saving your parking bay.");
+  return;
+}
+
+const saveParking = async (bayId: string) => {
+  try {
+    const ok = await claimBay(nearestNode.nodeKey, bayId, firebaseUid);
+    
+if (ok) {
+  try {
+    await startSession(firebaseUid, nearestNode.nodeKey, bayId);
+  } catch (e) {
+    console.log("[SQL] session start failed:", e);
+  }
+}
+    Alert.alert(
+      ok ? "You're parked!" : "Bay no longer available",
+      ok ? `Saved: ${bayId.replace('Bay', 'Bay ')}.` : "Someone else claimed it, or the car has left."
+    );
+  } catch (error) {
+    console.error("[Parking] claim failed:", error);
+    Alert.alert("Could not save parking", "Something went wrong.");
+  }
+};
+
+Alert.alert(
+  "Which bay are you in?",
+  "These bays are occupied near you.",
+  [
+    ...claimable.slice(0, 2).map(b => ({
+      text: b.bayId.replace('Bay', 'Bay '),
+      onPress: () => saveParking(b.bayId),
+    })),
+    { text: "Cancel", style: "cancel" as const },
+  ]
+);
+    
+
+  } catch (error) {
+    console.error('[BLE] Scan failed:', error);
+
+    Alert.alert(
+      'Bluetooth scan failed',
+      'Something went wrong while looking for nearby parking bays.'
+    );
+  } finally {
+    setScanning(false);
+  }
+}}
+>
+  <Feather name="map-pin" size={18} color="#1fc919" />
+
+  <View style={styles.parkingButtonText}>
+   <Text style={styles.parkingButtonTitle}>
+  {scanning ? 'Finding your parking bay...' : 'Where did you park?'}
+</Text>
+
+    <Text style={styles.parkingButtonSubtitle}>
+      Find your nearby parking bay
+    </Text>
+  </View>
+
+  <Feather name="chevron-right" size={20} color="#FFFFFF" />
+</TouchableOpacity>
         {/* Search Bar Container */}
         <View style={styles.search}>
           <SearchBar />
@@ -175,10 +316,10 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 26,
     fontWeight: "800", // Strong heavy title weight
-    color: "#b11010",
+    color: "#fdfafa",
     letterSpacing: -0.5,
     alignItems:'center',
-    marginLeft:100,
+    marginLeft:75,
   },
 
   subtitle: {
@@ -228,6 +369,39 @@ avatarText: {
       marginTop: 1,
       marginLeft:135,
   },
+
+  moffetButtonTitle: {
+  fontSize: 15,
+  fontWeight: "700",
+  color: "#c12525",
+},
+  parkingButton: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#146564",
+  borderRadius: 16,
+  paddingHorizontal: 16,
+  paddingVertical: 14,
+  marginTop: 8,
+  marginBottom: 12,
+},
+
+parkingButtonText: {
+  flex: 1,
+  marginLeft: 12,
+},
+
+parkingButtonTitle: {
+  fontSize: 15,
+  fontWeight: "700",
+  color: "#FFFFFF",
+},
+
+parkingButtonSubtitle: {
+  fontSize: 11,
+  color: "#D9EEEE",
+  marginTop: 3,
+},
 });
 /**
  * References

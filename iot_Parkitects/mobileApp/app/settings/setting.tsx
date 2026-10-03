@@ -100,11 +100,13 @@ export default function SettingsScreen() {
           // Check for device location permission grant (Singh, 2024)
         const {status} = await Location.getForegroundPermissionsAsync();
         if (status !== 'granted') {
-          return; //does not reprompt the user- this can be linked to the permissions screen or some sort of notification prompt idea
+          return; //does not reprompt the user- is be linked to the permissions screen 
         }
         
+
         try {
-          // Retrieve current GPS coordinate position (CoddyKit, 2026)
+          //(Expo,2026)
+          //gets the current position
           const position = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.Balanced,
           });
@@ -131,7 +133,7 @@ export default function SettingsScreen() {
 
             setForm((prev) => ({ ...prev }))
 
-            setLocationDisplay(locationLabel) // Store updated location locally for display
+            setLocationDisplay(locationLabel) //location gets stored locally, it refreshes when user goes to settings screen only not always syncing in the background
           }
         } catch (error) { }
       };

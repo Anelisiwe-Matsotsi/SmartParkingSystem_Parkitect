@@ -1,17 +1,20 @@
 //(Withfra.me, 2022)
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { registerForPushNotificationsAsync } from '../../utils/pushNotifications';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import {
   StyleSheet,
-  SafeAreaView,
   View,
   Image,
   Text,
   TouchableOpacity,
+  InteractionManager,
   TextInput,
   Alert // pulling in alerts to show login errors (React Native, 2026)
 } from 'react-native';
+
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/theme';
 
 // importing the login function from firebase
@@ -31,6 +34,8 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+
+ 
   // this fires when the user presses the login button
   const handleLogin = async () => {
     if (!form.userNumber || !form.password) 
@@ -59,7 +64,21 @@ export default function SignIn() {
 
       // checks the found email and password against firebase (Firebase, 2026)
       await signInWithEmailAndPassword(auth, resolvedEmail, form.password);
+
+       const uid = auth.currentUser?.uid;
+
+       router.replace('/permissions' as any);
+
+       if (uid) {
+        InteractionManager.runAfterInteractions(() => {
+          registerForPushNotificationsAsync(uid);
+        });
+       }
       
+      if(auth.currentUser)
+      {
+        await registerForPushNotificationsAsync(auth.currentUser.uid); //push notification token given after user logs in
+      }
       // if it passes, they are granted access to the app
       router.replace('/permissions' as any);
       

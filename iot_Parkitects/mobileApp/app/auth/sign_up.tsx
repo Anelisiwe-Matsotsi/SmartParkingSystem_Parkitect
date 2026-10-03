@@ -1,6 +1,7 @@
 //(Withfra.me, 2022)
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { registerForPushNotificationsAsync } from '../../utils/pushNotifications';
 import {
   StyleSheet,
   SafeAreaView,
@@ -72,6 +73,7 @@ export default function SignUp() {
         throw new Error(`Server returned error: ${errorText}`);
       }
       
+      await registerForPushNotificationsAsync(firebaseUid); //push notification token given after user registers
       Alert.alert('Success!', 'Your account has been created.');
       
       // takes them to the sign in page so they can log in
