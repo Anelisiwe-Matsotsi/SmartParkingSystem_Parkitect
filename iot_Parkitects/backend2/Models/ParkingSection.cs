@@ -1,10 +1,9 @@
-// [Ref: 1]
+// Imports for schema mapping (Microsoft, 2026a)
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend2.Models
 {
-    // [Ref: 2]
     [Table("ParkingSection")]
     public class ParkingSection
     {
@@ -18,7 +17,7 @@ namespace backend2.Models
         [MaxLength(255)]
         public string sectionName { get; set; } = string.Empty;
 
-        // [Ref: 3]
+        // Establishes a foreign key relationship to the ParkingLot model (Microsoft, 2026b)
         [ForeignKey("parkingID")]
         public ParkingLot? ParkingLot { get; set; }
 
@@ -27,8 +26,7 @@ namespace backend2.Models
 }
 
 /*
- * References:
- * [Ref: 1] Microsoft Docs - Data Annotations in EF Core.
- * [Ref: 2] Codd, E.F. - Relational Model of Data for Large Shared Data Banks.
- * [Ref: 3] Microsoft EF Core - Relationships, Navigation Properties and Foreign Keys.
+ * References
+ * Microsoft, 2026a. Data Annotations in EF Core. (Version 10.0) [Source Code] Available at: < https://learn.microsoft.com/en-us/ef/core/modeling/ > [Accessed 08 September 2026]
+ * Microsoft, 2026b. Relationships, Navigation Properties and Foreign Keys. (Version 10.0) [Source Code] Available at: < https://learn.microsoft.com/en-us/ef/core/modeling/relationships > [Accessed 08 September 2026]
  */

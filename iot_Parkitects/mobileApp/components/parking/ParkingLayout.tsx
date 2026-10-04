@@ -1,7 +1,10 @@
-import React, { useMemo, useState } from 'react';
+// (Expo, 2024; Firebase, 2026)
+import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import ParkingBay from './ParkingBay';
 import SectionTabs from './SectionTabs';
+// Firebase config import for user authentication (Firebase, 2026)
+import { auth } from '@/config/firebaseConfig';
 
 // Each number in "groups" is a block of bays; an aisle is drawn between blocks
 const SECTIONS: Record<string, { prefix: string; title: string; groups: number[] }> = {
@@ -19,8 +22,33 @@ const normalize = (raw: string) => {
 };
 
 export default function ParkingLayout({ mapData }: { mapData: any }) {
+  // Manages active section state using hooks (Expo, 2024)
   const [activeSection, setActiveSection] = useState('Section A');
   const config = SECTIONS[activeSection];
+
+  // Holds the users actual role from the backend
+  const [userRole, setUserRole] = useState<string>('Student'); 
+
+  // Fetches the users profile to check if they are a Lecturer
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      // Fetches the current authenticated users UID (Firebase, 2026)
+      const firebaseUid = auth?.currentUser?.uid;
+      if (!firebaseUid) return;
+
+      try {
+        const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/User/profile/${firebaseUid}`);
+        if (response.ok) {
+          const data = await response.json();
+          setUserRole(data.userRole); // Sets 'Student' or 'Lecturer'
+        }
+      } catch (error) {
+        console.error('Failed to fetch user role:', error);
+      }
+    };
+
+    fetchUserRole();
+  }, []);
 
   const section = mapData?.sections?.find((s: any) =>
     s.sectionName?.toUpperCase().includes(activeSection.toUpperCase())
@@ -35,7 +63,7 @@ export default function ParkingLayout({ mapData }: { mapData: any }) {
 
   const isOccupied = (i: number) => {
     const realBay = bayLookup.get(`${config.prefix}${i}`);
-    return realBay ? realBay.isOccupied : i % 6 === 0; // live data fallback
+    return realBay ? realBay.isOccupied : true; // live data fallback
   };
 
   const total = config.groups.reduce((a, b) => a + b, 0);
@@ -44,15 +72,20 @@ export default function ParkingLayout({ mapData }: { mapData: any }) {
 
   let nextBay = 1;
 
+  // Determines if the current section should be disabled based on actual role
+  const isSectionDisabled = activeSection === 'Section E' && userRole !== 'Lecturer';
+
   return (
     <View style={styles.container}>
       <SectionTabs selectedSection={activeSection} onSelectSection={setActiveSection} />
 
       <View style={styles.sectionCard}>
         <View style={styles.header}>
-          <Text style={styles.title}>{config.title}</Text>
+          <Text style={styles.title}>{config.title} {isSectionDisabled ? "(Lecturer Only)" : ""}</Text>
           <View style={styles.pill}>
-            <Text style={styles.pillText}>{freeCount} of {total} free</Text>
+            <Text style={styles.pillText}>
+              {isSectionDisabled ? "0" : freeCount} of {total} free
+            </Text>
           </View>
         </View>
 
@@ -74,7 +107,8 @@ export default function ParkingLayout({ mapData }: { mapData: any }) {
                     <ParkingBay
                       key={`${config.prefix}-${i}`}
                       id={`${config.prefix}-${i}`}
-                      occupied={isOccupied(i)}
+                      occupied={isSectionDisabled ? true : isOccupied(i)} // Forces occupied if disabled
+                      disabled={isSectionDisabled} // Passes the disabled prop to gray it out
                     />
                   );
                 })}
@@ -146,3 +180,9 @@ const styles = StyleSheet.create({
     letterSpacing: 6,
   },
 });
+
+/*
+ * References
+ * Expo, 2024. React Native Core Components. (Version 10.0) [Source Code] Available at: < https://reactnative.dev/docs/components-and-apis > [Accessed 28 September 2026]
+ * Firebase, 2026. Firebase Authentication. (Version 10.0) [Source Code] Available at: < https://firebase.google.com/docs/auth > [Accessed 28 September 2026]
+ */

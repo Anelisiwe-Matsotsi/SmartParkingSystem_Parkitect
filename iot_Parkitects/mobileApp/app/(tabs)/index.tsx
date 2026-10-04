@@ -1,4 +1,4 @@
-//(Expo Documentation.2024)
+//(Expo, 2024)
 import { ScrollView, StyleSheet, View, ActivityIndicator } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -76,3 +76,8 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   }
 });
+
+/*
+ * References
+ * Expo, 2024. React Native Core Components. (Version 10.0) [Source Code] Available at: < https://reactnative.dev/docs/components-and-apis > [Accessed 06 September 2026]
+ */

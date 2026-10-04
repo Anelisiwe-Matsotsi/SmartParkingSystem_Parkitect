@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import {auth} from '../config/firebaseConfig'
 import { registerForPushNotificationsAsync } from '@/utils/pushNotifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type NotificationType = 'complaint' | 'info' | 'reminder' | 'alert';
 
@@ -28,14 +29,36 @@ interface NotificationItem {
 export default function NotificationsScreen() {
   const router = useRouter();
 
-  const isParked = true;
+  const [isParked, setIsParked] = useState(false);
+  const [parkedLocation, setParkedLocation] = useState('');
+  const [parkedTime, setParkedTime] = useState('');
+
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [complaintFixed, setComplaintFixed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-
+  // Checks local storage for any saved parkings
+  useEffect(() => {
+    const checkParkingStatus = async () => {
+      try {
+        const savedLabel = await AsyncStorage.getItem('parkedLabel');
+        if (savedLabel) {
+          setIsParked(true);
+          setParkedLocation(savedLabel);
+          
+          // Optionally, you could also save/retrieve a timestamp when parking, 
+          // but for now, we just use a generic time or format the current time
+          setParkedTime(`Session Active`);
+        }
+      } catch (error) {
+        console.error('Error checking parking status:', error);
+      }
+    };
+    
+    checkParkingStatus();
+  }, []);
 
   // gets the driver's own tickets that and general notiifications (Expo, 2026)
   const loadNotifications = useCallback(async () => {
@@ -180,8 +203,8 @@ const handleOpenNotification = (item: NotificationItem) => {
 
             <View style={styles.parkingDetails}>
               <Text style={styles.parkingBannerTitle}>You're currently parked</Text>
-              <Text style={styles.parkingLocation}>Section A • Bay A-03</Text>
-              <Text style={styles.parkingTime}>Parked at 09:42 AM</Text>
+              <Text style={styles.parkingLocation}>{parkedLocation}</Text>
+              <Text style={styles.parkingTime}>Parked at: {parkedTime}</Text>
 
               <TouchableOpacity
                 style={styles.findCarBtn}
