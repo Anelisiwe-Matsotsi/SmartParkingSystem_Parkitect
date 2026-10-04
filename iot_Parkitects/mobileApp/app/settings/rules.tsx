@@ -12,12 +12,15 @@ import { useRouter } from 'expo-router';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import { ThemedText } from '@/components/themed-text'
 import { useAccessibility } from '@/context/accessibilityContext';
+import { Feather } from '@expo/vector-icons';
+
+type FeatherIconName = React.ComponentProps<typeof FeatherIcon>['name'];
 
 //(StackOverflow, 2022)
 //the rule item interface is declared with attributes that the array will contain
 interface RuleItem {
   id: string;
-  icon: string;
+  icon: FeatherIconName;
   title: string;
   description: string;
 }
@@ -70,7 +73,7 @@ const RULES: RuleItem[] = [
   },
   {
     id: '8',
-    icon: 'lightbulb-off',
+    icon: 'sun',
     title: 'Head Lights',
     description: 'Make sure that your vehicle lights are turned off.',
   },
