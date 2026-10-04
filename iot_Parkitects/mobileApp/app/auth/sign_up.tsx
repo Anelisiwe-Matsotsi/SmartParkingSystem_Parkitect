@@ -7,7 +7,7 @@ import {
   SafeAreaView,
   Image,
   View,
-  Text,
+  Text as RNText,
   TextInput,
   TouchableOpacity,
   Alert // importing Alert so we can pop up error messages easily (React Native, 2026)
@@ -15,6 +15,8 @@ import {
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Colors } from '@/constants/theme';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 
 // pulling in the specific firebase registration function
 import { createUserWithEmailAndPassword } from 'firebase/auth';
@@ -23,6 +25,7 @@ import { auth } from '../../config/firebaseConfig';
 
 export default function SignUp() {
   const router = useRouter();
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
   const [isLoading, setIsLoading] = useState(false); // loading state for the registration process
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
@@ -34,6 +37,7 @@ export default function SignUp() {
   });
 
   const handleRegister = async () => {
+    triggerHaptic();
     // checks that they dont submit blank forms
     if (!form.name ||!form.email || !form.password || !form.userNumber) {
       Alert.alert('Hold up!', 'Please enter your name, email, password and user number.');
@@ -89,8 +93,7 @@ export default function SignUp() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, 
-       backgroundColor: Colors.light.background,}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <KeyboardAwareScrollView>
         <View style={styles.logoContainer}>
           <Image
@@ -100,9 +103,9 @@ export default function SignUp() {
             style={styles.logoImg} />
         </View>
         <View style={styles.form}>
-          <Text style={styles.title}>Create a new account</Text>
+          <Text style={[styles.title, { color: theme.heading }]}>Create a new account</Text>
 
-          <Text style={styles.subtitle}>
+          <Text style={[styles.subtitle, { color: theme.muted }]}>
             Please put all of your information below to create a new account.
           </Text>
 
@@ -111,8 +114,8 @@ export default function SignUp() {
               clearButtonMode="while-editing"
               onChangeText={name => setForm({ ...form, name })}
               placeholder="Full Name"
-              placeholderTextColor="#A5A5AE"
-              style={styles.inputControl}
+              placeholderTextColor={theme.muted}
+              style={[styles.inputControl, { backgroundColor: theme.surface, color: theme.text }]}
               value={form.name} />
           </View>
 
@@ -124,25 +127,25 @@ export default function SignUp() {
               keyboardType="email-address"
               onChangeText={email => setForm({ ...form, email })}
               placeholder="Email Address"
-              placeholderTextColor="#A5A5AE"
-              style={styles.inputControl}
+              placeholderTextColor={theme.muted}
+              style={[styles.inputControl, { backgroundColor: theme.surface, color: theme.text }]}
               value={form.email} />
           </View>
 
           {/* custom radio button layout for role selection */}
           <View style={styles.radioContainer}>
             <TouchableOpacity 
-              style={[styles.radioButton, form.userRole === 'Student' && styles.radioSelected]} 
+              style={[styles.radioButton, { backgroundColor: theme.surface, borderColor: theme.border }, form.userRole === 'Student' && styles.radioSelected]} 
               onPress={() => setForm({ ...form, userRole: 'Student' })}
             >
-              <Text style={form.userRole === 'Student' ? styles.textSelected : styles.textUnselected}>Student</Text>
+              <Text style={form.userRole === 'Student' ? styles.textSelected : [styles.textUnselected, { color: theme.muted }]}>Student</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.radioButton, form.userRole === 'Lecturer' && styles.radioSelected]} 
+              style={[styles.radioButton, { backgroundColor: theme.surface, borderColor: theme.border }, form.userRole === 'Lecturer' && styles.radioSelected]} 
               onPress={() => setForm({ ...form, userRole: 'Lecturer' })}
             >
-              <Text style={form.userRole === 'Lecturer' ? styles.textSelected : styles.textUnselected}>Lecturer</Text>
+              <Text style={form.userRole === 'Lecturer' ? styles.textSelected : [styles.textUnselected, { color: theme.muted }]}>Lecturer</Text>
             </TouchableOpacity>
           </View>
 
@@ -154,21 +157,21 @@ export default function SignUp() {
               clearButtonMode="while-editing"
               onChangeText={userNumber => setForm({ ...form, userNumber })}
               placeholder={form.userRole === 'Student' ? "Student Number" : "Lecturer / Staff ID"}
-              placeholderTextColor="#A5A5AE"
-              style={styles.inputControl}
+              placeholderTextColor={theme.muted}
+              style={[styles.inputControl, { backgroundColor: theme.surface, color: theme.text }]}
               value={form.userNumber} />
           </View>
 
           <View style={styles.input}>
-  <View style={styles.passwordContainer}>
+  <View style={[styles.passwordContainer, { backgroundColor: theme.surface }]}>
     <TextInput
       autoCorrect={false}
       clearButtonMode="while-editing"
       onChangeText={password => setForm({ ...form, password })}
       placeholder="Password"
-      placeholderTextColor="#A5A5AE"
+      placeholderTextColor={theme.muted}
       secureTextEntry={!showPassword}
-      style={styles.passwordInput}
+      style={[styles.passwordInput, { color: theme.text }]}
       value={form.password}
     />
 
@@ -202,14 +205,14 @@ export default function SignUp() {
             onPress={() => {
               router.push('/auth/sign_in');
             }}>
-            <Text style={styles.formFooter}>
+            <Text style={[styles.formFooter, { color: theme.text }]}>
               Already have an account?
-              <Text style={{ color: '#0c6064' }}> Log in</Text>
+              <RNText style={{ color: theme.tint }}> Log in</RNText>
             </Text>
           </TouchableOpacity>
 
           <View style={styles.formSpacer}>
-            <Text style={styles.formSpacerText}>Or Sign up with</Text>
+            <Text style={[styles.formSpacerText, { backgroundColor: theme.background, color: theme.text }]}>Or Sign up with</Text>
 
             <View style={styles.formSpacerDivider} />
           </View>

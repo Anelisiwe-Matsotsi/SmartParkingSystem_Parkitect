@@ -5,18 +5,17 @@ import {
   SafeAreaView,
   View,
   TouchableOpacity,
-  Text,
   TextInput,
   Alert,
   Image,
   ActivityIndicator
 } from 'react-native';
+import { ThemedText as Text } from '@/components/themed-text';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAccessibility } from '@/context/accessibilityContext';
 import StatsCard from '@/components/ticket/StatsCard';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { auth } from '../../config/firebaseConfig';
@@ -56,8 +55,7 @@ type BayItem = { label: string; value: string; section: string; number: string }
 
 export default function Example() {
 
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light']
+  const { theme, colorMode, triggerHaptic, triggerScreenReader } = useAccessibility();
 
   const router = useRouter();
 //
@@ -184,11 +182,15 @@ useFocusEffect(
     }
 
     if (form.reasonId === 0) {
+      triggerHaptic();
+      triggerScreenReader('Please select a reason for reporting');
       Alert.alert('Selection Required', 'Please select a reason for reporting.');
       return;
     }
 
     if (!value) {
+  triggerHaptic();
+  triggerScreenReader('Please select an occupied parking bay');
   Alert.alert('Selection Required', 'Please select an occupied parking bay.');
   return;
 }
@@ -226,6 +228,8 @@ useFocusEffect(
         });
 
       if (response.ok) {
+        triggerHaptic();
+        triggerScreenReader('Ticket submitted');
         router.push('/success');
       } else {
         Alert.alert('Error', 'Failed to create ticket. Please try again.');
@@ -241,7 +245,7 @@ useFocusEffect(
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.text }]}>Create a Ticket</Text>
+        <Text style={[styles.title, { color: theme.heading }]}>Create a Ticket</Text>
         <Text style={styles.subtitle}>Report Any parking violation</Text>
       </View>
 
@@ -255,14 +259,18 @@ useFocusEffect(
             return (
               <TouchableOpacity
                 key={item.id}
-                onPress={() => setForm({ ...form, reasonId: item.id })}
+                onPress={() => {
+                  triggerHaptic();
+                  setForm({ ...form, reasonId: item.id });
+                }}
                 style={[
                   styles.cancelReason,
-                  isActive && styles.cancelReasonActive,
+                  { backgroundColor: theme.surface },
+                  isActive && { backgroundColor: theme.background },
                 ]}>
                 <View style={styles.cancelReasonContent}>
-                  <Text style={styles.cancelReasonTitle}>{item.reason}</Text>
-                  <Text style={styles.cancelReasonDescription}>
+                  <Text style={[styles.cancelReasonTitle, { color: theme.heading }]}>{item.reason}</Text>
+                  <Text style={[styles.cancelReasonDescription, { color: theme.muted }]}>
                     {item.description}
                   </Text>
                 </View>
@@ -295,6 +303,7 @@ useFocusEffect(
             setItems={setItems}
             placeholder="Select a parking bay"
             listMode="MODAL"
+            theme={colorMode === 'dark' ? 'DARK' : 'LIGHT'}
             style={styles.dropdown}
             dropDownContainerStyle={styles.dropdownContainer}
           />
@@ -305,20 +314,20 @@ useFocusEffect(
 )}
         </View>
         <Text style={styles.sectionTitle}>Description (Optional)</Text>
-        <View style={styles.formInput}>
+        <View style={[styles.formInput, { backgroundColor: theme.surface }]}>
           <TextInput
             clearButtonMode="while-editing"
             multiline={true}
             onChangeText={bio => setForm({ ...form, bio })}
             placeholder="Describe parking violation..."
-            placeholderTextColor="#6b7280"
-            style={[styles.formInputControl, styles.formTextarea]}
+            placeholderTextColor={theme.muted}
+            style={[styles.formInputControl, styles.formTextarea, { color: theme.text }]}
             value={form.bio}
           />
         </View>
 
         <Text style={styles.sectionTitle}>Add Image Evidence (Optional)</Text>
-        <TouchableOpacity style={styles.cancelReason} onPress={pickImage}>
+        <TouchableOpacity style={[styles.cancelReason, { backgroundColor: theme.surface }]} onPress={pickImage}>
           <FeatherIcon name="camera" size={29} color="#6b7280" />
           <Text style={[styles.sectionSubtitle, { marginLeft: 12 }]}>
             {form.imageUri ? 'Image Selected' : 'Upload Image'}

@@ -13,19 +13,17 @@ import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAccessibility } from '@/context/accessibilityContext';
 
 export default function TabLayout() {
-  const {theme} = useAccessibility();
+  const { theme } = useAccessibility();
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: theme.tint,
         tabBarInactiveTintColor: theme.icon,
-        tabBarStyle: { backgroundColor: theme.surface, borderTopColor: theme.muted },
+        tabBarStyle: { backgroundColor: theme.surface, borderTopColor: theme.border },
         headerShown: false, //hides the header for all screens in the tab navigator
         tabBarButton: HapticTab,
       }}>

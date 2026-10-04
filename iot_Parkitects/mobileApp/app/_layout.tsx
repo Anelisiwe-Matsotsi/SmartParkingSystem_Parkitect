@@ -22,8 +22,11 @@ function RootLayoutNav() {
   
   return (
     <ThemeProvider value={colorMode === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack initialRouteName="landing" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: shouldReduceMotion ? 'none' : 'default' }} />
+      <Stack
+        initialRouteName="landing"
+        screenOptions={{ headerShown: false, animation: shouldReduceMotion ? 'none' : 'default' }}
+      >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       <StatusBar style={colorMode === 'dark' ? 'light' : 'dark'} />

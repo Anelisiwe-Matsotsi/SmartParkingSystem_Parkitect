@@ -1,6 +1,7 @@
 //(Withfra.me, 2022)
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { ThemedText as Text } from '@/components/themed-text';
 import Feather from "@expo/vector-icons/Feather";
 import { Colors } from "@/constants/theme";
 

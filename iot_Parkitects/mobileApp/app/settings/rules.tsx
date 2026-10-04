@@ -70,7 +70,7 @@ const RULES: RuleItem[] = [
   },
   {
     id: '8',
-    icon: 'lightbulb-off',
+    icon: 'sun',
     title: 'Head Lights',
     description: 'Make sure that your vehicle lights are turned off.',
   },
@@ -81,15 +81,17 @@ export default function RulesScreen() {
   const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => { triggerHaptic(); router.back(); }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           {/*(Expo Documentation, 2026)*/}
-          <FeatherIcon name="arrow-left" size={24} color="#1F2937" />
+          <FeatherIcon name="arrow-left" size={24} color={theme.heading} />
         </TouchableOpacity>
       </View>
 
@@ -97,24 +99,32 @@ export default function RulesScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
-        <ThemedText style={styles.screenTitle}>Parking Lot Rules</ThemedText>
+        <ThemedText style={[styles.screenTitle, { color: theme.heading }]}>Parking Lot Rules</ThemedText>
 
         {RULES.map((item) => (
-          <View key={item.id} style={styles.ruleCard}>
+          <TouchableOpacity
+            key={item.id}
+            activeOpacity={0.8}
+            onPress={() => {
+              triggerHaptic();
+              triggerScreenReader(`${item.title}. ${item.description}`);
+            }}
+            style={[styles.ruleCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+          >
             <View style={styles.cardHeader}>
               <View style={styles.cardTitleRow}>
                 <View style={styles.iconBadge}>
                   {/*(Expo Documentation, 2026)*/}
-                  <FeatherIcon name={item.icon} size={16} color="#0D5265" />
+                  <FeatherIcon name={item.icon as any} size={16} color="#0D5265" />
                 </View>
-                <ThemedText style={styles.cardTitle}>{item.title}</ThemedText>
+                <ThemedText style={[styles.cardTitle, { color: theme.heading }]}>{item.title}</ThemedText>
               </View>
             </View>
 
-            <ThemedText style={styles.cardDescription}>
+            <ThemedText style={[styles.cardDescription, { color: theme.muted }]}>
               {item.description}
             </ThemedText>
-          </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
     </SafeAreaView>

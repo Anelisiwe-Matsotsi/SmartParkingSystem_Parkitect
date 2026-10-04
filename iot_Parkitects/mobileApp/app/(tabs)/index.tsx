@@ -6,6 +6,7 @@ import AlertBanner from '@/components/notifications/AlertBanner'
 import HomeHeader from '@/components/parking/HomeHeader';
 import ParkingLayout from '@/components/parking/ParkingLayout';
 import { Colors } from '@/constants/theme';
+import { useAccessibility } from '@/context/accessibilityContext';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -13,6 +14,7 @@ export default function HomeScreen() {
   const [showAlert, setShowAlert] = useState(true);
   const [mapData, setMapData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { theme, triggerScreenReader } = useAccessibility();
 
   // Fetch the data globally on the home screen
   const fetchMapData = async () => {
@@ -39,8 +41,14 @@ export default function HomeScreen() {
   const availableBays = mapData?.availableBays ?? 0;
   const isLimited = availableBays > 0 && availableBays <= 15;
 
+  useEffect(() => {
+    if (!loading) {
+      triggerScreenReader(`Home screen. ${availableBays} bays left`);
+    }
+  }, [loading]);
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         
         {/* Pass live data to Header */}

@@ -7,7 +7,7 @@ import {
   StyleSheet,
   View,
   Image,
-  Text,
+  Text as RNText,
   TouchableOpacity,
   InteractionManager,
   TextInput,
@@ -16,6 +16,8 @@ import {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/theme';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 
 // importing the login function from firebase
 import {
@@ -26,6 +28,7 @@ import { auth } from '../../config/firebaseConfig';
 
 export default function SignIn() {
   const router = useRouter();
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
   const [form, setForm] = useState({
     userNumber: '',
     password: '',
@@ -38,6 +41,7 @@ export default function SignIn() {
  
   // this fires when the user presses the login button
   const handleLogin = async () => {
+    triggerHaptic();
     if (!form.userNumber || !form.password) 
     {
       Alert.alert('Oops', 'Please fill in both your user number and password.');
@@ -86,6 +90,7 @@ export default function SignIn() {
     catch (error: any) 
     {
       // wrong password or user number throws an alert
+      triggerScreenReader('Login failed');
       Alert.alert('Login Failed', 'Invalid user number or password. Please try again.');
     } finally {
     setIsLoading(false); // Unlock button
@@ -94,7 +99,7 @@ export default function SignIn() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.header}>
           <View style={styles.logoContainer}>
             <Image
@@ -103,18 +108,18 @@ export default function SignIn() {
               style={styles.headerImg}
               source={require('@/assets/images/parki-splash.png')}/>
           </View>
-          <Text style={styles.title}>
-            Sign in to <Text style={{ color: '#118091' }}>Parkitech</Text>
+          <Text style={[styles.title, { color: theme.heading }]}>
+            Sign in to <RNText style={{ color: '#118091' }}>Parkitech</RNText>
           </Text>
 
-          <Text style={styles.subtitle}>
+          <Text style={[styles.subtitle, { color: theme.muted }]}>
            Find your parking
           </Text>
         </View>
 
         <View style={styles.form}>
           <View style={styles.input}>
-            <Text style={styles.inputLabel}>User Number</Text>
+            <Text style={[styles.inputLabel, { color: theme.heading }]}>User Number</Text>
 
             <TextInput
               autoCapitalize="none"
@@ -123,22 +128,22 @@ export default function SignIn() {
               keyboardType="email-address"
               onChangeText={userNumber => setForm({ ...form, userNumber })}
               placeholder="ST___________/LR___________"
-              placeholderTextColor="#6b7280"
-              style={styles.inputControl}
+              placeholderTextColor={theme.muted}
+              style={[styles.inputControl, { backgroundColor: theme.surface, color: theme.text }]}
               value={form.userNumber} />
           </View>
 
           <View style={styles.input}>
-  <Text style={styles.inputLabel}>Password</Text>
+  <Text style={[styles.inputLabel, { color: theme.heading }]}>Password</Text>
 
-  <View style={styles.passwordContainer}>
+  <View style={[styles.passwordContainer, { backgroundColor: theme.surface }]}>
     <TextInput
       autoCorrect={false}
       clearButtonMode="while-editing"
       onChangeText={password => setForm({ ...form, password })}
       placeholder="********"
-      placeholderTextColor="#6b7280"
-      style={styles.passwordInput}
+      placeholderTextColor={theme.muted}
+      style={[styles.passwordInput, { color: theme.text }]}
       secureTextEntry={!showPassword}
       value={form.password}
     />
@@ -175,7 +180,7 @@ export default function SignIn() {
             onPress={() => router.push('/auth/forgot_password')}
             activeOpacity={0.7}
           >
-            <Text style={styles.formLink}>Forgot password?</Text>
+            <Text style={[styles.formLink, { color: theme.tint }]}>Forgot password?</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -185,9 +190,9 @@ export default function SignIn() {
           // handle link
              router.push('/auth/sign_up');
         }}>
-        <Text style={styles.formFooter}>
+        <Text style={[styles.formFooter, { color: theme.text }]}>
           Don't have an account?{' '}
-          <Text style={{ textDecorationLine: 'underline', color: '#0c6064' }}>Sign up</Text>
+          <RNText style={{ textDecorationLine: 'underline', color: theme.tint }}>Sign up</RNText>
         </Text>
       </TouchableOpacity>
     </SafeAreaView>

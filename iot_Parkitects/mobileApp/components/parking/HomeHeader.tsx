@@ -5,7 +5,6 @@ import  {useState} from 'react';
 import AlertBanner from '@/components/notifications/AlertBanner'
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
@@ -13,6 +12,8 @@ import {
   Alert,
   Linking
 } from "react-native";
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 import Feather from "@expo/vector-icons/Feather";
 import {
   requestBlePermissions,
@@ -24,8 +25,6 @@ import SearchBar from "./SearchBar";
 import { getBaysForNode, claimBay } from "@/utils/parkingFirebase";
 import { auth } from "@/config/firebaseConfig";
 import { startSession } from "@/utils/parkingApi"
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 
 // props to recieve live count
 type Props = {
@@ -35,9 +34,10 @@ type Props = {
 export default function HomeHeader({ availableSpaces }: Props) {
   const router = useRouter();
   const [scanning, setScanning] = useState(false);
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
   
   return (
-    <SafeAreaView style={styles.wrapper}>
+    <SafeAreaView style={[styles.wrapper, { backgroundColor: theme.background }]}>
       <View style={styles.container}>
         <View style={styles.topRow}>
           <TouchableOpacity style={styles.locationBadge}>
@@ -46,10 +46,10 @@ export default function HomeHeader({ availableSpaces }: Props) {
           </TouchableOpacity>
 
           <View style={styles.rightButtons}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/notifications')}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => { triggerHaptic(); router.push('/notifications'); }}>
               <Feather name="bell" size={18} color="#111827" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.avatarButton} onPress={() => router.push('/settings/setting')}>
+            <TouchableOpacity style={styles.avatarButton} onPress={() => { triggerHaptic(); router.push('/settings/setting'); }}>
               <Text style={styles.avatarText}>MA</Text>
             </TouchableOpacity>
           </View>
@@ -63,6 +63,7 @@ export default function HomeHeader({ availableSpaces }: Props) {
        
   <TouchableOpacity style={styles.parkingButton}
   onPress={async () => {
+    triggerHaptic();
     const mapsUrl =
       "https://maps.app.goo.gl/rJiNs9tSvVf75Tqf9?g_st=aw";
 
@@ -96,6 +97,8 @@ export default function HomeHeader({ availableSpaces }: Props) {
           <TouchableOpacity
   style={styles.parkingButton}
  onPress={async () => {
+  triggerHaptic();
+  triggerScreenReader('Looking for your parking bay');
   try {
     setScanning(true);
 
@@ -169,20 +172,6 @@ const saveParking = async (bayId: string) => {
 if (ok) {
   try {
     await startSession(firebaseUid, nearestNode.nodeKey, bayId);
-
-    // Fetches coordinates from API
-        const API_URL = process.env.EXPO_PUBLIC_API_URL;
-        
-        // Finds the active beacon
-        const response = await axios.get(`${API_URL}/api/FindMyCar/active-bay`);
-        const lat = response.data.latitude;
-        const lon = response.data.longitude;
-        const label = response.data.formattedLocation;
-
-        // Save to phones local memory
-        await AsyncStorage.setItem('parkedLat', lat.toString());
-        await AsyncStorage.setItem('parkedLon', lon.toString());
-        await AsyncStorage.setItem('parkedLabel', label);
   } catch (e) {
     console.log("[SQL] session start failed:", e);
   }

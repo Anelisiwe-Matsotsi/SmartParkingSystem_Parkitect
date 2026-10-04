@@ -1,6 +1,7 @@
 //(Expo Documentation.2024)
 import React from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
+import { useAccessibility } from '@/context/accessibilityContext';
 
 type Props = {
   id: string;
@@ -11,14 +12,15 @@ export default function ParkingBay({
   id,
   occupied = false,
 }: Props) {
+  const { theme } = useAccessibility();
   return (
-    <View style={styles.bay}>
+    <View style={[styles.bay, { backgroundColor: theme.surface }]}>
       {occupied ? (
         <Image source={require('@/assets/images/car.png')} style={{ width: 50, height: 25, resizeMode: 'contain' }} />
       ) : (
         <View style={styles.empty} />
       )}
-      <Text style={styles.label}>{id}</Text>
+      <Text style={[styles.label, { color: theme.tint }]}>{id}</Text>
     </View>
   );
 }

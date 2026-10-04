@@ -44,7 +44,7 @@ interface AccessibilityContextValue extends AccessibilityState {
   setReduceMotion: (v: boolean) => void;
   setScreenReader: (v: boolean) => void;
   setHapticFeedback: (v: boolean) => void;
-  loadFromServer: (settings: Partial<AccessibilityState> & {theme?: string}) => void;
+  loadFromServer: (settings: Partial<AccessibilityState> & { theme?: string }) => void;
   triggerScreenReader: (text: string) => void;
   triggerHaptic: (style?: Haptics.ImpactFeedbackStyle) => void;
 }
@@ -94,58 +94,56 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
 
   //(Patel, 2025)
   //calls the loadfromserver to load the settings that have been chosen by the user and saved otherwise default settings are left the same
-const loadFromServer = useCallback((settings: Partial<AccessibilityState> & { theme?: string }) => {
+  const loadFromServer = useCallback((settings: Partial<AccessibilityState> & { theme?: string }) => {
     if (settings.textSize && ['small', 'medium', 'large'].includes(settings.textSize)) {
       setTextSize(settings.textSize);
-    }      //(Balasubramanian, 2023)
-    const savedMode = settings.theme ?? settings.colorMode; //saves the mode as theme
+    }
+    const savedMode = settings.theme ?? settings.colorMode;
     if (savedMode === 'light' || savedMode === 'dark') setColorMode(savedMode);
+      //(Balasubramanian, 2023)
     if (settings.reduceMotion !== undefined) setReduceMotion(settings.reduceMotion);
     if (settings.screenReader !== undefined) setScreenReader(settings.screenReader);
     if (settings.hapticFeedback !== undefined) setHapticFeedback(settings.hapticFeedback);
   }, []);
 
-    const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
-
-
-    //settings start loading from the login page to save user preference (starts as default)
   useEffect(() => {
-    AsyncStorage.getItem('accessibilitySettings')
-      .then((saved) => {
+    let unsubscribe = () => {};
+
+    const start = async () => {
+      try {
+        const saved = await AsyncStorage.getItem('accessibilitySettings');
         if (saved) loadFromServer(JSON.parse(saved));
-      })
-      .finally(() => setLoaded(true));
+      } catch (error) {
+        console.warn('Could not read saved accessibility settings', error);
+      }
+      setLoaded(true);
+
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (!user) return;
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/Settings/user/${user.uid}`);
+          if (response.ok) {
+            loadFromServer(await response.json());
+          }
+        } catch (error) {
+          console.warn('Could not load accessibility settings', error);
+        }
+      });
+    };
+
+    start();
+    return () => unsubscribe();
   }, [loadFromServer]);
 
-
-  //saves a copy on the phone every time a setting changes
   useEffect(() => {
     if (!loaded) return;
     AsyncStorage.setItem(
       'accessibilitySettings',
       JSON.stringify({ textSize, colorMode, reduceMotion, screenReader, hapticFeedback })
-    );
+    ).catch((error) => console.warn('Could not save accessibility settings', error));
   }, [loaded, textSize, colorMode, reduceMotion, screenReader, hapticFeedback]);
-
-
-  //loads the settings saved in the database when a user is logged in
-  useEffect(() => {
-    const loginPreference = onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/Settings/user/${user.uid}`);
-        if (response.ok) {
-          loadFromServer(await response.json());
-        }
-      } catch (error) {
-        console.warn('Could not load accessibility settings', error);
-      }
-    });
-    return loginPreference;
-  }, [loadFromServer]);
-
-
 
   //(Balasubramanian, 2023)
   const triggerHaptic = useCallback(
@@ -160,17 +158,17 @@ const loadFromServer = useCallback((settings: Partial<AccessibilityState> & { th
   //(Balasubramanian, 2023)
   const triggerScreenReader = useCallback(
     (text: string) => {
-      if (screenReader && !osScreenReaderEnabled) { //in-app speech will not read if operating system speech is also on
+      if (screenReader && !osScreenReaderEnabled) {
         Speech.stop();
         Speech.speak(text);
       }
     },
-    [screenReader,osScreenReaderEnabled]
+    [screenReader, osScreenReaderEnabled]
   );
 
   const scale = scaleMap[textSize];
   const theme = Colors[colorMode];
-  const shouldReduceMotion = reduceMotion || osReduceMotionEnabled; //reducing motion starts if the users turns it on in the app or the OS has it on
+  const shouldReduceMotion = reduceMotion || osReduceMotionEnabled;
 
   //(Senturk, 2026)
   return (

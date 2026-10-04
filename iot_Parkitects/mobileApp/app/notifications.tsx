@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback} from 'react';
 import {
   StyleSheet,
   View,
-  Text,
   TouchableOpacity,
   ScrollView,
   Modal,
@@ -13,6 +12,8 @@ import { useRouter } from 'expo-router';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import {auth} from '../config/firebaseConfig'
 import { registerForPushNotificationsAsync } from '@/utils/pushNotifications';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 
 type NotificationType = 'complaint' | 'info' | 'reminder' | 'alert';
 
@@ -27,6 +28,7 @@ interface NotificationItem {
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
 
   const isParked = true;
   const [loading, setLoading] = useState(true);
@@ -88,11 +90,14 @@ export default function NotificationsScreen() {
   
   
 const handleOpenNotification = (item: NotificationItem) => {
+    triggerHaptic();
+    triggerScreenReader(`${item.title}. ${item.description}`);
     setComplaintFixed(false);
     setSelectedNotification(item);
   };
 
   const handleCloseModal = () => {
+    triggerHaptic();
     setSelectedNotification(null);
   };
 
@@ -118,6 +123,7 @@ const handleOpenNotification = (item: NotificationItem) => {
       });
 
       setComplaintFixed(true);
+      triggerScreenReader('Thanks, we will verify if your violation has been resolved');
       setNotifications((prev) => prev.filter((n) => n.id !== selectedNotification.id));
     } catch (error) {
       console.error('Failed to submit response', error);
@@ -153,15 +159,15 @@ const handleOpenNotification = (item: NotificationItem) => {
   };
 
   return (
-    <View style ={styles.container}>
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => { triggerHaptic(); router.back(); }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <FeatherIcon name="arrow-left" size={24} color="#1F2937" />
+          <FeatherIcon name="arrow-left" size={24} color={theme.heading} />
         </TouchableOpacity>
       </View>
 
@@ -170,7 +176,7 @@ const handleOpenNotification = (item: NotificationItem) => {
         removeClippedSubviews={false}
         contentContainerStyle={styles.scrollContainer}
       >
-        <Text style={styles.screenTitle}>Notifications</Text>
+        <Text style={[styles.screenTitle, { color: theme.heading }]}>Notifications</Text>
 
         {isParked && (
           <View style={styles.parkingBanner}>
@@ -199,24 +205,24 @@ const handleOpenNotification = (item: NotificationItem) => {
           <ActivityIndicator style={{ marginTop: 40 }} color="#0D5265" />
         ) : notifications.length > 0 ? (
           <>
-            <Text style={styles.sectionHeader}>Recent notifications</Text>
+            <Text style={[styles.sectionHeader, { color: theme.muted }]}>Recent notifications</Text>
 
             {notifications.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                style={styles.notificationCard}
+                style={[styles.notificationCard, { backgroundColor: theme.surface }]}
                 activeOpacity={0.7}
                 onPress={() => handleOpenNotification(item)}
               >
                 <View style={styles.cardHeader}>
                   <View style={styles.cardTitleRow}>
                     <View style={[styles.statusDot, getStatusDotStyle(item.type)]} />
-                    <Text style={styles.cardTitle}>{item.title}</Text>
+                    <Text style={[styles.cardTitle, { color: theme.heading }]}>{item.title}</Text>
                   </View>
-                  <Text style={styles.cardTime}>{item.time}</Text>
+                  <Text style={[styles.cardTime, { color: theme.muted }]}>{item.time}</Text>
                 </View>
 
-                <Text style={styles.cardDescription} numberOfLines={2}>
+                <Text style={[styles.cardDescription, { color: theme.muted }]} numberOfLines={2}>
                   {item.description}
                 </Text>
               </TouchableOpacity>
@@ -224,11 +230,11 @@ const handleOpenNotification = (item: NotificationItem) => {
           </>
         ) : (
           <View style={styles.emptyState}>
-            <View style={styles.emptyIconContainer}>
+            <View style={[styles.emptyIconContainer, { backgroundColor: theme.surface }]}>
               <FeatherIcon name="bell-off" size={26} color="#9CA3AF" />
             </View>
-            <Text style={styles.emptyTitle}>No notifications</Text>
-            <Text style={styles.emptyDescription}>
+            <Text style={[styles.emptyTitle, { color: theme.heading }]}>No notifications</Text>
+            <Text style={[styles.emptyDescription, { color: theme.muted }]}>
               You're all caught up. New parking alerts and updates will appear here.
             </Text>
           </View>
@@ -244,7 +250,7 @@ const handleOpenNotification = (item: NotificationItem) => {
           activeOpacity={1}
           onPress={handleCloseModal}
         >
-          <TouchableOpacity style={styles.modalCard} activeOpacity={1}>
+          <TouchableOpacity style={[styles.modalCard, { backgroundColor: theme.surface }]} activeOpacity={1}>
                 <View style={styles.modalIconBadge}>
                   <FeatherIcon
                     name={getModalIconName(selectedNotification.type)}
@@ -253,18 +259,18 @@ const handleOpenNotification = (item: NotificationItem) => {
                   />
                 </View>
 
-                <Text style={styles.modalTitle}>{selectedNotification.title}</Text>
-                <Text style={styles.modalDescription}>{selectedNotification.description}</Text>
+                <Text style={[styles.modalTitle, { color: theme.heading }]}>{selectedNotification.title}</Text>
+                <Text style={[styles.modalDescription, { color: theme.muted }]}>{selectedNotification.description}</Text>
 
                 {selectedNotification.type === 'complaint' ? (
                   !complaintFixed ? (
                     <View style={styles.modalActions}>
                       <TouchableOpacity
-                        style={[styles.btn, styles.btnSecondary]}
+                        style={[styles.btn, styles.btnSecondary, { backgroundColor: theme.background }]}
                         onPress={handleCloseModal}
                         disabled={submitting}
                       >
-                        <Text style={styles.btnSecondaryText}>Not Yet</Text>
+                        <Text style={[styles.btnSecondaryText, { color: theme.text }]}>Not Yet</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity

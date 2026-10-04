@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 import ParkingBay from './ParkingBay';
 import SectionTabs from './SectionTabs';
 
@@ -19,6 +21,7 @@ const normalize = (raw: string) => {
 };
 
 export default function ParkingLayout({ mapData }: { mapData: any }) {
+  const { theme } = useAccessibility();
   const [activeSection, setActiveSection] = useState('Section A');
   const config = SECTIONS[activeSection];
 
@@ -45,12 +48,12 @@ export default function ParkingLayout({ mapData }: { mapData: any }) {
   let nextBay = 1;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.surface }]}>
       <SectionTabs selectedSection={activeSection} onSelectSection={setActiveSection} />
 
-      <View style={styles.sectionCard}>
+      <View style={[styles.sectionCard, { backgroundColor: theme.background }]}>
         <View style={styles.header}>
-          <Text style={styles.title}>{config.title}</Text>
+          <Text style={[styles.title, { color: theme.tint }]}>{config.title}</Text>
           <View style={styles.pill}>
             <Text style={styles.pillText}>{freeCount} of {total} free</Text>
           </View>
