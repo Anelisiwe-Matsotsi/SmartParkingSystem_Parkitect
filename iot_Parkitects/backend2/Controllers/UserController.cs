@@ -28,6 +28,12 @@ namespace backend2.Controllers
             public string UserRole { get; set; } = "Student";
         }
 
+        public class UpdateProfileDto
+        {
+            public string Name { get; set; } = string.Empty;
+            public string Email { get; set; } = string.Empty;
+        }
+
         [HttpPost("sync")]
         public async Task<IActionResult> SyncUser([FromBody] UserSyncDto dto)
         {
@@ -95,6 +101,95 @@ namespace backend2.Controllers
             if (user == null) return NotFound("User not found");
 
             return Ok(new { email = user.Email, role = user.UserRole });
+        }
+
+        [HttpGet("profile/{firebaseUid}")]
+        public async Task<IActionResult> GetUserProfile(string firebaseUid)
+        {
+            // First checks the Student table for the logged-in Firebase user
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.FirebaseUid == firebaseUid);
+
+            if (student != null)
+            {
+                return Ok(new
+                {
+                    userNumber = student.UserNumber,
+                    name = student.Name,
+                    email = student.Email,
+                    userRole = student.UserRole
+                });
+            }
+
+            // Checks the Lecturer table if the user is not a student
+            var lecturer = await _context.Lecturers
+                .FirstOrDefaultAsync(l => l.FirebaseUid == firebaseUid);
+
+            if (lecturer != null)
+            {
+                return Ok(new
+                {
+                    userNumber = lecturer.UserNumber,
+                    name = lecturer.Name,
+                    email = lecturer.Email,
+                    userRole = lecturer.UserRole
+                });
+            }
+
+            // Finally checks the base User table
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+
+            if (user != null)
+            {
+                return Ok(new
+                {
+                    userNumber = user.UserNumber,
+                    name = user.Name,
+                    email = user.Email,
+                    userRole = user.UserRole
+                });
+            }
+
+            return NotFound("User profile not found.");
+        }
+
+        [HttpPut("profile/{firebaseUid}")]
+        public async Task<IActionResult> UpdateUserProfile(
+            string firebaseUid,
+            [FromBody] UpdateProfileDto dto)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+
+            if (user == null)
+            {
+                return NotFound("User profile not found.");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.Name))
+            {
+                return BadRequest("Name is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.Email))
+            {
+                return BadRequest("Email is required.");
+            }
+
+            user.Name = dto.Name;
+            user.Email = dto.Email;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Profile updated successfully.",
+                userNumber = user.UserNumber,
+                name = user.Name,
+                email = user.Email,
+                userRole = user.UserRole
+            });
         }
     }
 }

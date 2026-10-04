@@ -4,16 +4,18 @@
 import React, { useState, useRef } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   TextInput,
   ScrollView,
+  Image,
 } from "react-native";
+import { ThemedText as Text } from '@/components/themed-text';
 import Feather from "@expo/vector-icons/Feather";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import StatsCard from "@/components/ticket/StatsCard";
 import { Colors } from '@/constants/theme';
+import { useAccessibility } from '@/context/accessibilityContext';
 
 //These are the frequently asked questions that the chatbot can answer,
 //each question is a string in the faqOptions array
@@ -27,7 +29,29 @@ const faqOptions = [
   "Report a parking problem",
 ];
 
+
+//icon
+function BotMessage({ text }: { text: string }) {
+  const { theme } = useAccessibility();
+  return (
+    <View style={styles.botRow}>
+      <View style={styles.botIcon}>
+        <Image
+          source={require("../../assets/images/byte-bot.png")}
+          style={styles.botImage}
+        />
+        {/* Later: swap for your bot <Image /> here */}
+      </View>
+      <View style={[styles.botMessage, { backgroundColor: theme.surface }]}>
+        <Text style={[styles.botMessageText, { color: theme.text }]}>{text}</Text>
+      </View>
+    </View>
+  );
+}
+
+
 export default function ChatbotScreen() {
+  const { theme, triggerHaptic, triggerScreenReader, shouldReduceMotion } = useAccessibility();
   //This stores the question selected by the user
   const [message, setMessage] = useState("");
   // Stores the history of selected questions and their answers
@@ -40,6 +64,8 @@ export default function ChatbotScreen() {
   // This function runs when the user selects a question from the list of frequently asked questions, 
   // then it saves the selected question so that the answer can be displayed
   const handleQuestion = (question: string) => {
+    triggerHaptic();
+    triggerScreenReader(`${question}. ${getAnswer(question)}`);
     // Add the new question and its answer to the bottom of the chat history
     setChatHistory((prev) => [...prev, { question, answer: getAnswer(question) }]);
     // Afterwards, hide the options and show the back button
@@ -49,45 +75,37 @@ export default function ChatbotScreen() {
 
   //This function takes the user back to the list of questions when they click the back button, it resets the selected question
   const handleBack = () => {
+    triggerHaptic();
     setShowOptions(true);
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView
         ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
         // Triggers the scroll to the bottom when the user returns to the question
-        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: !shouldReduceMotion })}
       >
       
         <StatsCard/>
 
         {/*Chat Bot Message (need to put byte bot pic later) */}
-        <View style={styles.botMessage}>
-          <Text style={styles.botMessageText}>
-            Hi! I'm Parkitects' helper. Choose a question
-            below and I'll point you in the right direction.
-          </Text>
-        </View>
+       <BotMessage text="Hi! I'm Parkitects' helper. Choose a question below and I'll point you in the right direction." />
 
         {/* Stack Overflow, 2018 */}
         {/* Chat History */}
         {chatHistory.map((chat, index) => (
-          <View key={index}>
-            <View style={styles.selectedQuestionContainer}>
-              <Text style={styles.selectedQuestionText}>
-                {chat.question}
-              </Text>
-            </View>
-            <View style={styles.botMessage}>
-              <Text style={styles.botMessageText}>
-                {chat.answer}
-              </Text>
-            </View>
-          </View>
-        ))}
+  <View key={index}>
+    <View style={[styles.selectedQuestionContainer, { backgroundColor: theme.surface }]}>
+      <Text style={[styles.selectedQuestionText, { color: theme.text }]}>
+        {chat.question}
+      </Text>
+    </View>
+    <BotMessage text={chat.answer} />
+  </View>
+))}
 
         {/* FAQ Buttons */}
         {showOptions && (
@@ -95,10 +113,10 @@ export default function ChatbotScreen() {
             {faqOptions.map((question) => (
               <TouchableOpacity
                 key={question}
-                style={styles.questionButton}
+                style={[styles.questionButton, { backgroundColor: theme.surface }]}
                 onPress={() => handleQuestion(question)}
               >
-                <Text style={styles.questionText}>
+                <Text style={[styles.questionText, { color: theme.text }]}>
                   {question}
                 </Text>
               </TouchableOpacity>
@@ -109,10 +127,10 @@ export default function ChatbotScreen() {
         {/* Back Button */}
         {!showOptions && (
           <TouchableOpacity
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: theme.surface }]}
             onPress={handleBack}
           >
-            <Text style={styles.backButtonText}>
+            <Text style={[styles.backButtonText, { color: theme.text }]}>
               Back to Questions
             </Text>
           </TouchableOpacity>
@@ -173,10 +191,31 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 18,
     paddingVertical: 16,
-    marginBottom: 18,
-    alignSelf: "flex-start",
-    maxWidth: "90%",
+    flexShrink: 1,
   },
+
+  /* Bot message */
+botRow: {
+  flexDirection: "row",
+  alignItems: "flex-end",
+  marginBottom: 18,
+  maxWidth: "95%",
+},
+
+botIcon: {
+  width: 38,
+  height: 38,
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 8,
+},
+
+botImage: {
+  width: 48,
+  height: 48,
+  resizeMode: "contain",
+},
+
 
   botMessageText: {
     fontSize: 17,
@@ -217,6 +256,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     alignSelf: "flex-end",
     maxWidth: "90%",
+    borderRadius: 20,
   },
 
     selectedQuestionText: {

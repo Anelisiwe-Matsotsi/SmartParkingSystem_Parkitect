@@ -1,16 +1,3 @@
-USE master;
-GO
-
--- Create the ParkitectDB database only if it does not already exist
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'ParkitectsDB')
-BEGIN
-    CREATE DATABASE ParkitectsDB;
-END
-GO
-
--- Switch to the ParkitectDB database
-USE ParkitectsDB;
-GO
 
 -- User Related Tables
 -- Create the User table
@@ -55,23 +42,31 @@ CREATE TABLE ParkingLot (
     totalCapacity INT NOT NULL
 );
 
--- Create the ParkingLayout table
-CREATE TABLE ParkingLayout (
-    layoutID INT PRIMARY KEY IDENTITY(1,1), 
+CREATE TABLE ParkingSection (
+    sectionID INT PRIMARY KEY IDENTITY(1,1), 
     parkingID INT NOT NULL,
     sectionName NVARCHAR(255) NOT NULL,
-    CONSTRAINT FK_ParkingLayout_Parking FOREIGN KEY (parkingID) REFERENCES ParkingLot(parkingID) ON DELETE CASCADE
+    CONSTRAINT FK_ParkingSection_Parking 
+        FOREIGN KEY (parkingID) REFERENCES ParkingLot(parkingID) ON DELETE CASCADE
 );
+
+-- Create the ParkingLayout table
+-- CREATE TABLE ParkingLayout (
+--     layoutID INT PRIMARY KEY IDENTITY(1,1), 
+--     parkingID INT NOT NULL,
+--     sectionName NVARCHAR(255) NOT NULL,
+--     CONSTRAINT FK_ParkingLayout_Parking FOREIGN KEY (parkingID) REFERENCES ParkingLot(parkingID) ON DELETE CASCADE
+-- );
 
 -- Create the ParkingBay table
 CREATE TABLE ParkingBay (
     bayID INT PRIMARY KEY IDENTITY(1,1),
-    layoutID INT NOT NULL,
+    sectionID INT NOT NULL,
     bayNumber NVARCHAR(255) NOT NULL,
-    isOccupied BIT NOT NULL,
-    CONSTRAINT FK_ParkingBay_ParkingLayout FOREIGN KEY (layoutID) REFERENCES ParkingLayout(layoutID) ON DELETE CASCADE
+    isOccupied BIT NOT NULL DEFAULT 0,
+    CONSTRAINT FK_ParkingBay_ParkingSection
+        FOREIGN KEY (sectionID) REFERENCES ParkingSection(sectionID) ON DELETE CASCADE
 );
-
 
 -- Part of analytics
 -- Create the ParkingSession table
@@ -81,7 +76,10 @@ CREATE TABLE ParkingSession (
     bayID INT NOT NULL,
     startDate DATETIME NOT NULL,
     endDate DATETIME NULL,
-    CONSTRAINT FK_ParkingSession_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
+    CONSTRAINT FK_ParkingSession_User
+        FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE,
+    CONSTRAINT FK_ParkingSession_ParkingBay
+        FOREIGN KEY (bayID) REFERENCES ParkingBay(bayID)
 );
 
 -- Part of analytics
@@ -92,6 +90,8 @@ CREATE TABLE Sensor (
     distanceReadingCm INT NOT NULL,
     hardwareModel NVARCHAR(255) NOT NULL,
     location GEOGRAPHY NULL,
+    beaconNodeKey NVARCHAR(100) NULL,
+    firebaseBayKey NVARCHAR(100) NULL,
     CONSTRAINT FK_Sensor_ParkingBay FOREIGN KEY (bayID) REFERENCES ParkingBay(bayID) ON DELETE CASCADE
 );
 
@@ -109,10 +109,8 @@ CREATE TABLE Permissions (
     permissionsID INT PRIMARY KEY IDENTITY(1,1),
     userID INT NOT NULL,
     bluetooth BIT NOT NULL,
-    notifications BIT NOT NULL,
     location BIT NOT NULL,
     ruleAlerts BIT NOT NULL,
-    emailNotifications BIT NOT NULL,
      CONSTRAINT FK_Permissions_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
 );
 
@@ -124,7 +122,6 @@ CREATE TABLE Preferences (
     colorMode NVARCHAR(255),
     screenReader BIT NOT NULL,
     hapticFeedback BIT NOT NULL,
-    language NVARCHAR(255),
     location NVARCHAR(255),
     emailNotifications BIT NOT NULL,
     pushNotifications BIT NOT NULL,
@@ -134,10 +131,29 @@ CREATE TABLE Preferences (
 
 );
 
+-- Settings table (security web app)
+CREATE TABLE Settings (
+    settingsID INT PRIMARY KEY IDENTITY(1,1),
+    -- Stores the firebase uid of the user
+    userID NVARCHAR(255) NOT NULL UNIQUE,
+    darkMode BIT NOT NULL DEFAULT 0,
+    compactTables BIT NOT NULL DEFAULT 0,
+    ticketUpdates BIT NOT NULL DEFAULT 1,
+    parkingAlerts BIT NOT NULL DEFAULT 1,
+    systemAlerts BIT NOT NULL DEFAULT 1,
+    alertSound BIT NOT NULL DEFAULT 1,
+    rememberDevice BIT NOT NULL DEFAULT 0,
+    largerText BIT NOT NULL DEFAULT 0,
+    reducedMotion BIT NOT NULL DEFAULT 0,
+    CONSTRAINT FK_Settings_User FOREIGN KEY (userID)
+        REFERENCES [User](firebaseUid) ON DELETE CASCADE
+);
+
 
 -- Create the Tickets table
 CREATE TABLE Tickets (
     ticketID INT PRIMARY KEY IDENTITY(1,1),
+    reportingUserID NVARCHAR(128) NULL, -- user that reports ticket 
     userID NVARCHAR(128) NOT NULL, --stores firebase user uid
     bayID NVARCHAR(50) NOT NULL,
     bayNumber NVARCHAR(50) NOT NULL,
@@ -148,7 +164,7 @@ CREATE TABLE Tickets (
     status NVARCHAR(50) NOT NULL DEFAULT 'Pending',
     createdAt DATETIME2 NOT NULL DEFAULT GETDATE(),
     updatedAt DATETIME2 NULL,
-    response NVARCHAR(MAX) NULL,
+    response NVARCHAR(MAX) NULL
 );
 
 -- Create ChatBot table
@@ -160,7 +176,8 @@ CREATE TABLE ChatBot (
 );
 
 -- Create Notification table
-CREATE TABLE Notification (
+-- named Notifications (plural) because the backend queries [Notifications]
+CREATE TABLE Notifications (
     notificationID INT PRIMARY KEY IDENTITY(1,1),
     notificationType NVARCHAR(255) NOT NULL,
     title NVARCHAR(255) NOT NULL,
@@ -176,5 +193,15 @@ CREATE TABLE Ratings (
     label NVARCHAR(20) NOT NULL,
     submittedAt DATETIME NOT NULL,
     CONSTRAINT FK_AppRating_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
+);
+
+--Creating a table to handle push tokens sent by security to user mobile app
+CREATE TABLE PushToken (
+    tokenID INT PRIMARY KEY IDENTITY(1,1),
+    userID NVARCHAR(128) NOT NULL,
+    token NVARCHAR(255) NOT NULL UNIQUE,
+    platform NVARCHAR(20) NOT NULL,
+    createdAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+    updatedAt DATETIME2 NULL
 );
 GO

@@ -3,9 +3,10 @@ import React from 'react';
 import {
   StyleSheet,
   View,
-  Text,
   TouchableOpacity,
 } from 'react-native';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 import FeatherIcon from '@expo/vector-icons/Feather';
 
 type AlertType = 'info' | 'warning' | 'error' | 'success';
@@ -25,6 +26,7 @@ export default function AlertBanner({
   icon,
   onDismiss,
 }: AlertBannerProps) {
+  const { theme, triggerHaptic } = useAccessibility();
   const getTypeStyles = () => {
     switch (type) {
       case 'error':
@@ -58,7 +60,7 @@ export default function AlertBanner({
   const iconName = icon || styleConfig.defaultIcon;
 
   return (
-    <View style={styles.alert}>
+    <View style={[styles.alert, { backgroundColor: theme.surface, borderColor: theme.border }]}>
       {/* ICON BADGE */}
       <View style={[styles.alertIconBadge, { backgroundColor: styleConfig.iconBg }]}>
         <FeatherIcon
@@ -70,10 +72,10 @@ export default function AlertBanner({
 
       {/* TEXT CONTENT */}
       <View style={styles.alertBody}>
-        <Text style={styles.alertTitle} numberOfLines={1}>
+        <Text style={[styles.alertTitle, { color: theme.heading }]} numberOfLines={1}>
           {title}
         </Text>
-        <Text style={styles.alertMessage}>
+        <Text style={[styles.alertMessage, { color: theme.muted }]}>
           {message}
         </Text>
       </View>
@@ -81,7 +83,7 @@ export default function AlertBanner({
       {/* DISMISS BUTTON */}
       <TouchableOpacity
         style={styles.closeButton}
-        onPress={onDismiss}
+        onPress={() => { triggerHaptic(); onDismiss(); }}
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       >
         <FeatherIcon
@@ -101,7 +103,7 @@ const styles = StyleSheet.create({
     left: 40,
     right: 16,
      width:'80%',
-height:'10%',
+minHeight: 70,
    
      flexDirection: 'row',
     

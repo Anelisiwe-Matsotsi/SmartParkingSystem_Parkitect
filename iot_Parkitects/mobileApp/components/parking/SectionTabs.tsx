@@ -2,29 +2,42 @@
 import React from "react";
 import {
   View,
-  Text,
   StyleSheet,
+  ScrollView,
   TouchableWithoutFeedback,
 } from "react-native";
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 
 const tabs = [
   { name: "Section A" },
   { name: "Section B" },
   { name: "Section C" },
+  { name: "Section D" },
+  { name: "Section E" },
 ];
 
-export default function SectionTabs() {
-  const [selected, setSelected] = React.useState(0);
+type Props = {
+  selectedSection: string;
+  onSelectSection: (section: string) => void;
+};
 
+export default function SectionTabs({ selectedSection, onSelectSection }: Props) {
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
   return (
-    <View style={styles.container}>
-      {tabs.map((item, index) => {
-        const active = index === selected;
+    <View style={[styles.container, { backgroundColor: theme.surface }]}>
+      <ScrollView removeClippedSubviews={false} horizontal showsHorizontalScrollIndicator={false}>
+        {tabs.map((item) => {
+          const active = item.name === selectedSection;
 
-        return (
-          <View key={item.name} style={styles.tabWrapper}>
+          return (
             <TouchableWithoutFeedback
-              onPress={() => setSelected(index)}
+              key={item.name}
+              onPress={() => {
+                triggerHaptic();
+                triggerScreenReader(item.name);
+                onSelectSection(item.name);
+              }}
             >
               <View
                 style={[
@@ -35,6 +48,7 @@ export default function SectionTabs() {
                 <Text
                   style={[
                     styles.text,
+                    { color: theme.muted },
                     active && styles.activeText,
                   ]}
                 >
@@ -42,9 +56,9 @@ export default function SectionTabs() {
                 </Text>
               </View>
             </TouchableWithoutFeedback>
-          </View>
-        );
-      })}
+          );
+        })}
+      </ScrollView>
     </View>
   );
 }
@@ -54,38 +68,31 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginHorizontal: 8,
     marginTop: 10,
-    marginBottom: 20,
+    marginBottom: 15,
     padding: 4,
     borderRadius: 12,
     backgroundColor: "#FFFFFF",
-   
   },
-
-  tabWrapper: {
-    flex: 1,
-  },
-
   tab: {
+    paddingHorizontal: 16,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 11,
+    paddingVertical: 10,
     borderRadius: 10,
   },
-
   activeTab: {
     backgroundColor: "#E8F7F7",
   },
-
   text: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
     color: "#7B8794",
   },
-
   activeText: {
     color: "#0B5D6B",
   },
 });
+
 /**
  * References
  * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].

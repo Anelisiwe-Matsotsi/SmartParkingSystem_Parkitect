@@ -5,6 +5,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h> // (Espressif Systems, 2023)
+#include "esp_wpa2.h" // WPA2 Enterprise Library
 #include <Firebase_ESP_Client.h> // (Mobizt, 2023)
 #include <LiquidCrystal.h> // (Arduino, 2023b)
 
@@ -12,9 +13,10 @@
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 
-// Wifi Credentials
-#define WIFI_SSID "HUAWEI-B525-B6DF"
-#define WIFI_PASSWORD "0L659M2Y403"
+// Wifi Credentials (campus wifi)
+#define WIFI_SSID "Edu-WiFi"
+#define EAP_IDENTITY "st10435542@myemeris.edu.za"
+#define EAP_PASSWORD "Happydays@22"
 
 // our Firebase Credentials
 #define API_KEY "AIzaSyDbL55frdOhcMZPmW3HiUFhBb7AWbj6Nwg"
@@ -61,15 +63,23 @@ void setup() {
   // Wifi section
   // Connect to Wifi (Espressif Systems, 2023)
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("\nConnecting to Wifi");
+
+  // Feeds the credentials to the ESP32 authentication client
+  esp_eap_client_set_identity((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY));
+  esp_eap_client_set_username((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY));
+  esp_eap_client_set_password((uint8_t *)EAP_PASSWORD, strlen(EAP_PASSWORD));
+  esp_wifi_sta_enterprise_enable();
+
+  WiFi.begin(WIFI_SSID);
+
+  Serial.print("\nConnecting to Campus Wifi");
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(300);
     Serial.print(".");
   }
   
-  Serial.println("\nWifi Connected.");
+  Serial.println("\nCampus Wifi Connected.");
   lcd.setCursor(0, 1);
   lcd.print("Wifi Connected! ");
 

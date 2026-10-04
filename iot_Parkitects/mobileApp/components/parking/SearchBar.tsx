@@ -16,19 +16,21 @@ import { Radius } from
 '@/constants/radius';
 import { Spacing } from
 '@/constants/spacing';
+import { useAccessibility } from '@/context/accessibilityContext';
 
  export default function SearchBar() {
+    const { theme } = useAccessibility();
     return (
         <View style={styles.search}>
             <TextInput
             placeholder="Search parking bay..."
-            placeholderTextColor={Colors.light.muted}
-            style={styles.searchInput}
+            placeholderTextColor={theme.muted}
+            style={[styles.searchInput, { backgroundColor: theme.surface, color: theme.heading }]}
         />
 
         <View style={styles.searchFloating}>
             <TouchableOpacity>
-                <View style={styles.searchButton}>
+                <View style={[styles.searchButton, { backgroundColor: theme.background }]}>
                     <Feather
                     name="search"
                     size={20}

@@ -8,10 +8,10 @@ namespace backend2.Models
         public int settingsID { get; set; } //linked to preference table with settingsID
 
         [Required]
-        public string userID { get; set; } = string.Empty;
+        public int userID { get; set; }
 
         //(Noble, 2024)
-        public string language { get; set; } = "English";
+        //public string language { get; set; } = "English";
         public string? location { get; set; }
         public bool emailNotifications { get; set; } = false;
         public bool pushNotifications { get; set; } = true;
@@ -23,12 +23,6 @@ namespace backend2.Models
         public bool screenReader { get; set; } = true;
         public bool hapticFeedback { get; set; } = true;
 
-        //Security web app settings
-        public bool darkMode {get; set;} = false;
-        public bool compactTables {get; set;} = false;
-        public bool ticketUpdates {get; set;} = true;
-        public bool parkingAlerts {get; set;} = true;
-        public bool systemAlerts {get; set;} = true;
 
 
     }

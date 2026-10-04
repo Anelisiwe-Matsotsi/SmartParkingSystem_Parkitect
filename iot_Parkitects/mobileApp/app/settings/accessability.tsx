@@ -19,11 +19,7 @@ import FeatherIcon from '@expo/vector-icons/Feather';
 import { ThemedText } from '@/components/themed-text'
 
 //THE API BASE URL- TO BE CHANGED (same as tickets one-natasha)
-<<<<<<< Updated upstream
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
-=======
-const API_BASE_URL = 'http://172.20.10.6:8080';
->>>>>>> Stashed changes
 
 // export default function Example() {
 //    const router = useRouter();
@@ -87,8 +83,7 @@ export default function Example() {
             await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...existing, textSize, theme: colorMode, reduceMotion, screenReader, hapticFeedback, userID: currentUser.uid }),
-            });
+                body: JSON.stringify({ ...existing, textSize, theme: colorMode, colorMode, reduceMotion, screenReader, hapticFeedback, userID: currentUser.uid }),            });
             triggerHaptic(); //activates the haptic feedback when the user saves it
             router.back(); //sends user back to the previous screen which is settings
         } catch (error) {
@@ -112,7 +107,7 @@ export default function Example() {
         </ThemedText>
       </View>
 
-      <ScrollView>
+      <ScrollView removeClippedSubviews={false}>
         {/* text size preview */}
           <ThemedText
               style={[

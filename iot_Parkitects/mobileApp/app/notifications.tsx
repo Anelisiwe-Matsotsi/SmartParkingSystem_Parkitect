@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback} from 'react';
 import {
   StyleSheet,
-  SafeAreaView,
   View,
-  Text,
   TouchableOpacity,
   ScrollView,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import FeatherIcon from '@expo/vector-icons/Feather';
+import {auth} from '../config/firebaseConfig'
+import { registerForPushNotificationsAsync } from '@/utils/pushNotifications';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type NotificationType = 'complaint' | 'info' | 'reminder' | 'alert';
 
@@ -19,53 +24,135 @@ interface NotificationItem {
   title: string;
   description: string;
   time: string;
+  ticketId?: number;
 }
-
-const NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: '1',
-    type: 'complaint',
-    title: 'Parking Complaint',
-    description: 'A complaint has been recorded regarding your parking bay.',
-    time: '10 min ago',
-  },
-  {
-    id: '2',
-    type: 'info',
-    title: 'Parking Update',
-    description: 'Section B currently has 12 available parking bays.',
-    time: '1 hr ago',
-  },
-  {
-    id: '3',
-    type: 'reminder',
-    title: 'Parking Reminder',
-    description: 'Remember to follow university parking rules and move your vehicle before parking hours end.',
-    time: '3 hrs ago',
-  },
-  {
-    id: '4',
-    type: 'alert',
-    title: 'Parking Alert',
-    description: 'Your vehicle is currently parked in Section A, Bay A-03.',
-    time: '5 hrs ago',
-  },
-];
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
 
-  const isParked = true;
+  const [isParked, setIsParked] = useState(false);
+  const [parkedLocation, setParkedLocation] = useState('');
+  const [parkedTime, setParkedTime] = useState('');
+
+  const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [complaintFixed, setComplaintFixed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleOpenNotification = (item: NotificationItem) => {
+  // Checks local storage for any saved parkings
+  useEffect(() => {
+    const checkParkingStatus = async () => {
+      try {
+        const savedLabel = await AsyncStorage.getItem('parkedLabel');
+        if (savedLabel) {
+          setIsParked(true);
+          setParkedLocation(savedLabel);
+          
+          // Optionally, you could also save/retrieve a timestamp when parking, 
+          // but for now, we just use a generic time or format the current time
+          setParkedTime(`Session Active`);
+        }
+      } catch (error) {
+        console.error('Error checking parking status:', error);
+      }
+    };
+    
+    checkParkingStatus();
+  }, []);
+
+  // gets the driver's own tickets that and general notiifications (Expo, 2026)
+  const loadNotifications = useCallback(async () => {
+    const firebaseUid = auth?.currentUser?.uid;
+    if (!firebaseUid) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const [ticketsRes, notifsRes] = await Promise.all([
+        fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/Tickets`),
+        fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/notification`),
+      ]);
+
+      const allTickets = await ticketsRes.json();
+      const myTickets = allTickets.filter(
+        (t: any) => t.userID === firebaseUid && t.status === 'Notified'
+      );
+
+      const ticketItems: NotificationItem[] = myTickets.map((t: any) => ({
+        id: `ticket-${t.ticketID}`,
+        type: 'complaint',
+        title: 'Parking Ticket Issued',
+        description: `${t.reason} — Parking Bay ${t.bayNumber}`,
+        time: new Date(t.createdAt).toLocaleString(),
+        ticketId: t.ticketID,
+      }));
+
+      const generalNotifs = notifsRes.ok ? await notifsRes.json() : [];
+      const generalItems: NotificationItem[] = generalNotifs.map((n: any) => ({
+        id: `notif-${n.notificationID}`,
+        type: n.notificationType,
+        title: n.title,
+        description: n.description,
+        time: new Date(n.time).toLocaleString(),
+      }));
+
+      setNotifications([...ticketItems, ...generalItems]);
+    } catch (error) {
+      console.error('Failed to load notifications', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+  
+  
+const handleOpenNotification = (item: NotificationItem) => {
+    triggerHaptic();
+    triggerScreenReader(`${item.title}. ${item.description}`);
     setComplaintFixed(false);
     setSelectedNotification(item);
   };
 
   const handleCloseModal = () => {
+    triggerHaptic();
     setSelectedNotification(null);
+  };
+
+  //method for a fixed ticket-security is notified
+  const handleMarkFixed = async () => {
+    if (!selectedNotification?.ticketId) {
+      setComplaintFixed(true);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/Tickets/${selectedNotification.ticketId}`);
+      const ticket = await res.json();
+
+      ticket.status = 'Awaiting review';
+      ticket.response = 'I have fixed the parking issue.';
+
+      await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/Tickets/${selectedNotification.ticketId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ticket),
+      });
+
+      setComplaintFixed(true);
+      triggerScreenReader('Thanks, we will verify if your violation has been resolved');
+      setNotifications((prev) => prev.filter((n) => n.id !== selectedNotification.id));
+    } catch (error) {
+      console.error('Failed to submit response', error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const getStatusDotStyle = (type: NotificationType) => {
@@ -95,22 +182,24 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => { triggerHaptic(); router.back(); }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <FeatherIcon name="arrow-left" size={24} color="#1F2937" />
+          <FeatherIcon name="arrow-left" size={24} color={theme.heading} />
         </TouchableOpacity>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={false}
         contentContainerStyle={styles.scrollContainer}
       >
-        <Text style={styles.screenTitle}>Notifications</Text>
+        <Text style={[styles.screenTitle, { color: theme.heading }]}>Notifications</Text>
 
         {isParked && (
           <View style={styles.parkingBanner}>
@@ -120,8 +209,8 @@ export default function NotificationsScreen() {
 
             <View style={styles.parkingDetails}>
               <Text style={styles.parkingBannerTitle}>You're currently parked</Text>
-              <Text style={styles.parkingLocation}>Section A • Bay A-03</Text>
-              <Text style={styles.parkingTime}>Parked at 09:42 AM</Text>
+              <Text style={styles.parkingLocation}>{parkedLocation}</Text>
+              <Text style={styles.parkingTime}>Parked at: {parkedTime}</Text>
 
               <TouchableOpacity
                 style={styles.findCarBtn}
@@ -135,26 +224,28 @@ export default function NotificationsScreen() {
           </View>
         )}
 
-        {NOTIFICATIONS.length > 0 ? (
+        {loading ? (
+          <ActivityIndicator style={{ marginTop: 40 }} color="#0D5265" />
+        ) : notifications.length > 0 ? (
           <>
-            <Text style={styles.sectionHeader}>Recent notifications</Text>
+            <Text style={[styles.sectionHeader, { color: theme.muted }]}>Recent notifications</Text>
 
-            {NOTIFICATIONS.map((item) => (
+            {notifications.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                style={styles.notificationCard}
+                style={[styles.notificationCard, { backgroundColor: theme.surface }]}
                 activeOpacity={0.7}
                 onPress={() => handleOpenNotification(item)}
               >
                 <View style={styles.cardHeader}>
                   <View style={styles.cardTitleRow}>
                     <View style={[styles.statusDot, getStatusDotStyle(item.type)]} />
-                    <Text style={styles.cardTitle}>{item.title}</Text>
+                    <Text style={[styles.cardTitle, { color: theme.heading }]}>{item.title}</Text>
                   </View>
-                  <Text style={styles.cardTime}>{item.time}</Text>
+                  <Text style={[styles.cardTime, { color: theme.muted }]}>{item.time}</Text>
                 </View>
 
-                <Text style={styles.cardDescription} numberOfLines={2}>
+                <Text style={[styles.cardDescription, { color: theme.muted }]} numberOfLines={2}>
                   {item.description}
                 </Text>
               </TouchableOpacity>
@@ -162,32 +253,27 @@ export default function NotificationsScreen() {
           </>
         ) : (
           <View style={styles.emptyState}>
-            <View style={styles.emptyIconContainer}>
+            <View style={[styles.emptyIconContainer, { backgroundColor: theme.surface }]}>
               <FeatherIcon name="bell-off" size={26} color="#9CA3AF" />
             </View>
-            <Text style={styles.emptyTitle}>No notifications</Text>
-            <Text style={styles.emptyDescription}>
+            <Text style={[styles.emptyTitle, { color: theme.heading }]}>No notifications</Text>
+            <Text style={[styles.emptyDescription, { color: theme.muted }]}>
               You're all caught up. New parking alerts and updates will appear here.
             </Text>
           </View>
         )}
       </ScrollView>
-
+</SafeAreaView>
       {/* Detail Modal */}
-      <Modal
-        visible={selectedNotification !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={handleCloseModal}
-      >
+      {selectedNotification !== null && (
+        <View style = {StyleSheet.absoluteFillObject}>
+       
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={handleCloseModal}
         >
-          <TouchableOpacity style={styles.modalCard} activeOpacity={1}>
-            {selectedNotification && (
-              <>
+          <TouchableOpacity style={[styles.modalCard, { backgroundColor: theme.surface }]} activeOpacity={1}>
                 <View style={styles.modalIconBadge}>
                   <FeatherIcon
                     name={getModalIconName(selectedNotification.type)}
@@ -196,24 +282,28 @@ export default function NotificationsScreen() {
                   />
                 </View>
 
-                <Text style={styles.modalTitle}>{selectedNotification.title}</Text>
-                <Text style={styles.modalDescription}>{selectedNotification.description}</Text>
+                <Text style={[styles.modalTitle, { color: theme.heading }]}>{selectedNotification.title}</Text>
+                <Text style={[styles.modalDescription, { color: theme.muted }]}>{selectedNotification.description}</Text>
 
                 {selectedNotification.type === 'complaint' ? (
                   !complaintFixed ? (
                     <View style={styles.modalActions}>
                       <TouchableOpacity
-                        style={[styles.btn, styles.btnSecondary]}
+                        style={[styles.btn, styles.btnSecondary, { backgroundColor: theme.background }]}
                         onPress={handleCloseModal}
+                        disabled={submitting}
                       >
-                        <Text style={styles.btnSecondaryText}>Not Yet</Text>
+                        <Text style={[styles.btnSecondaryText, { color: theme.text }]}>Not Yet</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
                         style={[styles.btn, styles.btnPrimary]}
-                        onPress={() => setComplaintFixed(true)}
+                        onPress={handleMarkFixed}
+                        disabled={submitting}
                       >
-                        <Text style={styles.btnPrimaryText}>Fixed</Text>
+                        <Text style={styles.btnPrimaryText}>
+                          {submitting ? 'Sending...' : 'Fixed'}
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   ) : (
@@ -232,16 +322,22 @@ export default function NotificationsScreen() {
                     <Text style={styles.btnPrimaryText}>Got it</Text>
                   </TouchableOpacity>
                 )}
-              </>
-            )}
+            
+          
           </TouchableOpacity>
         </TouchableOpacity>
-      </Modal>
-    </SafeAreaView>
+        </View>
+      )}
+    </View>
   );
-}
 
+}
 const styles = StyleSheet.create({
+
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
   safeArea: {
     flex: 1,
     backgroundColor: '#F8FAFC',
@@ -250,7 +346,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 4,
-    marginTop:23,
+    marginTop: 23,
   },
   backButton: {
     width: 40,
@@ -268,8 +364,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 20,
   },
-
-  /* Parking Status Banner */
   parkingBanner: {
     flexDirection: 'row',
     backgroundColor: '#13384Bff',
@@ -323,8 +417,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-
-  /* Notification List */
   sectionHeader: {
     fontSize: 15,
     fontWeight: '600',
@@ -382,8 +474,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     paddingLeft: 16,
   },
-
-  /* Empty State */
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -410,8 +500,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
   },
-
-  /* Modal Overlay & Card */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.4)',
@@ -454,8 +542,6 @@ const styles = StyleSheet.create({
     gap: 10,
     width: '100%',
   },
-
-  /* Shared Button Styles */
   btn: {
     flex: 1,
     height: 44,
@@ -482,8 +568,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-
-  /* Confirmation Box */
   confirmationBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -501,7 +585,11 @@ const styles = StyleSheet.create({
   },
 });
 
+
 /**
  * References
+ * 
+ * Expo Docs, 2026. Expo push notifications setup. (Version 10.0) [Source Code]. Available at: < https://docs.expo.dev/push-notifications/push-notifications-setup/ > [Accessed 25 September 2026]
+ * Expo Docs, 2026b. Expo Notifications. (Version 10.0) [Source Code]. Available at: < https://docs.expo.dev/versions/latest/sdk/notifications/ > [Accessed 25 September 2026]
  * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
  */
