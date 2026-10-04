@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { hasBlePermissions, isBluetoothOn } from '../../utils/ble';
+//(Withfra.me, 2022)
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { registerForPushNotificationsAsync } from '../../utils/pushNotifications';
 import FeatherIcon from '@expo/vector-icons/Feather';
@@ -33,6 +34,160 @@ password: '',
 });
 const [isLoading, setIsLoading] = useState(false);
 const [showPassword, setShowPassword] = useState(false);
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+
+// importing the login function from firebase
+import {
+  signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential,
+} from 'firebase/auth';
+// importing our custom auth setup
+import { auth } from '../../config/firebaseConfig';
+// Google Sign in (React Native Google Sign In, 2026)
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+export default function SignIn() {
+  const router = useRouter();
+  const [form, setForm] = useState({
+    userNumber: '',
+    password: '',
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Configures Google Sign in (React Native Google Sign In, 2026)
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    });
+  }, []);
+ 
+  // this fires when the user presses the login button
+  const handleLogin = async () => {
+    if (!form.userNumber || !form.password) 
+    {
+      Alert.alert('Oops', 'Please fill in both your user number and password.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try 
+    {
+      // hits the .net backend to find the email associated with this user number
+      const apiUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/User/resolve-email/${form.userNumber}`;
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) 
+      {
+        Alert.alert('Login Failed', 'User number not found.');
+        setIsLoading(false);
+        return;
+      }
+      
+      const data = await response.json();
+      const resolvedEmail = data.email;
+
+      // checks the found email and password against firebase (Firebase, 2026)
+      await signInWithEmailAndPassword(auth, resolvedEmail, form.password);
+
+       const uid = auth.currentUser?.uid;
+
+       router.replace('/permissions' as any);
+
+       if (uid) {
+        InteractionManager.runAfterInteractions(() => {
+          registerForPushNotificationsAsync(uid);
+        });
+       }
+      
+      if(auth.currentUser)
+      {
+        await registerForPushNotificationsAsync(auth.currentUser.uid); //push notification token given after user logs in
+      }
+      // if it passes, they are granted access to the app
+      router.replace('/permissions' as any);
+      
+    } 
+    catch (error: any) 
+    {
+      // wrong password or user number throws an alert
+      Alert.alert('Login Failed', 'Invalid user number or password. Please try again.');
+    } finally {
+    setIsLoading(false); // Unlock button
+  }
+  };
+
+  // Google Sign In Logic (Firebase, 2026b)
+  const handleGoogleSignIn = async () => {
+    try 
+    {
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+
+      const idToken = response.data?.idToken;
+      
+      if (!idToken) 
+      {
+          throw new Error("No ID Token found");
+      }
+
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+      const userCredential = await signInWithCredential(auth, googleCredential);
+      const firebaseUid = userCredential.user.uid;
+
+      const apiUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/User/sync`;
+      const backendResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firebaseUid: firebaseUid,
+          userNumber: `G-${Date.now()}`,
+          name: userCredential.user.displayName || "Google User",
+          email: userCredential.user.email,
+          userRole: 'Student'
+        })
+      });
+
+      if (!backendResponse.ok) 
+      {
+        throw new Error(`Failed to sync Google user to database.`);
+      }
+
+      await registerForPushNotificationsAsync(firebaseUid);
+      router.replace('/permissions' as any);
+
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('Google Sign-In Failed', error.message);
+    }
+  };
+
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <Image
+              alt="App Logo"
+              resizeMode="contain"
+              style={styles.headerImg}
+              source={require('@/assets/images/parki-splash.png')}/>
+          </View>
+          <Text style={styles.title}>
+            Sign in to <Text style={{ color: '#118091' }}>Parkitech</Text>
+          </Text>
+
+          <Text style={styles.subtitle}>
+           Find your parking
+          </Text>
+        </View>
+
+        <View style={styles.form}>
+          <View style={styles.input}>
+            <Text style={styles.inputLabel}>User Number</Text>
 
 // this fires when the user presses the login button
 const handleLogin = async () => {
@@ -311,3 +466,12 @@ alignItems: 'center',
 justifyContent: 'center',
 },
 });
+/**
+ * References
+ * Expo, 2026. Environment variables in Expo. [online] Available at: <https://docs.expo.dev/guides/environment-variables/> [Accessed 30 August 2026].
+ * Firebase, 2026a. Password Authentication. [source code]. Available: <https://firebase.google.com/docs/auth/web/password-auth> [Accessed 28 August 2026].
+ * Firebase, 2026b. Authenticate Using Google with React Native. (Version 10.0) [Source Code] Available at: <https://firebase.google.com/docs/auth/react-native/google-signin> [Accessed 22 September 2026].
+ * React Native, 2026. Alert. [source code]. Available: <https://reactnative.dev/docs/alert> [Accessed 28 August 2026].
+ * React Native Google Sign In, 2026. Google Sign In. (Version 10.0) [Source Code] Available at: <https://react-native-google-signin.github.io/docs/setting-up/expo> [Accessed 22 September 2026].
+ * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
+ */

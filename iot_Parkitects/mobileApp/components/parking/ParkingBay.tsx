@@ -1,4 +1,4 @@
-//(Expo Documentation.2024)
+//(Expo, 2024)
 import React from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import { useAccessibility } from '@/context/accessibilityContext';
@@ -6,11 +6,13 @@ import { useAccessibility } from '@/context/accessibilityContext';
 type Props = {
   id: string;
   occupied?: boolean;
+  disabled?: boolean;
 };
 
 function ParkingBay({
   id,
   occupied = false,
+  disabled = false,
 }: Props) {
   const { theme, colorMode } = useAccessibility();
   return (
@@ -33,6 +35,7 @@ function ParkingBay({
 // memo: a bay only re-renders when its own id/occupied changes (or the theme context changes)
 export default React.memo(ParkingBay);
 
+// Stylesheet for UI elements (Expo, 2024)
 const styles = StyleSheet.create({
   bay: {
     width: 55,
@@ -50,10 +53,26 @@ const styles = StyleSheet.create({
     height: 25,
     resizeMode: 'contain',
   },
+  disabledBay: {
+    backgroundColor: '#F1F5F9', 
+    borderColor: '#CBD5E1', 
+  },
+  empty: {
+    width: 14,
+    height: 14,
+  },
   label: {
     marginTop: 2,
     fontSize: 9,
     fontWeight: "600",
     color: "#0B5D6B",
   },
+  disabledLabel: {
+    color: '#94A3B8', 
+  }
 });
+
+/*
+ * References
+ * Expo, 2024. React Native Core Components. (Version 10.0) [Source Code] Available at: < https://reactnative.dev/docs/components-and-apis > [Accessed 28 September 2026]
+ */
