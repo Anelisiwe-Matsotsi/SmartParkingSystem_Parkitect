@@ -103,7 +103,9 @@ namespace backend2.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("No image provided");
 
-            string connectionString = _configuration.GetConnectionString("AzureBlobStorage");
+            //getting connection & making sure it doesnt return null for docker image workflow
+            string connectionString = _configuration.GetConnectionString("AzureBlobStorage")??
+                throw new InvalidOperationException("AzureBlobStorage connection string is not there");
             string containerName = "complaint-image";
 
             BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
