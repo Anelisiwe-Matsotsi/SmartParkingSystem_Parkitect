@@ -183,8 +183,8 @@ if (ok) {
         await AsyncStorage.setItem('parkedLat', lat.toString());
         await AsyncStorage.setItem('parkedLon', lon.toString());
         await AsyncStorage.setItem('parkedLabel', label);
-  } catch (e) {
-    console.log("[SQL] session start failed:", e);
+  } catch (e: any) {
+    console.log("[SQL] session start failed:", e?.message, "| sent:", nearestNode.nodeKey, bayId);
   }
 }
     Alert.alert(
