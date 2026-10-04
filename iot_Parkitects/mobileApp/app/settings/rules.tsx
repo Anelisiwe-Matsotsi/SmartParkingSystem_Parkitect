@@ -10,6 +10,7 @@ import {
 //using a path alias to call files that have supporting code for accessibility functions to work
 import { useRouter } from 'expo-router';
 import FeatherIcon from '@expo/vector-icons/Feather';
+
 import { ThemedText } from '@/components/themed-text'
 import { useAccessibility } from '@/context/accessibilityContext';
 
@@ -17,7 +18,7 @@ import { useAccessibility } from '@/context/accessibilityContext';
 //the rule item interface is declared with attributes that the array will contain
 interface RuleItem {
   id: string;
-  icon: string;
+  icon: React.ComponentProps<typeof FeatherIcon>['name'];
   title: string;
   description: string;
 }
@@ -70,7 +71,7 @@ const RULES: RuleItem[] = [
   },
   {
     id: '8',
-    icon: 'lightbulb-off',
+    icon: 'sun',
     title: 'Head Lights',
     description: 'Make sure that your vehicle lights are turned off.',
   },
