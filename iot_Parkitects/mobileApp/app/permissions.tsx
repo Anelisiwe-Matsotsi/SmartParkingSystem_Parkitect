@@ -5,13 +5,14 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  Text,
   ScrollView,
   Switch,
   Alert,
   AppState,
   Linking,
 } from 'react-native';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import * as Location from 'expo-location';
@@ -29,6 +30,7 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function Permissions() {
   const router = useRouter();
+  const { theme, triggerHaptic } = useAccessibility();
 //  (kumar.2023)
   // Settings opens this screen with ?from=settings so it doesn't auto-skip
   const { from } = useLocalSearchParams<{ from?: string }>();
@@ -108,6 +110,7 @@ export default function Permissions() {
 
   // An app cannot revoke an OS permission, so turning a switch OFF sends the user to Settings.
   const toggleBluetooth = async (on: boolean) => {
+    triggerHaptic();
     if (!on) {
       Linking.openSettings();
       return;
@@ -126,6 +129,7 @@ export default function Permissions() {
   };
 
   const toggleLocation = async (on: boolean) => {
+    triggerHaptic();
     if (!on) {
       Linking.openSettings();
       return;
@@ -137,6 +141,7 @@ export default function Permissions() {
   };
 
   const handleConfirm = async () => {
+    triggerHaptic();
     // Bluetooth is required: it's how we confirm which bay you parked in.
     if (!perms.bluetooth && !fromSettings) {
       Alert.alert(
@@ -180,7 +185,7 @@ export default function Permissions() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F7FAFB' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={styles.header}>
         <View style={styles.headerActions}>
           <TouchableOpacity
@@ -193,18 +198,18 @@ export default function Permissions() {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.title}>Permissions</Text>
+        <Text style={[styles.title, { color: theme.heading }]}>Permissions</Text>
 
         <Text style={styles.subtitle}>Stay on track with Parkitech</Text>
       </View>
 
-      <ScrollView>
+      <ScrollView removeClippedSubviews={false}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Permissions</Text>
 
-          <View style={styles.sectionItem}>
+          <View style={[styles.sectionItem, { backgroundColor: theme.surface }]}>
             <View style={styles.sectionInfo}>
-              <Text style={styles.sectionName}>Bluetooth</Text>
+              <Text style={[styles.sectionName, { color: theme.heading }]}>Bluetooth</Text>
 
               <Text style={styles.sectionDescription}>
                 Required. Confirms which bay you parked in.
@@ -226,9 +231,9 @@ export default function Permissions() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Additional Settings (optional)</Text>
 
-          <View style={styles.sectionItem}>
+          <View style={[styles.sectionItem, { backgroundColor: theme.surface }]}>
             <View style={styles.sectionInfo}>
-              <Text style={styles.sectionName}>Location</Text>
+              <Text style={[styles.sectionName, { color: theme.heading }]}>Location</Text>
 
               <Text style={styles.sectionDescription}>
                 Guides you across the lot when you use Find My Car.
@@ -242,15 +247,15 @@ export default function Permissions() {
             />
           </View>
 
-          <View style={styles.sectionItem}>
+          <View style={[styles.sectionItem, { backgroundColor: theme.surface }]}>
             <View style={styles.sectionInfo}>
-              <Text style={styles.sectionName}>Rule alerts</Text>
+              <Text style={[styles.sectionName, { color: theme.heading }]}>Rule alerts</Text>
 
               <Text style={styles.sectionDescription}>Receive daily parking rules.</Text>
             </View>
 
             <Switch
-              onValueChange={ruleAlerts => setPerms(p => ({ ...p, ruleAlerts }))}
+              onValueChange={ruleAlerts => { triggerHaptic(); setPerms(p => ({ ...p, ruleAlerts })); }}
               trackColor={{ false: '#757575', true: '#107c84' }}
               value={perms.ruleAlerts}
             />

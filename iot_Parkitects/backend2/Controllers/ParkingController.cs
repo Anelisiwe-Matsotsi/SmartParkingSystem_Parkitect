@@ -1,4 +1,4 @@
-// [Ref: 1]
+// Imports (Microsoft, 2026a)
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend2.Data;
@@ -6,6 +6,7 @@ using backend2.Models;
 
 namespace backend2.Controllers
 {
+    // Sets up the API routing (Microsoft, 2026a)
     [Route("api/[controller]")]
     [ApiController]
     public class ParkingController : ControllerBase
@@ -24,6 +25,7 @@ namespace backend2.Controllers
             // Seed base parking lot data if database is uninitialized
             await EnsureDatabaseSeededAsync();
 
+            // Queries the DB to include related entities (Microsoft, 2026b)
             var sections = await _context.ParkingSections
                 .Include(s => s.ParkingBays)
                     .ThenInclude(b => b.Sensor)
@@ -132,12 +134,12 @@ namespace backend2.Controllers
                 var bays = new List<ParkingBay>();
                 for (int i = 1; i <= 70; i++)
                 {
-                    bool isBayOccupied = random.Next(0, 2) == 1;
+                    bool isBayOccupied = true;
 
                     // Physical sensors are assigned to Bay A1 and A2
                     if (label == "A" && (i == 1 || i == 2))
                     {
-                        isBayOccupied = (i == 2);
+                        isBayOccupied = false; // only makes these two bays available
                     }
 
                     bays.Add(new ParkingBay
@@ -316,10 +318,11 @@ namespace backend2.Controllers
 
             return Ok(bays);
         }
-
     }
-
-
-
 }
 
+/*
+ * References
+ * Microsoft, 2026a. ControllerBase Class. (Version 10.0) [Source Code] Available at: < https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.controllerbase > [Accessed 06 September 2026]
+ * Microsoft, 2026b. Entity Framework Core Querying Data. (Version 10.0) [Source Code] Available at: < https://learn.microsoft.com/en-us/ef/core/querying/ > [Accessed 06 September 2026]
+ */

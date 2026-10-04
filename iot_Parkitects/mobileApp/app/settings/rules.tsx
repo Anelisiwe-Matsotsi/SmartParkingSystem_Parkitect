@@ -10,15 +10,17 @@ import {
 //using a path alias to call files that have supporting code for accessibility functions to work
 import { useRouter } from 'expo-router';
 import FeatherIcon from '@expo/vector-icons/Feather';
-
-import { ThemedText } from '@/components/themed-text'
+import { ThemedText } from '@/components/themed-text';
 import { useAccessibility } from '@/context/accessibilityContext';
+import { Feather } from '@expo/vector-icons';
+
+type FeatherIconName = React.ComponentProps<typeof FeatherIcon>['name'];
 
 //(StackOverflow, 2022)
 //the rule item interface is declared with attributes that the array will contain
 interface RuleItem {
   id: string;
-  icon: React.ComponentProps<typeof FeatherIcon>['name'];
+  icon: FeatherIconName;
   title: string;
   description: string;
 }
@@ -79,43 +81,53 @@ const RULES: RuleItem[] = [
 
 export default function RulesScreen() {
   const router = useRouter();
-  const { theme } = useAccessibility();
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => { triggerHaptic(); router.back(); }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           {/*(Expo Documentation, 2026)*/}
-          <FeatherIcon name="arrow-left" size={24} color="#1F2937" />
+          <FeatherIcon name="arrow-left" size={24} color={theme.heading} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView
+      <ScrollView removeClippedSubviews={false}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
-        <ThemedText style={styles.screenTitle}>Parking Lot Rules</ThemedText>
+        <ThemedText style={[styles.screenTitle, { color: theme.heading }]}>Parking Lot Rules</ThemedText>
 
         {RULES.map((item) => (
-          <View key={item.id} style={styles.ruleCard}>
+          <TouchableOpacity
+            key={item.id}
+            activeOpacity={0.8}
+            onPress={() => {
+              triggerHaptic();
+              triggerScreenReader(`${item.title}. ${item.description}`);
+            }}
+            style={[styles.ruleCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+          >
             <View style={styles.cardHeader}>
               <View style={styles.cardTitleRow}>
                 <View style={styles.iconBadge}>
                   {/*(Expo Documentation, 2026)*/}
-                  <FeatherIcon name={item.icon} size={16} color="#0D5265" />
+                  <FeatherIcon name={item.icon as any} size={16} color="#0D5265" />
                 </View>
-                <ThemedText style={styles.cardTitle}>{item.title}</ThemedText>
+                <ThemedText style={[styles.cardTitle, { color: theme.heading }]}>{item.title}</ThemedText>
               </View>
             </View>
 
-            <ThemedText style={styles.cardDescription}>
+            <ThemedText style={[styles.cardDescription, { color: theme.muted }]}>
               {item.description}
             </ThemedText>
-          </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
     </SafeAreaView>

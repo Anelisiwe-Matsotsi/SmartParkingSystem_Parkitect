@@ -5,10 +5,11 @@ import {
   View,
   Dimensions,
   SafeAreaView,
-  Text,
   TouchableOpacity,
   Alert
 } from 'react-native';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import FeatherIcon from '@expo/vector-icons/Feather';
@@ -48,6 +49,7 @@ const getBearing = (lat1: number, lon1: number, lat2: number, lon2: number) => {
 };
 
 function ParkingDiagram({ distance, arrowRotation }: { distance: number, arrowRotation: number }) {
+  const { shouldReduceMotion } = useAccessibility();
   const progress = Math.max(0, Math.min(100, 100 - distance)); // Shrinks the circle as you get closer
 
   //Progress Bar (npm, 2024)
@@ -62,7 +64,7 @@ function ParkingDiagram({ distance, arrowRotation }: { distance: number, arrowRo
         rotation={225}
         arcSweepAngle={270}
         lineCap="round"
-        duration={1000}
+        duration={shouldReduceMotion ? 0 : 1000}
       >
         {() => (
           <View style={styles.progressContent}>
@@ -86,6 +88,7 @@ function ParkingDiagram({ distance, arrowRotation }: { distance: number, arrowRo
 
 export default function FindCarScreen() {
   const router = useRouter();
+  const { triggerHaptic, triggerScreenReader } = useAccessibility();
   const [parkedLocation, setParkedLocation] = useState<string>("Locating...");
   const [targetCoords, setTargetCoords] = useState<{ lat: number, lon: number } | null>(null);
   
@@ -177,6 +180,11 @@ export default function FindCarScreen() {
     };
   }, [targetCoords]);
 
+  useEffect(() => {
+    if (parkedLocation !== 'Locating...') {
+      triggerScreenReader(`Find your car. ${parkedLocation}`);
+    }
+  }, [parkedLocation]);
   // Clears the storage when the user drives away
   const handleCheckout = async () => {
     await AsyncStorage.removeItem('parkedLat');
@@ -196,7 +204,7 @@ export default function FindCarScreen() {
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.backButton}
-              onPress={() => router.back()}
+              onPress={() => { triggerHaptic(); router.back(); }}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <FeatherIcon name="arrow-left" size={24} color="#FFFFFF" />
@@ -224,7 +232,7 @@ export default function FindCarScreen() {
               </View>
               <TouchableOpacity
                 style={styles.doneButton}
-                onPress={() => router.back()}
+                onPress={() => { triggerHaptic(); router.back(); }}
                 activeOpacity={0.8}
               >
                 <Text style={styles.doneButtonText}>Done</Text>

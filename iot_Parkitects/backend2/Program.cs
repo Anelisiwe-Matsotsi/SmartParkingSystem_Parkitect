@@ -28,7 +28,7 @@ namespace backend2
             builder.Services.AddSingleton(sp =>
             {
                 var config = sp.GetRequiredService<IConfiguration>();
-                return new BlobServiceClient(config["AzureBlobStorage:ConnectionString"]);
+                return new BlobServiceClient(config.GetConnectionString("AzureBlobStorage"));
             });
 
           //prints the server and database name on startup

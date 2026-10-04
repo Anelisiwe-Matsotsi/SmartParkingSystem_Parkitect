@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   View,
-  Text,
   Alert,
   TextInput,
 } from 'react-native';
@@ -15,9 +14,12 @@ import { useRouter } from 'expo-router';
 import { auth } from '../../config/firebaseConfig';
 import { verifyBeforeUpdateEmail, EmailAuthProvider,
   reauthenticateWithCredential, updatePassword,} from 'firebase/auth';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 
 export default function AccountScreen() {
   const router = useRouter();
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
 
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
@@ -111,6 +113,7 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   };
 
   const saveName = async () => {
+    triggerHaptic();
     if (!editedName.trim()) {
       Alert.alert('Invalid Name', 'Please enter your name.');
       return;
@@ -120,6 +123,7 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   };
 
   const saveEmail = () => {
+  triggerHaptic();
   const newEmail = editedEmail.trim().toLowerCase();
 
   if (!newEmail) {
@@ -153,6 +157,7 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 };
 
 const confirmEmailChange = async () => {
+  triggerHaptic();
   if (!currentPassword.trim()) {
     Alert.alert(
       'Password Required',
@@ -212,6 +217,8 @@ const confirmEmailChange = async () => {
     setEditedEmail('');
     setIsEditingEmail(false);
 
+    triggerScreenReader('Verification email sent');
+
     Alert.alert(
       'Verify Your New Email',
       `A verification email has been sent to ${newEmail}. Please verify the new email address to complete the change.`
@@ -251,6 +258,7 @@ const confirmEmailChange = async () => {
 };
 
 const changePassword = async () => {
+  triggerHaptic();
   if (!currentPassword.trim()) {
     Alert.alert(
       'Current Password Required',
@@ -330,6 +338,8 @@ const changePassword = async () => {
     setNewPassword('');
     setConfirmNewPassword('');
     setShowPasswordChange(false);
+
+    triggerScreenReader('Password updated');
 
     Alert.alert(
       'Password Updated',
@@ -411,6 +421,7 @@ const changePassword = async () => {
       setIsEditingName(false);
       setIsEditingEmail(false);
 
+      triggerScreenReader('Your profile has been updated');
       Alert.alert('Success', 'Your profile has been updated.');
     } catch (error: any) {
   console.error('Profile update error:', error);
@@ -425,12 +436,12 @@ const changePassword = async () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
 
       {showPasswordPrompt && (
   <View style={styles.passwordOverlay}>
-    <View style={styles.passwordModal}>
-      <Text style={styles.passwordTitle}>
+    <View style={[styles.passwordModal, { backgroundColor: theme.surface }]}>
+      <Text style={[styles.passwordTitle, { color: theme.heading }]}>
         Confirm Your Password
       </Text>
 
@@ -439,7 +450,8 @@ const changePassword = async () => {
       </Text>
 
       <TextInput
-        style={styles.input}
+        placeholderTextColor={theme.muted}
+        style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
         value={currentPassword}
         onChangeText={setCurrentPassword}
         placeholder="Current password"
@@ -450,7 +462,7 @@ const changePassword = async () => {
 
       <View style={styles.editButtons}>
         <TouchableOpacity
-          style={styles.cancelButton}
+          style={[styles.cancelButton, { backgroundColor: theme.background }]}
           onPress={() => {
             setCurrentPassword('');
             setShowPasswordPrompt(false);
@@ -463,7 +475,7 @@ const changePassword = async () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.saveButton}
+          style={[styles.saveButton, { backgroundColor: theme.primary }]}
           onPress={confirmEmailChange}
           disabled={isSaving}
         >
@@ -478,8 +490,8 @@ const changePassword = async () => {
 
 {showPasswordChange && (
   <View style={styles.passwordOverlay}>
-    <View style={styles.passwordModal}>
-      <Text style={styles.passwordTitle}>
+    <View style={[styles.passwordModal, { backgroundColor: theme.surface }]}>
+      <Text style={[styles.passwordTitle, { color: theme.heading }]}>
         Update Password
       </Text>
 
@@ -489,7 +501,8 @@ const changePassword = async () => {
 
       <View style={styles.passwordInputContainer}>
   <TextInput
-    style={styles.passwordInput}
+    placeholderTextColor={theme.muted}
+    style={[styles.passwordInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
     value={currentPassword}
     onChangeText={setCurrentPassword}
     placeholder="Current password"
@@ -513,7 +526,8 @@ const changePassword = async () => {
 
 <View style={[styles.passwordInputContainer, { marginTop: 10 }]}>
   <TextInput
-    style={styles.passwordInput}
+    placeholderTextColor={theme.muted}
+    style={[styles.passwordInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
     value={newPassword}
     onChangeText={setNewPassword}
     placeholder="New password"
@@ -537,7 +551,8 @@ const changePassword = async () => {
 
 <View style={[styles.passwordInputContainer, { marginTop: 10 }]}>
   <TextInput
-    style={styles.passwordInput}
+    placeholderTextColor={theme.muted}
+    style={[styles.passwordInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
     value={confirmNewPassword}
     onChangeText={setConfirmNewPassword}
     placeholder="Confirm new password"
@@ -561,7 +576,7 @@ const changePassword = async () => {
 
       <View style={styles.editButtons}>
         <TouchableOpacity
-          style={styles.cancelButton}
+          style={[styles.cancelButton, { backgroundColor: theme.background }]}
           onPress={() => {
           setCurrentPassword('');
           setNewPassword('');
@@ -581,7 +596,7 @@ const changePassword = async () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.saveButton}
+          style={[styles.saveButton, { backgroundColor: theme.primary }]}
           onPress={changePassword}
           disabled={isSaving}
         >
@@ -601,15 +616,15 @@ const changePassword = async () => {
           onPress={() => router.back()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <FeatherIcon color="#0F172A" name="arrow-left" size={22} />
+          <FeatherIcon color={theme.heading} name="arrow-left" size={22} />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>Account</Text>
+        <Text style={[styles.headerTitle, { color: theme.heading }]}>Account</Text>
 
         <View style={styles.headerButton} />
       </View>
 
-      <ScrollView
+      <ScrollView removeClippedSubviews={false}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
@@ -621,17 +636,17 @@ const changePassword = async () => {
         {/* PERSONAL INFORMATION SECTION */}
         <Text style={styles.sectionHeader}>PERSONAL INFORMATION</Text>
 
-        <View style={styles.cardGroup}>
+        <View style={[styles.cardGroup, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           {/* Username */}
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>Username</Text>
+            <Text style={[styles.rowLabel, { color: theme.heading }]}>Username</Text>
 
             <Text style={styles.rowValueStatic}>
               {isLoading ? 'Loading...' : userNumber}
             </Text>
           </View>
 
-          <View style={styles.rowDivider} />
+          <View style={[styles.rowDivider, { backgroundColor: theme.border }]} />
 
           {/* Name */}
           {!isEditingName ? (
@@ -640,10 +655,10 @@ const changePassword = async () => {
               activeOpacity={0.7}
               onPress={startEditingName}
             >
-              <Text style={styles.rowLabel}>Name</Text>
+              <Text style={[styles.rowLabel, { color: theme.heading }]}>Name</Text>
 
               <View style={styles.rowRight}>
-                <Text style={styles.rowValue}>
+                <Text style={[styles.rowValue, { color: theme.muted }]}>
                   {isLoading ? 'Loading...' : userName}
                 </Text>
 
@@ -659,7 +674,8 @@ const changePassword = async () => {
               <Text style={styles.editLabel}>Name</Text>
 
               <TextInput
-                style={styles.input}
+                placeholderTextColor={theme.muted}
+                style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
                 value={editedName}
                 onChangeText={setEditedName}
                 placeholder="Enter your name"
@@ -669,7 +685,7 @@ const changePassword = async () => {
 
               <View style={styles.editButtons}>
                 <TouchableOpacity
-                  style={styles.cancelButton}
+                  style={[styles.cancelButton, { backgroundColor: theme.background }]}
                   onPress={cancelNameEdit}
                   disabled={isSaving}
                 >
@@ -677,7 +693,7 @@ const changePassword = async () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.saveButton}
+                  style={[styles.saveButton, { backgroundColor: theme.primary }]}
                   onPress={saveName}
                   disabled={isSaving}
                 >
@@ -693,7 +709,7 @@ const changePassword = async () => {
         {/* LOGIN INFORMATION SECTION */}
         <Text style={styles.sectionHeader}>LOGIN INFORMATION</Text>
 
-        <View style={styles.cardGroup}>
+        <View style={[styles.cardGroup, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           {/* Email */}
           {!isEditingEmail ? (
             <TouchableOpacity
@@ -701,10 +717,10 @@ const changePassword = async () => {
               activeOpacity={0.7}
               onPress={startEditingEmail}
             >
-              <Text style={styles.rowLabel}>Email</Text>
+              <Text style={[styles.rowLabel, { color: theme.heading }]}>Email</Text>
 
               <View style={styles.rowRight}>
-                <Text style={styles.rowValue}>
+                <Text style={[styles.rowValue, { color: theme.muted }]}>
                   {isLoading ? 'Loading...' : userEmail}
                 </Text>
 
@@ -720,7 +736,8 @@ const changePassword = async () => {
               <Text style={styles.editLabel}>Email</Text>
 
               <TextInput
-                style={styles.input}
+                placeholderTextColor={theme.muted}
+                style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
                 value={editedEmail}
                 onChangeText={setEditedEmail}
                 placeholder="Enter your email"
@@ -731,7 +748,7 @@ const changePassword = async () => {
 
               <View style={styles.editButtons}>
                 <TouchableOpacity
-                  style={styles.cancelButton}
+                  style={[styles.cancelButton, { backgroundColor: theme.background }]}
                   onPress={cancelEmailEdit}
                   disabled={isSaving}
                 >
@@ -739,7 +756,7 @@ const changePassword = async () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.saveButton}
+                  style={[styles.saveButton, { backgroundColor: theme.primary }]}
                   onPress={saveEmail}
                   disabled={isSaving}
                 >
@@ -751,7 +768,7 @@ const changePassword = async () => {
             </View>
           )}
 
-          <View style={styles.rowDivider} />
+          <View style={[styles.rowDivider, { backgroundColor: theme.border }]} />
 
           {/* Password */}
           <TouchableOpacity
@@ -764,7 +781,7 @@ const changePassword = async () => {
     setShowPasswordChange(true);
   }}
 >
-  <Text style={styles.rowLabel}>Update password</Text>
+  <Text style={[styles.rowLabel, { color: theme.heading }]}>Update password</Text>
 
   <FeatherIcon
     color="#C5C5C7"

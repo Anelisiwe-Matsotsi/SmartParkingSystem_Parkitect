@@ -64,7 +64,7 @@ namespace backend2.Controllers
             }
                        
             //updated is user changes their preferences in settings
-            preferences.language = settings.language;
+            //preferences.language = settings.language;
             preferences.location = settings.location;
             preferences.emailNotifications = settings.emailNotifications;
             preferences.pushNotifications = settings.pushNotifications;
