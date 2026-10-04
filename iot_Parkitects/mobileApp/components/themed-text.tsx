@@ -1,4 +1,4 @@
-import { StyleSheet, Text, type TextProps } from 'react-native';
+import { StyleSheet, Text, type TextProps, type TextStyle } from 'react-native';
 import { useAccessibility } from '@/context/accessibilityContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
@@ -26,15 +26,19 @@ export function ThemedText({
         styles.default;
   
         //merging the typeStyle defaults with preferences picked
-        const flattened = StyleSheet.flatten([typeStyle, style]);
+        const flattened = (StyleSheet.flatten([typeStyle, style]) || {}) as TextStyle;
+        const ownStyle = (StyleSheet.flatten(style) || {}) as TextStyle;
         const baseFontSize = flattened.fontSize ?? 16;
+        const { lineHeight: flatLineHeight, ...flatRest } = flattened;
+        const baseLineHeight = ownStyle.fontSize && !ownStyle.lineHeight ? undefined : flatLineHeight;
 
   return (
     <Text
       style={[
         { color },
-        flattened,
+        flatRest,
         { fontSize: baseFontSize * scale },
+        baseLineHeight ? { lineHeight: baseLineHeight * scale } : null,
       ]}
       {...rest}
     />

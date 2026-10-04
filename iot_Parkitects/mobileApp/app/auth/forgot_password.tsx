@@ -6,7 +6,7 @@ import {
   SafeAreaView,
   View,
   Image,
-  Text,
+  Text as RNText,
   TouchableOpacity,
   TextInput,
   Alert,
@@ -14,6 +14,8 @@ import {
 
 import FeatherIcon from '@expo/vector-icons/Feather';
 import { Colors } from '@/constants/theme';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 
 // Firebase password reset
 import { sendPasswordResetEmail } from 'firebase/auth';
@@ -21,11 +23,13 @@ import { auth } from '../../config/firebaseConfig';
 
 export default function ForgotPassword() {
   const router = useRouter();
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
 
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleResetPassword = async () => {
+    triggerHaptic();
     if (!email.trim()) {
       Alert.alert(
         'Missing Email',
@@ -65,7 +69,7 @@ export default function ForgotPassword() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
 
         {/* BACK BUTTON */}
         <TouchableOpacity
@@ -76,9 +80,9 @@ export default function ForgotPassword() {
           <FeatherIcon
             name="arrow-left"
             size={22}
-            color="#0F172A"
+            color={theme.heading}
           />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={[styles.backText, { color: theme.heading }]}>Back</Text>
         </TouchableOpacity>
 
         {/* HEADER */}
@@ -92,12 +96,12 @@ export default function ForgotPassword() {
             />
           </View>
 
-          <Text style={styles.title}>
+          <Text style={[styles.title, { color: theme.heading }]}>
             Forgot your{' '}
-            <Text style={{ color: '#118091' }}>password?</Text>
+            <RNText style={{ color: '#118091' }}>password?</RNText>
           </Text>
 
-          <Text style={styles.subtitle}>
+          <Text style={[styles.subtitle, { color: theme.muted }]}>
             Enter your email address and we'll send you a link to reset your password.
           </Text>
         </View>
@@ -106,15 +110,15 @@ export default function ForgotPassword() {
         <View style={styles.form}>
 
           <View style={styles.input}>
-            <Text style={styles.inputLabel}>Email Address</Text>
+            <Text style={[styles.inputLabel, { color: theme.heading }]}>Email Address</Text>
 
             <TextInput
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
               placeholder="Enter your email"
-              placeholderTextColor="#6b7280"
-              style={styles.inputControl}
+              placeholderTextColor={theme.muted}
+              style={[styles.inputControl, { backgroundColor: theme.surface, color: theme.text }]}
               value={email}
               onChangeText={setEmail}
             />
@@ -146,7 +150,7 @@ export default function ForgotPassword() {
             onPress={() => router.replace('/auth/sign_in')}
             activeOpacity={0.7}
           >
-            <Text style={styles.formLink}>
+            <Text style={[styles.formLink, { color: theme.tint }]}>
               Back to Sign in
             </Text>
           </TouchableOpacity>

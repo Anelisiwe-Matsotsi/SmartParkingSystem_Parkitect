@@ -6,7 +6,6 @@ import {
   Dimensions,
   Image,
   SafeAreaView,
-  Text,
   TouchableOpacity,
 } from 'react-native';
 
@@ -15,6 +14,8 @@ import Svg, { Circle } from 'react-native-svg';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
 import { Colors } from '@/constants/theme';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 
 const { width } = Dimensions.get('window');
 
@@ -171,9 +172,10 @@ function ParkingDiagram() {
 // ----------------------------------------------------
 
 export default function LandingScreen() {
+  const { theme, triggerHaptic } = useAccessibility();
   return (
     <LinearGradient
-      colors={['#d9dff3', '#FFFFFF']}
+      colors={[theme.background, theme.surface]}
       style={styles.gradient}
     >
 
@@ -183,13 +185,13 @@ export default function LandingScreen() {
 
 
 
-          <Text style={styles.title}>
+          <Text style={[styles.title, { color: theme.heading }]}>
             Find Your Parking
           </Text>
 
 
 
-          <Text style={styles.subtitle}>
+          <Text style={[styles.subtitle, { color: theme.muted }]}>
             Find available parking, know what's
             {'\n'}
             happening, and never arrive late.
@@ -212,10 +214,10 @@ export default function LandingScreen() {
             {/* sign in */}
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() => router.push('/auth/sign_in')}
+              onPress={() => { triggerHaptic(); router.push('/auth/sign_in'); }}
             >
               <View style={styles.btnSecondary}>
-                <Text style={styles.btnSecondaryText}>
+                <Text style={[styles.btnSecondaryText, { color: theme.heading }]}>
                   Log In
                 </Text>
               </View>
@@ -225,7 +227,7 @@ export default function LandingScreen() {
             {/* sign up */}
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() => router.push('/auth/sign_up')}
+              onPress={() => { triggerHaptic(); router.push('/auth/sign_up'); }}
             >
               <View style={styles.btn}>
                 <Text style={styles.btnText}>

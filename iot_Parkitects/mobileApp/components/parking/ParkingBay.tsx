@@ -1,6 +1,7 @@
 //(Expo, 2024)
 import React from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
+import { useAccessibility } from '@/context/accessibilityContext';
 
 type Props = {
   id: string;
@@ -8,25 +9,31 @@ type Props = {
   disabled?: boolean;
 };
 
-export default function ParkingBay({
+function ParkingBay({
   id,
   occupied = false,
   disabled = false,
 }: Props) {
+  const { theme, colorMode } = useAccessibility();
   return (
-    <View style={[styles.bay, disabled && styles.disabledBay]}>
-      {occupied && !disabled ? (
-        <Image 
-          source={require('@/assets/images/car.png')} 
-          style={{ width: 50, height: 25, resizeMode: 'contain', opacity: disabled ? 0.3 : 1 }} 
-        />
-      ) : (
-        <View style={styles.empty} />
-      )}
-      <Text style={[styles.label, disabled && styles.disabledLabel]}>{id}</Text>
+    <View style={[styles.bay, { backgroundColor: theme.surface }]}>
+      {/* Always render the same two children (car + label) and only change opacity.
+          Swapping an Image for an empty View on every poll is what stresses Fabric. */}
+      <Image
+        source={require('@/assets/images/car.png')}
+        style={[
+          styles.car,
+          { opacity: occupied ? 1 : 0 },
+          colorMode === 'dark' ? { tintColor: theme.muted } : null,
+        ]}
+      />
+      <Text style={[styles.label, { color: theme.tint }]}>{id}</Text>
     </View>
   );
 }
+
+// memo: a bay only re-renders when its own id/occupied changes (or the theme context changes)
+export default React.memo(ParkingBay);
 
 // Stylesheet for UI elements (Expo, 2024)
 const styles = StyleSheet.create({
@@ -40,6 +47,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     margin: 2,
+  },
+  car: {
+    width: 50,
+    height: 25,
+    resizeMode: 'contain',
   },
   disabledBay: {
     backgroundColor: '#F1F5F9', 

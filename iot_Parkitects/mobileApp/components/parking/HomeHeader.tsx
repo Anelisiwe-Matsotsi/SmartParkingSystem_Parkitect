@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import AlertBanner from '@/components/notifications/AlertBanner'
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
@@ -12,6 +11,8 @@ import {
   Alert,
   Linking
 } from "react-native";
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 import Feather from "@expo/vector-icons/Feather";
 import {
   requestBlePermissions,
@@ -23,8 +24,6 @@ import SearchBar from "./SearchBar";
 import { getBaysForNode, claimBay } from "@/utils/parkingFirebase";
 import { auth } from "@/config/firebaseConfig";
 import { startSession } from "@/utils/parkingApi"
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 
 // props to recieve live count
 type Props = {
@@ -34,6 +33,8 @@ type Props = {
 export default function HomeHeader({ availableSpaces }: Props) {
   const router = useRouter();
   const [scanning, setScanning] = useState(false);
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
+  
   const [profileName, setProfileName] = useState('User');
 
 useEffect(() => {
@@ -74,7 +75,7 @@ const initials = profileName
   .toUpperCase();
 
   return (
-    <SafeAreaView style={styles.wrapper}>
+    <SafeAreaView style={[styles.wrapper, { backgroundColor: theme.background }]}>
       <View style={styles.container}>
         <View style={styles.topRow}>
           <TouchableOpacity style={styles.locationBadge}>
@@ -83,10 +84,11 @@ const initials = profileName
           </TouchableOpacity>
 
           <View style={styles.rightButtons}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/notifications')}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => { triggerHaptic(); router.push('/notifications'); }}>
               <Feather name="bell" size={18} color="#111827" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.avatarButton} onPress={() => router.push('/settings/setting')}>
+
+            <TouchableOpacity style={styles.avatarButton} onPress={() => { triggerHaptic(); router.push('/settings/setting'); }}>
               <Text style={styles.avatarText}>{initials}</Text>
             </TouchableOpacity>
           </View>
@@ -96,47 +98,45 @@ const initials = profileName
           {availableSpaces} Bays Left
         </Text>
 
-  {/* Conditionally render the alternative parking button if exactly 1 space remains */}
-  {availableSpaces === 1 && (     
-    <TouchableOpacity 
-      style={styles.parkingButton}
-      onPress={async () => {
-        const mapsUrl =
-        "https://maps.app.goo.gl/rJiNs9tSvVf75Tqf9?g_st=aw";
+       
+  <TouchableOpacity style={styles.parkingButton}
+  onPress={async () => {
+    triggerHaptic();
+    const mapsUrl =
+      "https://maps.app.goo.gl/rJiNs9tSvVf75Tqf9?g_st=aw";
 
-        try 
-        {
-          await Linking.openURL(mapsUrl);
-        } 
-        catch (error) 
-        {
-          console.error("Could not open maps:", error);
+    try {
+      await Linking.openURL(mapsUrl);
+    } catch (error) {
+      console.error("Could not open maps:", error);
 
-          Alert.alert(
-            "Unable to open maps",
-            "Something went wrong while opening the parking location."
-          );
-        }
-      }}
-    >
-      <Feather name="alert-octagon" size={18} color="#ff0000" />
+      Alert.alert(
+        "Unable to open maps",
+        "Something went wrong while opening the parking location."
+      );
+    }
 
-      <View style={styles.parkingButtonText}>
-      <Text style={styles.parkingButtonTitle} >
-        low on bays
-      </Text>
+  }}
 
-      <Text style={styles.parkingButtonSubtitle}>
-        Go to Moffet And Main
-      </Text>
-    </View>
-      <Feather name="chevron-right" size={20} color="#FFFFFF" />
-  </TouchableOpacity>
-  )}
+><Feather name="alert-octagon" size={18} color="#ff0000" />
+
+  <View style={styles.parkingButtonText}>
+   <Text style={styles.parkingButtonTitle} >
+ low on bays
+</Text>
+
+    <Text style={styles.parkingButtonSubtitle}>
+      Go to Moffet And Main
+    </Text>
+  </View>
+    <Feather name="chevron-right" size={20} color="#FFFFFF" />
+</TouchableOpacity>
 
           <TouchableOpacity
   style={styles.parkingButton}
  onPress={async () => {
+  triggerHaptic();
+  triggerScreenReader('Looking for your parking bay');
   try {
     setScanning(true);
 
@@ -211,6 +211,7 @@ if (ok) {
   try 
   {
     await startSession(firebaseUid, nearestNode.nodeKey, bayId);
+  } catch (e) {
 
     // Fetches coordinates from API
     const API_URL = process.env.EXPO_PUBLIC_API_URL;

@@ -1,6 +1,8 @@
+import { View, StyleSheet } from 'react-native';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 // (Expo, 2024; Firebase, 2026)
 import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import ParkingBay from './ParkingBay';
 import SectionTabs from './SectionTabs';
 // Firebase config import for user authentication (Firebase, 2026)
@@ -22,6 +24,7 @@ const normalize = (raw: string) => {
 };
 
 export default function ParkingLayout({ mapData }: { mapData: any }) {
+  const { theme } = useAccessibility();
   // Manages active section state using hooks (Expo, 2024)
   const [activeSection, setActiveSection] = useState('Section A');
   const config = SECTIONS[activeSection];
@@ -76,12 +79,12 @@ export default function ParkingLayout({ mapData }: { mapData: any }) {
   const isSectionDisabled = activeSection === 'Section E' && userRole !== 'Lecturer';
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.surface }]}>
       <SectionTabs selectedSection={activeSection} onSelectSection={setActiveSection} />
 
-      <View style={styles.sectionCard}>
+      <View style={[styles.sectionCard, { backgroundColor: theme.background }]}>
         <View style={styles.header}>
-          <Text style={styles.title}>{config.title} {isSectionDisabled ? "(Lecturer Only)" : ""}</Text>
+          <Text style={[styles.title, { color: theme.tint }]}>{config.title} {isSectionDisabled ? "(Lecturer Only)" : ""}</Text>
           <View style={styles.pill}>
             <Text style={styles.pillText}>
               {isSectionDisabled ? "0" : freeCount} of {total} free
