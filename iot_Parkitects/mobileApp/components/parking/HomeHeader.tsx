@@ -1,7 +1,6 @@
-// (Withfra.me, 2022)
-import React from "react";
+//(Withfra.me, 2022)
+import React, { useEffect, useState } from "react";
 import { useRouter } from 'expo-router';
-import  {useState} from 'react';
 import AlertBanner from '@/components/notifications/AlertBanner'
 import {
   View,
@@ -35,7 +34,45 @@ type Props = {
 export default function HomeHeader({ availableSpaces }: Props) {
   const router = useRouter();
   const [scanning, setScanning] = useState(false);
-  
+  const [profileName, setProfileName] = useState('User');
+
+useEffect(() => {
+  const loadUserProfile = async () => {
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/User/profile/${currentUser.uid}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user profile.');
+      }
+
+      const data = await response.json();
+
+      setProfileName(data.name || 'User');
+    } catch (error) {
+      console.error('Profile loading error:', error);
+    }
+  };
+
+  loadUserProfile();
+}, []);
+
+const initials = profileName
+  .trim()
+  .split(/\s+/)
+  .filter(Boolean)
+  .slice(0, 2)
+  .map(name => name[0])
+  .join('')
+  .toUpperCase();
+
   return (
     <SafeAreaView style={styles.wrapper}>
       <View style={styles.container}>
@@ -50,7 +87,7 @@ export default function HomeHeader({ availableSpaces }: Props) {
               <Feather name="bell" size={18} color="#111827" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.avatarButton} onPress={() => router.push('/settings/setting')}>
-              <Text style={styles.avatarText}>MA</Text>
+              <Text style={styles.avatarText}>{initials}</Text>
             </TouchableOpacity>
           </View>
         </View>

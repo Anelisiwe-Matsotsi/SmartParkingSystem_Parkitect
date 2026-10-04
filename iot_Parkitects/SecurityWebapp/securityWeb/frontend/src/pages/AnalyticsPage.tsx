@@ -9,6 +9,10 @@ import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import TableHead from "@mui/material/TableHead";
 
+// (Parastoo, 2026))
+import jsPDF from "jspdf"; 
+import autoTable from "jspdf-autotable";
+
 interface ParkingHistory {
   bay: string;
   user: string;
@@ -29,7 +33,7 @@ export const AnalyticsPage: React.FC = () => {
   const [rows, setRows] = useState<ParkingHistory[]>([]);
   const [summary, setSummary] = useState({ issued: 0, resolved: 0, avgTime: 0, 
     weeklyChart: [0, 0, 0, 0, 0, 0, 0], // Set the default chart values to 0
-    breakdown: { RP: 0, VB: 0, IB: 0, OT: 0 }  // Set the default violation report values to 0
+    breakdown: { RP: 0, LO: 0, VB: 0, PS: 0, OT: 0 }  // Set the default violation report values to 0
   });
 
   const[isLoading, setIsLoading] = useState(true);
@@ -60,6 +64,73 @@ export const AnalyticsPage: React.FC = () => {
     } finally {
       setIsLoading(false); // Stop loading whether it succeeds or fails
     }
+  };
+
+  // Generates and downloads a PDF report using the current dashboard state (Parastoo, 2026)
+  const handleDownloadReport = () => {
+    const doc = new jsPDF();
+
+    // Report Header
+    doc.setFontSize(20);
+    doc.text("Parkitects Analytics Report", 14, 22);
+    
+    // Add a generation timestamp
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+    // Summary Statistics
+    doc.setFontSize(14);
+    doc.setTextColor(20, 20, 20);
+    doc.text("System Summary", 14, 45);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
+    doc.text(`Tickets Issued: ${summary.issued}`, 14, 55);
+    doc.text(`Tickets Resolved: ${summary.resolved}`, 14, 62);
+    doc.text(`Avg. Resolution Time: ${summary.avgTime} hrs`, 14, 69);
+
+    // Violation Breakdown
+    doc.setFontSize(14);
+    doc.setTextColor(20, 20, 20);
+    doc.text("Violation Breakdown", 100, 45);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
+    doc.text(`Restricted Parking: ${summary.breakdown.RP}%`, 100, 55);
+    doc.text(`Lights Are On: ${summary.breakdown.LO}%`, 100, 62);
+    doc.text(`Vehicle Outside Bay: ${summary.breakdown.VB}%`, 100, 69);
+    doc.text(`Parked Skew: ${summary.breakdown.PS}%`, 100, 76);
+    doc.text(`Other: ${summary.breakdown.OT}%`, 100, 83);
+
+    // Parking History Table
+    doc.setFontSize(14);
+    doc.setTextColor(20, 20, 20);
+    doc.text("Historical Parking Records", 14, 102);
+
+    // Map the React state array into a format that jspdf-autotable can read
+    const tableColumn = ["Bay", "User", "Type", "Time In", "Time Out", "Duration", "Status"];
+    const tableRows = rows.map(row => [
+      row.bay, 
+      row.user, 
+      row.userType, 
+      row.timeIn, 
+      row.timeOut, 
+      row.duration, 
+      row.status
+    ]);
+
+    // Draw the table starting slightly below the header (Parastoo, 2026)
+    autoTable(doc, {
+      startY: 100,
+      head: [tableColumn],
+      body: tableRows,
+      theme: 'striped',
+      headStyles: { fillColor: [11, 93, 107] }, 
+    });
+
+    // Trigger the file download
+    doc.save("Parkitects_Analytics_Report.pdf");
   };
   
 
@@ -129,6 +200,8 @@ export const AnalyticsPage: React.FC = () => {
           <button
             className="button primary"
             type="button"
+            onClick={handleDownloadReport}
+            disabled={isLoading || rows.length === 0}
           >
             Download Report
           </button>
@@ -223,13 +296,18 @@ export const AnalyticsPage: React.FC = () => {
             </div>
 
             <div>
-              <span><i>VB</i>Vehicle outside bay</span>
-              <strong>{summary.breakdown.VB}%</strong>
+              <span><i>LO</i>Lights are on</span>
+              <strong>{summary.breakdown.LO}%</strong>
             </div>
 
             <div>
-              <span><i>IB</i>Incorrect bay</span>
-              <strong>{summary.breakdown.IB}%</strong>
+              <span><i>VB</i>Vehicle outside bay</span>
+              <strong>{summary.breakdown.VB}%</strong>
+            </div>
+            
+            <div>
+              <span><i>PS</i>Parked skew</span>
+              <strong>{summary.breakdown.PS}%</strong>
             </div>
 
             <div>
@@ -418,6 +496,7 @@ export default AnalyticsPage;
 {/*References
     Material UI.2026. Table. (Version 2.0) [Source code] . Available at: <https://mui.com/material-ui/react-table/> [Accessed 12 August 2026]. 
     Meta Platforms, Inc. 2026. Synchronizing with Effects – React. [Online] Available at: <https://react.dev/learn/synchronizing-with-effects> [Accessed 2 October 2026].
+    Parastoo. 2026. jspdf-autotable - npm. [Online] Available at: <https://www.npmjs.com/package/jspdf-autotable> [Accessed 2 October 2026].
     realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 August 2026].        
     rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 August 2026].
 */}
