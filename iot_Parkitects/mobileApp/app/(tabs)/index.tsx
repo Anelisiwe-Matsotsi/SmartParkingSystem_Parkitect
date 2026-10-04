@@ -1,6 +1,6 @@
 //(Expo Documentation.2024)
 import { ScrollView, StyleSheet, View, ActivityIndicator } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AlertBanner from '@/components/notifications/AlertBanner' 
 import HomeHeader from '@/components/parking/HomeHeader';
@@ -16,14 +16,18 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const { theme, triggerScreenReader } = useAccessibility();
 
+  const lastJson = useRef('');
   // Fetch the data globally on the home screen
   const fetchMapData = async () => {
     try {
       const res = await fetch(`${API_URL}/api/Parking/map`);
       if (res.ok) {
-        const data = await res.json();
-        setMapData(data);
+        const text = await res.text();
+        if (text !== lastJson.current) {   // only update when the data actually changed
+        lastJson.current = text;
+        setMapData(JSON.parse(text));
       }
+    }
     } catch (err) {
       console.warn('Map Fetch Error: ', err);
     } finally {
@@ -49,7 +53,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView removeClippedSubviews={false} showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         
         {/* Pass live data to Header */}
         <HomeHeader availableSpaces={availableBays} />

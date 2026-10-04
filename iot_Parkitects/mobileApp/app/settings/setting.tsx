@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import * as Location from 'expo-location' // Accessing device location via Expo Location (Expo Documentation, 2026)
 import { useFocusEffect } from '@react-navigation/native'; // React Navigation focus lifecycle hook (React Navigation, 2026)
 import { useCallback } from 'react';
-import { useLanguage } from '../../context/languageContext';
 // importing our custom auth setup
 import { auth } from '../../config/firebaseConfig';
 import { signOut } from 'firebase/auth'; // Firebase authentication sign out function (Firebase, 2026)
@@ -38,9 +37,7 @@ const OPTION_SIZE = 52;
 export default function SettingsScreen() {
   const [value, setValue] = useState(4);
   const sheet = useRef<any>(null);
-  const languageSheet = useRef<any>(null);
   const router = useRouter(); // Initialize navigation controller (Expo Documentation, 2026)
-  const { language, setLanguage, t } = useLanguage();
   const[locationDisplay, setLocationDisplay] = useState('');
 
   const [profileName, setProfileName] = useState('');
@@ -52,13 +49,6 @@ export default function SettingsScreen() {
     emailNotifications: true,
     pushNotifications: false,
   });
-
-  // Updates application language state and closes selection modal (React Docs, 2026)
-  const handleLanguageChange = async (newLanguage: 'en' | 'af' | 'xh') => {
-  triggerHaptic();
-  await setLanguage(newLanguage);
-  languageSheet.current?.close();
-};
 
 // Fetches current user profile from backend database using RESTful fetch API (Fahim, 2026)
   const loadUserProfile = async () => {
@@ -267,7 +257,7 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView removeClippedSubviews={false} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ThemedText style={styles.headerSubtitle}>
           Manage your personal details and security preferences below.
         </ThemedText>
@@ -275,7 +265,7 @@ export default function SettingsScreen() {
         {/* ACCOUNT SECTION */}
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>
-            {t('account')}
+            Account
           </ThemedText>
           <View style={[styles.sectionBody, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <TouchableOpacity
@@ -300,40 +290,12 @@ export default function SettingsScreen() {
         {/* PREFERENCES SECTION */}
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>
-            {t('preferences')}
+            Preferences
           </ThemedText>
           <View style={[styles.sectionBody, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <View style={[styles.rowWrapper, { backgroundColor: theme.surface, borderColor: theme.border }, styles.rowFirst]}>
               <TouchableOpacity
-                style={styles.row}
-                activeOpacity={0.7}
-                onPress={() => { triggerHaptic(); languageSheet.current?.open(); }}
-              >
-    <ThemedText style={[styles.rowLabel, { color: theme.heading }]}>
-      {t('language')}
-    </ThemedText>
-
-    <View style={styles.rowSpacer} />
-
-    <ThemedText style={styles.rowValue}>
-      {language === 'en'
-        ? 'English'
-        : language === 'af'
-        ? 'Afrikaans'
-        : 'isiXhosa'}
-    </ThemedText>
-
-    <FeatherIcon
-      color="#94A3B8"
-      name="chevron-right"
-      size={18}
-    />
-  </TouchableOpacity>
-</View>
-
-                        <View style={[styles.rowWrapper, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <TouchableOpacity
-                onPress={() => { triggerHaptic(); router.push('/permissions'); }}
+                onPress={() => { triggerHaptic(); router.push({ pathname: '/permissions', params: { from: 'settings' } } as any); }}
                 style={styles.row}
                 activeOpacity={0.7}
               >
@@ -502,80 +464,6 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
       </RBSheet>
-      <RBSheet
-  ref={languageSheet}
-  height={250}
-  openDuration={250}
-  customStyles={{
-    container: StyleSheet.flatten([styles.sheetContainer, { backgroundColor: theme.surface }]),
-    wrapper: {
-      backgroundColor: 'rgba(15, 23, 42, 0.4)',
-    },
-  }}
->
-  <View style={styles.sheetHeader}>
-    <ThemedText style={[styles.sheetHeaderTitle, { color: theme.heading }]}>
-      {t('selectLanguage')}
-    </ThemedText>
-
-    <ThemedText style={styles.sheetHeaderSubtitle}>
-      {t('chooseLanguage')}
-    </ThemedText>
-  </View>
-
-  <View style={{ padding: 24 }}>
-    <TouchableOpacity
-      style={[styles.languageOption, { borderBottomColor: theme.border }]}
-      onPress={() => handleLanguageChange('en')}
-    >
-      <ThemedText style={[styles.languageOptionText, { color: theme.heading }]}>
-        English
-      </ThemedText>
-
-      {language === 'en' && (
-        <FeatherIcon
-          name="check"
-          size={20}
-          color="#0D5265"
-        />
-      )}
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      style={[styles.languageOption, { borderBottomColor: theme.border }]}
-      onPress={() => handleLanguageChange('af')}
-    >
-      <ThemedText style={[styles.languageOptionText, { color: theme.heading }]}>
-        Afrikaans
-      </ThemedText>
-
-      {language === 'af' && (
-        <FeatherIcon
-          name="check"
-          size={20}
-          color="#0D5265"
-        />
-      )}
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      style={[styles.languageOption, { borderBottomColor: theme.border }]}
-      onPress={() => handleLanguageChange('xh')}
-    >
-      <ThemedText style={[styles.languageOptionText, { color: theme.heading }]}>
-        isiXhosa
-      </ThemedText>
-
-      {language === 'xh' && (
-        <FeatherIcon
-          name="check"
-          size={20}
-          color="#0D5265"
-        />
-      )}
-    </TouchableOpacity>
-  </View>
-</RBSheet>
     </SafeAreaView>
   );
 }
@@ -782,20 +670,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  languageOption: {
-  height: 50,
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  paddingHorizontal: 16,
-  borderBottomWidth: 1,
-  borderBottomColor: '#F1F5F9',
-},
-
-languageOptionText: {
-  fontSize: 16,
-  color: '#0F172A',
-},
 });
 /*
 *

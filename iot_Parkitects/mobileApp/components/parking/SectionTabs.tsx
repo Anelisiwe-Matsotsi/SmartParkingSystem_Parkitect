@@ -26,7 +26,7 @@ export default function SectionTabs({ selectedSection, onSelectSection }: Props)
   const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
   return (
     <View style={[styles.container, { backgroundColor: theme.surface }]}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <ScrollView removeClippedSubviews={false} horizontal showsHorizontalScrollIndicator={false}>
         {tabs.map((item) => {
           const active = item.name === selectedSection;
 

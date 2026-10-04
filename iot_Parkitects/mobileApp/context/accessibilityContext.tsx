@@ -1,5 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { AccessibilityInfo, useColorScheme } from 'react-native';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from 'react';
+import { AccessibilityInfo, InteractionManager, useColorScheme } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/theme';
 import * as Speech from 'expo-speech';
@@ -68,7 +75,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   const [osReduceMotionEnabled, setOsReduceMotionEnabled] = useState(false);
   const [osScreenReaderEnabled, setOsScreenReaderEnabled] = useState(false);
 
-    //(React Native, 2026)
+  //(React Native, 2026)
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setOsReduceMotionEnabled);
     AccessibilityInfo.isScreenReaderEnabled().then(setOsScreenReaderEnabled);
@@ -85,7 +92,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       setOsScreenReaderEnabled
     );
 
-      //(React Native, 2026)
+    //(React Native, 2026)
     return () => {
       reduceMotionSub.remove();
       screenReaderSub.remove();
@@ -100,50 +107,79 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     }
     const savedMode = settings.theme ?? settings.colorMode;
     if (savedMode === 'light' || savedMode === 'dark') setColorMode(savedMode);
-      //(Balasubramanian, 2023)
+    //(Balasubramanian, 2023)
     if (settings.reduceMotion !== undefined) setReduceMotion(settings.reduceMotion);
     if (settings.screenReader !== undefined) setScreenReader(settings.screenReader);
     if (settings.hapticFeedback !== undefined) setHapticFeedback(settings.hapticFeedback);
   }, []);
 
-  const [loaded, setLoaded] = useState(false);
+  // Back to defaults (used when nobody is signed in, so one user's theme never leaks to the next)
+  const systemSchemeRef = useRef(systemScheme);
+  systemSchemeRef.current = systemScheme;
+
+  const resetToDefaults = useCallback(() => {
+    setTextSize('medium');
+    setColorMode(systemSchemeRef.current === 'dark' ? 'dark' : 'light');
+    setReduceMotion(false);
+    setScreenReader(false);
+    setHapticFeedback(true);
+  }, []);
+
+  // Which user the current settings belong to, and which user's settings have finished loading.
+  // Saving to AsyncStorage only happens when these match, so defaults can never overwrite a saved cache.
+  const [uid, setUid] = useState<string | null>(null);
+  const [loadedFor, setLoadedFor] = useState<string | null>(null);
+
+  // Guards against an older sign-in/sign-out finishing after a newer one
+  const authRunRef = useRef(0);
 
   useEffect(() => {
-    let unsubscribe = () => {};
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      const run = ++authRunRef.current;
+      setUid(user?.uid ?? null);
+      setLoadedFor(null); // pause saving until this user's settings are loaded
 
-    const start = async () => {
-      try {
-        const saved = await AsyncStorage.getItem('accessibilitySettings');
-        if (saved) loadFromServer(JSON.parse(saved));
-      } catch (error) {
-        console.warn('Could not read saved accessibility settings', error);
-      }
-      setLoaded(true);
+      // Wait for the screen transition to finish before changing theme/motion,
+      // otherwise the whole app restyles while Android is still mounting the next screen.
+      InteractionManager.runAfterInteractions(async () => {
+        if (run !== authRunRef.current) return;
 
-      unsubscribe = onAuthStateChanged(auth, async (user) => {
-        if (!user) return;
+        if (!user) {
+          resetToDefaults();
+          return;
+        }
+
         try {
+          // 1) this user's cached copy (fast, works offline)
+          const cached = await AsyncStorage.getItem(`accessibilitySettings:${user.uid}`);
+          if (run !== authRunRef.current) return;
+          if (cached) loadFromServer(JSON.parse(cached));
+
+          // 2) the server copy wins if available
           const response = await fetch(`${API_BASE_URL}/api/Settings/user/${user.uid}`);
+          if (run !== authRunRef.current) return;
           if (response.ok) {
             loadFromServer(await response.json());
           }
         } catch (error) {
           console.warn('Could not load accessibility settings', error);
+        } finally {
+          if (run === authRunRef.current) setLoadedFor(user.uid);
         }
       });
-    };
+    });
 
-    start();
-    return () => unsubscribe();
-  }, [loadFromServer]);
+    return unsubscribe;
+  }, [loadFromServer, resetToDefaults]);
 
+  // Save this user's settings on the phone (keyed by uid, not shared between users)
   useEffect(() => {
-    if (!loaded) return;
+    if (!uid || loadedFor !== uid) return;
     AsyncStorage.setItem(
-      'accessibilitySettings',
+      `accessibilitySettings:${uid}`,
       JSON.stringify({ textSize, colorMode, reduceMotion, screenReader, hapticFeedback })
     ).catch((error) => console.warn('Could not save accessibility settings', error));
-  }, [loaded, textSize, colorMode, reduceMotion, screenReader, hapticFeedback]);
+  }, [uid, loadedFor, textSize, colorMode, reduceMotion, screenReader, hapticFeedback]);
 
   //(Balasubramanian, 2023)
   const triggerHaptic = useCallback(

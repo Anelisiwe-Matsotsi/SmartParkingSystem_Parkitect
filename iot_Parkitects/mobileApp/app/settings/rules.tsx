@@ -95,7 +95,7 @@ export default function RulesScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
+      <ScrollView removeClippedSubviews={false}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >

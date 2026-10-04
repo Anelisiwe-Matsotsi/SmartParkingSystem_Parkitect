@@ -107,7 +107,7 @@ export default function Example() {
         </ThemedText>
       </View>
 
-      <ScrollView>
+      <ScrollView removeClippedSubviews={false}>
         {/* text size preview */}
           <ThemedText
               style={[

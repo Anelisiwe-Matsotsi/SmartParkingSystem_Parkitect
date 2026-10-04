@@ -624,7 +624,7 @@ const changePassword = async () => {
         <View style={styles.headerButton} />
       </View>
 
-      <ScrollView
+      <ScrollView removeClippedSubviews={false}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >

@@ -203,7 +203,7 @@ export default function Permissions() {
         <Text style={styles.subtitle}>Stay on track with Parkitech</Text>
       </View>
 
-      <ScrollView>
+      <ScrollView removeClippedSubviews={false}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Permissions</Text>
 

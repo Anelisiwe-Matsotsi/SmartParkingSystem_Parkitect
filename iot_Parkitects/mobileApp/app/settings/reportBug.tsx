@@ -106,7 +106,7 @@ export default function ReportBugScreen() {
         <View style={styles.headerAction} />
       </View>
 
-      <ScrollView
+      <ScrollView removeClippedSubviews={false}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
