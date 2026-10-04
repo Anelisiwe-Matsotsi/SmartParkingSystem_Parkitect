@@ -104,7 +104,7 @@ namespace backend2.Controllers
                 return BadRequest("No image provided");
 
             //getting connection & making sure it doesnt return null for docker image workflow
-            string connectionString = _configuration.GetConnectionString("AzureBlobStorage")??
+            string connectionString = _configuration.GetConnectionString("AzureBlobStorage") ??
                 throw new InvalidOperationException("AzureBlobStorage connection string is not there");
             string containerName = "complaint-image";
 
