@@ -18,6 +18,7 @@ import { Radius } from
 '@/constants/radius';
 import { Spacing } from
 '@/constants/spacing';
+import { useAccessibility } from '@/context/accessibilityContext';
 
  // onSearch returns true when the bay was found (or the box was cleared)
  type Props = {

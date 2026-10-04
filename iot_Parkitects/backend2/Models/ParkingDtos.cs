@@ -1,7 +1,7 @@
 
 namespace backend2.Models
 {
-    //  Map summary DTO
+    //  Map summary DTO (Microsoft, 2026)
     public class ParkingMapResponseDto
     {
         public int TotalBays { get; set; }
@@ -28,7 +28,7 @@ namespace backend2.Models
         public int? DistanceReadingCm { get; set; }
     }
 
-    // [Ref: 3] IoT Hardware Payload DTO
+    // (IETF, 2014) IoT Hardware Payload DTO
     public class SensorIngestDto
     {
         public int SensorID { get; set; }
@@ -55,8 +55,7 @@ public class ParkVehicleDto
 }
 
 /*
- * References:
- * [Ref: 1] Microsoft Docs - Create Data Transfer Objects (DTOs) in ASP.NET Core.
- * [Ref: 2] Martin Fowler - Data Transfer Object Pattern.
- * [Ref: 3] RESTful API Design Specification - RFC 7231 Hypertext Transfer Protocol.
+ * References
+ * IETF, 2014. RESTful API Design Specification - RFC 7231. [online] Available at: < https://datatracker.ietf.org/doc/html/rfc7231 > [Accessed 06 September 2026]
+ * Microsoft, 2026. Create Data Transfer Objects (DTOs) in ASP.NET Core. [online] Available at: < https://learn.microsoft.com/en-us/aspnet/core/web-api/ > [Accessed 06 September 2026]
  */

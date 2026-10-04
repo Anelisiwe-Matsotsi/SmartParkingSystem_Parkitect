@@ -122,7 +122,6 @@ CREATE TABLE Preferences (
     colorMode NVARCHAR(255),
     screenReader BIT NOT NULL,
     hapticFeedback BIT NOT NULL,
-    language NVARCHAR(255),
     location NVARCHAR(255),
     emailNotifications BIT NOT NULL,
     pushNotifications BIT NOT NULL,

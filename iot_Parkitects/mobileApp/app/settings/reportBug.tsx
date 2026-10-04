@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import {
   StyleSheet,
   SafeAreaView,
@@ -12,9 +13,11 @@ import {
 
 import FeatherIcon from '@expo/vector-icons/Feather';
 import { ThemedText } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 
 export default function ReportBugScreen() {
   const router = useRouter();
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
 
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
@@ -32,11 +35,15 @@ export default function ReportBugScreen() {
 
   const handleSubmit = async () => {
     if (!category) {
+      triggerHaptic(Haptics.ImpactFeedbackStyle.Heavy);
+      triggerScreenReader('Please select a bug category');
       Alert.alert('Missing Category', 'Please select a bug category.');
       return;
     }
 
     if (!description.trim()) {
+      triggerHaptic(Haptics.ImpactFeedbackStyle.Heavy);
+      triggerScreenReader('Please describe the problem you experienced');
       Alert.alert('Missing Description', 'Please describe the problem you experienced.');
       return;
     }
@@ -46,6 +53,10 @@ export default function ReportBugScreen() {
     try {
       // Backend connection will be added here.
       // For now, the report is validated and submitted locally.
+
+      triggerHaptic();
+
+      triggerScreenReader('Bug report submitted');
 
       Alert.alert(
         'Bug Report Submitted',
@@ -73,7 +84,7 @@ export default function ReportBugScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -82,20 +93,20 @@ export default function ReportBugScreen() {
           activeOpacity={0.7}
         >
           <FeatherIcon
-            color="#0F172A"
+            color={theme.heading}
             name="arrow-left"
             size={22}
           />
         </TouchableOpacity>
 
-        <ThemedText numberOfLines={1} style={styles.headerTitle}>
+        <ThemedText numberOfLines={1} style={[styles.headerTitle, { color: theme.heading }]}>
           Report a Bug
         </ThemedText>
 
         <View style={styles.headerAction} />
       </View>
 
-      <ScrollView
+      <ScrollView removeClippedSubviews={false}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
@@ -110,22 +121,23 @@ export default function ReportBugScreen() {
             BUG DETAILS
           </ThemedText>
 
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
 
             {/* CATEGORY */}
             <View style={styles.inputSection}>
-              <ThemedText style={styles.inputLabel}>
+              <ThemedText style={[styles.inputLabel, { color: theme.heading }]}>
                 Bug Category
               </ThemedText>
 
               <TouchableOpacity
-                style={styles.dropdown}
+                style={[styles.dropdown, { backgroundColor: theme.surface, borderColor: theme.border }]}
                 onPress={() => setShowCategories(!showCategories)}
                 activeOpacity={0.7}
               >
                 <ThemedText
                   style={[
                     styles.dropdownText,
+                    { color: theme.heading },
                     !category && styles.placeholderText,
                   ]}
                 >
@@ -140,18 +152,18 @@ export default function ReportBugScreen() {
               </TouchableOpacity>
 
               {showCategories && (
-                <View style={styles.dropdownOptions}>
+                <View style={[styles.dropdownOptions, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                   {categories.map((item) => (
                     <TouchableOpacity
                       key={item}
-                      style={styles.dropdownOption}
+                      style={[styles.dropdownOption, { borderBottomColor: theme.border }]}
                       onPress={() => {
                         setCategory(item);
                         setShowCategories(false);
                       }}
                       activeOpacity={0.7}
                     >
-                      <ThemedText style={styles.dropdownOptionText}>
+                      <ThemedText style={[styles.dropdownOptionText, { color: theme.heading }]}>
                         {item}
                       </ThemedText>
                     </TouchableOpacity>
@@ -162,7 +174,7 @@ export default function ReportBugScreen() {
 
             {/* DESCRIPTION */}
             <View style={styles.inputSection}>
-              <ThemedText style={styles.inputLabel}>
+              <ThemedText style={[styles.inputLabel, { color: theme.heading }]}>
                 What went wrong?
               </ThemedText>
 
@@ -172,9 +184,9 @@ export default function ReportBugScreen() {
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Please describe the problem you experienced..."
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={theme.muted}
                 textAlignVertical="top"
-                style={styles.descriptionInput}
+                style={[styles.descriptionInput, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
               />
             </View>
 

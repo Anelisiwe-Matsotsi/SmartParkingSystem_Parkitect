@@ -2,11 +2,12 @@
 import React from "react";
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableWithoutFeedback,
 } from "react-native";
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 
 const tabs = [
   { name: "Section A" },
@@ -22,16 +23,21 @@ type Props = {
 };
 
 export default function SectionTabs({ selectedSection, onSelectSection }: Props) {
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
   return (
-    <View style={styles.container}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+    <View style={[styles.container, { backgroundColor: theme.surface }]}>
+      <ScrollView removeClippedSubviews={false} horizontal showsHorizontalScrollIndicator={false}>
         {tabs.map((item) => {
           const active = item.name === selectedSection;
 
           return (
             <TouchableWithoutFeedback
               key={item.name}
-              onPress={() => onSelectSection(item.name)}
+              onPress={() => {
+                triggerHaptic();
+                triggerScreenReader(item.name);
+                onSelectSection(item.name);
+              }}
             >
               <View
                 style={[
@@ -42,6 +48,7 @@ export default function SectionTabs({ selectedSection, onSelectSection }: Props)
                 <Text
                   style={[
                     styles.text,
+                    { color: theme.muted },
                     active && styles.activeText,
                   ]}
                 >
