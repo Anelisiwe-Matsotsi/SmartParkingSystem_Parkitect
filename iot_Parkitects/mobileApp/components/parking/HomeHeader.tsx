@@ -250,9 +250,9 @@ if (ok) {
            console.log("Could not lock coordinates. Sensor may be offline.");
         }
   } 
-  catch (e) 
+  catch (e: any) 
   {
-    console.log("[SQL] session start failed:", e);
+    console.log("[SQL] session start failed:", e?.message, "| sent:", nearestNode.nodeKey, bayId);
   }
 }
     Alert.alert(
