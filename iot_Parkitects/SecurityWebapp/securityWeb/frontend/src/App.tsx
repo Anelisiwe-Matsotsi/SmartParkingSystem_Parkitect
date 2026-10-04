@@ -27,13 +27,16 @@ const RequireSecurity: React.FC<{ children: React.ReactElement }> = ({ children 
   //(Bratslavsky, 2025)
   const [state, setState] = useState<"loading" | "ok" | "no">("loading");
 
+  //checks if the user is logged into firebase
   useEffect(() => {
     return onAuthStateChanged(auth, async (user) => {
+      //if there is no logged in user, access is denied
       if (!user) {
         setState("no");
         return;
       }
       const token = await user.getIdTokenResult();
+      //only users with the security role (created by the admin) are allowed to access the system
       setState(token.claims.role === "security" ? "ok" : "no");
     });                                                                                                                                       
   }, []);
@@ -80,7 +83,8 @@ const AppContent: React.FC = () => {
               element={<Login />}
             />
 
-            {/* Dashboard */}
+            {/* Dashboard //only security userscan access the dashboard*/}
+            
             <Route
               path="/dashboard"
               element={<RequireSecurity><BookPage /></RequireSecurity>}
