@@ -38,11 +38,13 @@ export default function ParkingLayout({onBayClick, mapData}: ParkingLayoutProps)
   let total = 0;
   let freeCount = 0;
   for (let i = 1; i <= slots; i++) {
-    const bay = bayLookup.get(`${config.prefix}${i}`);
-    if (bay) {
-      total++;
-      if (!bay.isOccupied) freeCount++;
-    }
+    const bayCode = `${config.prefix}${i}`;
+    const realBay = bayLookup.get(bayCode);
+    const defaultOccupancy = !(bayCode === "A1" || bayCode === "A2");
+    const isOccupied = realBay ? realBay.isOccupied : defaultOccupancy;
+
+    total++;
+    if (!isOccupied) freeCount++;
   }
 
   let nextBay = 1;
@@ -76,12 +78,19 @@ export default function ParkingLayout({onBayClick, mapData}: ParkingLayoutProps)
               <div className="section-grid">
                 {Array.from({ length: count }, (_, k) => {
                   const i = start + k;
-                  const realBay = bayLookup.get(`${config.prefix}${i}`);
+                  const bayCode = `${config.prefix}${i}`;
+                  const realBay = bayLookup.get(bayCode);
+
+                  // Fallback logic (for bays that are not in the live data yet)
+                  // Defaults all the bays to occupied (true) except for A1 and A2 which remain available (false) for hardware testing
+                  const defaultOccupancy = !(bayCode === "A1" || bayCode === "A2");
+                  const isBayOccupied = realBay ? realBay.isOccupied : defaultOccupancy;
+
                   return (
                     <ParkingBay
                       key={`${config.prefix}-${i}`}
                       id={`${config.prefix}-${String(i).padStart(2, "0")}`}
-                      occupied={realBay ? realBay.isOccupied : false} // bays missing from the data show as empty
+                      occupied={isBayOccupied} // bays missing from the data show as empty
                       onClick={onBayClick}
                     />
                   );
