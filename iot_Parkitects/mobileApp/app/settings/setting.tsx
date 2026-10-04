@@ -112,11 +112,11 @@ export default function SettingsScreen() {
           const locationLabel = place ? `${place.city ?? place.subregion ?? ''}, ${place.region ?? ''}`.trim() : null;
 
           if(locationLabel) {
-            const existingPreference = await fetch (`${API_BASE_URL}/api/Preferences/user/${currentUser.uid}`);
+            const existingPreference = await fetch (`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`);
             const existing = existingPreference.ok ? await existingPreference.json() : {};
 
             // Save user location preference via HTTP PUT request (Fahim, 2026)
-            await fetch(`${API_BASE_URL}/api/Preferences/user/${currentUser.uid}`, {
+            await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`, {
               method: 'PUT',
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({...existing, location: locationLabel, userID: currentUser.uid}),
@@ -151,7 +151,8 @@ export default function SettingsScreen() {
 
                 const response = await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`);
                 if (!response.ok) {
-                    throw new Error('Failed to fetch settings Screen');
+                  console.log('Failed to fetch settings');
+                  return; //returns default settings values
                 }
 
                 const settings = await response.json();
@@ -160,7 +161,7 @@ export default function SettingsScreen() {
                     pushNotifications: settings.pushNotifications,
                 });
             } catch (error) {
-                Alert.alert('Error', 'Error fetching your app settings preferences. Please try again.');
+              console.log('Error fetching settings:', error);
             }
         };
         fetchSettings();
@@ -252,9 +253,7 @@ export default function SettingsScreen() {
           Settings
         </ThemedText>
 
-        <TouchableOpacity style={styles.headerAction}>
-          <FeatherIcon color={theme.heading} name="more-vertical" size={22} />
-        </TouchableOpacity>
+        <View style={styles.headerAction} />
       </View>
 
       <ScrollView removeClippedSubviews={false} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
