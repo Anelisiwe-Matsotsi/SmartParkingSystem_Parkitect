@@ -7,16 +7,18 @@ type Props = {
   id: string;
   occupied?: boolean;
   disabled?: boolean;
+  highlighted?: boolean; // true for the bay the user searched for
 };
 
 function ParkingBay({
   id,
   occupied = false,
   disabled = false,
+  highlighted = false,
 }: Props) {
   const { theme, colorMode } = useAccessibility();
   return (
-    <View style={[styles.bay, { backgroundColor: theme.surface }]}>
+    <View style={[[styles.bay, { backgroundColor: theme.surface }], highlighted && styles.highlighted]}>
       {/* Always render the same two children (car + label) and only change opacity.
           Swapping an Image for an empty View on every poll is what stresses Fabric. */}
       <Image
@@ -56,6 +58,11 @@ const styles = StyleSheet.create({
   disabledBay: {
     backgroundColor: '#F1F5F9', 
     borderColor: '#CBD5E1', 
+  },
+  highlighted: {
+    backgroundColor: "#E8F7F7",
+    borderColor: "#0B5D6B",
+    borderWidth: 2,
   },
   empty: {
     width: 14,

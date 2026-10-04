@@ -12,7 +12,7 @@ namespace backend2.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IExpoPushService _pushService;
-
+        
         public NotificationController(ApplicationDbContext context, IExpoPushService pushService)
         {
             _context = context;
@@ -23,9 +23,10 @@ namespace backend2.Controllers
         [HttpPost("register-token")]
         public async Task<IActionResult> RegisterToken([FromBody] PushTokenDTO dto)
         {
-            var existing = await _context.PushToken.FirstOrDefaultAsync(t => t.userID == dto.userID &&
-                        t.token == dto.token);
-
+            //the token column is unique, so look the token up on its own:
+            //if the same phone signs in as a different user, the token moves to that user
+            var existing = await _context.PushToken.FirstOrDefaultAsync(t => t.token == dto.token);
+            
             if (existing == null)
             {
                 //registering new push token details in object
@@ -38,6 +39,8 @@ namespace backend2.Controllers
             }
             else
             {
+                existing.userID = dto.userID;
+                existing.platform = dto.platform;
                 existing.updatedAt = DateTime.UtcNow;
             }
             await _context.SaveChangesAsync();

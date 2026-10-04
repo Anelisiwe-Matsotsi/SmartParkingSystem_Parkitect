@@ -274,7 +274,7 @@ namespace backend2.Controllers
 
             var sensor = await _context.Sensors
                 .Include(s => s.ParkingBay)
-                .FirstOrDefaultAsync(s => s.beaconNodeKey == dto.NodeKey && s.firebaseBayKey == dto.BayKey);
+                .FirstOrDefaultAsync(s => s.firebaseBayKey == dto.BayKey);
             if (sensor?.ParkingBay == null) return NotFound("No bay is linked to this sensor.");
             var bay = sensor.ParkingBay;
 
