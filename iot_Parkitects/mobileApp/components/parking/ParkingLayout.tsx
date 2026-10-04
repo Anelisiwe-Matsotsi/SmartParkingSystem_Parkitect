@@ -2,7 +2,7 @@ import { View, StyleSheet } from 'react-native';
 import { ThemedText as Text } from '@/components/themed-text';
 import { useAccessibility } from '@/context/accessibilityContext';
 // (Expo, 2024; Firebase, 2026)
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect,useRef } from 'react';
 import ParkingBay from './ParkingBay';
 import SectionTabs from './SectionTabs';
 // Firebase config import for user authentication (Firebase, 2026)

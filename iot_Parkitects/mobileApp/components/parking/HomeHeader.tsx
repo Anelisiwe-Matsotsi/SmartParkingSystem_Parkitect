@@ -21,9 +21,12 @@ import {
   scanNearbyNodes,
 } from '@/utils/ble';
 import SearchBar from "./SearchBar";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getBaysForNode, claimBay } from "@/utils/parkingFirebase";
 import { auth } from "@/config/firebaseConfig";
 import { startSession } from "@/utils/parkingApi"
+import axios from "axios";
+
 
 // props to recieve live count
 type Props = {
@@ -209,51 +212,51 @@ const saveParking = async (bayId: string) => {
     const ok = await claimBay(nearestNode.nodeKey, bayId, firebaseUid);
     
 if (ok) {
-  try 
+  // 1. Start the SQL session
+  try
   {
     await startSession(firebaseUid, nearestNode.nodeKey, bayId);
-  } catch (e) {
-
-    // Fetches coordinates from API
-    const API_URL = process.env.EXPO_PUBLIC_API_URL;
-        
-    let fetched = false;
-        for (let i = 0; i < 3; i++) {
-          try 
-          {
-            // Finds the active beacon
-            const response = await axios.get(`${API_URL}/api/FindMyCar/active-bay`);
-
-            if (response.data) 
-            {
-              const lat = response.data.latitude;
-              const lon = response.data.longitude;
-              const label = response.data.formattedLocation;
-
-              // Saves to phones local memory
-              await AsyncStorage.setItem('parkedLat', lat.toString());
-              await AsyncStorage.setItem('parkedLon', lon.toString());
-              await AsyncStorage.setItem('parkedLabel', label);
-
-              fetched = true;
-              break; // exits the loops if successful
-            }
-          }
-          catch (err) 
-          {
-            console.log(`Fetch attempt ${i + 1} failed. Waiting for sensor...`);
-            await new Promise(resolve => setTimeout(resolve, 2000));
-          }
-        }
-        
-        if (!fetched) 
-          {
-           console.log("Could not lock coordinates. Sensor may be offline.");
-        }
-  } 
-  catch (e: any) 
+  }
+  catch (e: any)
   {
     console.log("[SQL] session start failed:", e?.message, "| sent:", nearestNode.nodeKey, bayId);
+  }
+
+  // 2. Fetches coordinates from API (retries while the sensor catches up)
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+  let fetched = false;
+  for (let i = 0; i < 3; i++) {
+    try
+    {
+      // Finds the active beacon
+      const response = await axios.get(`${API_URL}/api/FindMyCar/active-bay`);
+
+      if (response.data)
+      {
+        const lat = response.data.latitude;
+        const lon = response.data.longitude;
+        const label = response.data.formattedLocation;
+
+        // Saves to phones local memory
+        await AsyncStorage.setItem('parkedLat', lat.toString());
+        await AsyncStorage.setItem('parkedLon', lon.toString());
+        await AsyncStorage.setItem('parkedLabel', label ?? '');
+
+        fetched = true;
+        break; // exits the loops if successful
+      }
+    }
+    catch (err)
+    {
+      console.log(`Fetch attempt ${i + 1} failed. Waiting for sensor...`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+  }
+
+  if (!fetched)
+  {
+    console.log("Could not lock coordinates. Sensor may be offline.");
   }
 }
     Alert.alert(

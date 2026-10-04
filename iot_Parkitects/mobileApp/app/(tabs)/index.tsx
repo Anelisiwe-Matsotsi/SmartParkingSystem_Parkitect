@@ -1,7 +1,6 @@
 //(Expo, 2024)
 import { ScrollView, StyleSheet, View, ActivityIndicator } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
-import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AlertBanner from '@/components/notifications/AlertBanner' 
 import HomeHeader from '@/components/parking/HomeHeader';
