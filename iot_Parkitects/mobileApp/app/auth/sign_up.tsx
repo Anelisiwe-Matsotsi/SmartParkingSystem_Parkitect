@@ -17,7 +17,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Colors } from '@/constants/theme';
 
 // pulling in the specific firebase registration function (Firebase, 2026a)
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 // importing our custom auth setup
 import { auth } from '../../config/firebaseConfig';
 // Google Sign in (React Native Google Sign In, 2026)
@@ -103,15 +103,17 @@ export default function SignUp() {
     {
       // Prompts the user to sign in with Google
       await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
+      const response = await GoogleSignin.signIn();
+
+      const idToken = response.data?.idToken;
       
-      if (!userInfo.idToken) 
+      if (!idToken) 
       {
           throw new Error("No ID Token found");
       }
 
       // Creates a Firebase credential with the Google ID token
-      const googleCredential = GoogleAuthProvider.credential(userInfo.idToken);
+      const googleCredential = GoogleAuthProvider.credential(idToken);
       
       // Signs in the user with the credential
       const userCredential = await signInWithCredential(auth, googleCredential);

@@ -1,5 +1,5 @@
 //(Withfra.me, 2022)
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { registerForPushNotificationsAsync } from '../../utils/pushNotifications';
 import FeatherIcon from '@expo/vector-icons/Feather';
@@ -16,13 +16,16 @@ import {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/theme';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 // importing the login function from firebase
 import {
-  signInWithEmailAndPassword,
+  signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential,
 } from 'firebase/auth';
 // importing our custom auth setup
 import { auth } from '../../config/firebaseConfig';
+// Google Sign in (React Native Google Sign In, 2026)
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 export default function SignIn() {
   const router = useRouter();
@@ -34,7 +37,12 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-
+  // Configures Google Sign in (React Native Google Sign In, 2026)
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    });
+  }, []);
  
   // this fires when the user presses the login button
   const handleLogin = async () => {
@@ -90,6 +98,53 @@ export default function SignIn() {
     } finally {
     setIsLoading(false); // Unlock button
   }
+  };
+
+  // Google Sign In Logic (Firebase, 2026b)
+  const handleGoogleSignIn = async () => {
+    try 
+    {
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+
+      const idToken = response.data?.idToken;
+      
+      if (!idToken) 
+      {
+          throw new Error("No ID Token found");
+      }
+
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+      const userCredential = await signInWithCredential(auth, googleCredential);
+      const firebaseUid = userCredential.user.uid;
+
+      const apiUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/User/sync`;
+      const backendResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firebaseUid: firebaseUid,
+          userNumber: `G-${Date.now()}`,
+          name: userCredential.user.displayName || "Google User",
+          email: userCredential.user.email,
+          userRole: 'Student'
+        })
+      });
+
+      if (!backendResponse.ok) 
+      {
+        throw new Error(`Failed to sync Google user to database.`);
+      }
+
+      await registerForPushNotificationsAsync(firebaseUid);
+      router.replace('/permissions' as any);
+
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('Google Sign-In Failed', error.message);
+    }
   };
 
   return (
@@ -177,6 +232,26 @@ export default function SignIn() {
           >
             <Text style={styles.formLink}>Forgot password?</Text>
           </TouchableOpacity>
+
+          <View style={styles.formSpacer}>
+            <Text style={styles.formSpacerText}>Or Sign in with</Text>
+            <View style={styles.formSpacerDivider} />
+          </View>
+
+          <View style={styles.btnGroup}>
+            <TouchableOpacity
+              onPress={handleGoogleSignIn}
+              style={{ flex: 1, paddingHorizontal: 6 }}>
+              <View style={styles.btnGoogle}>
+                <MaterialCommunityIcons
+                  color="#fff"
+                  name="google"
+                  size={18}
+                  style={{ marginRight: 12 }} />
+                <Text style={styles.btnGoogleText}>Google</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -300,6 +375,53 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
+  formSpacer: {
+    marginTop: 20,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  formSpacerText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#454545',
+    lineHeight: 20,
+    paddingHorizontal: 12,
+    backgroundColor: Colors.light.background,
+    zIndex: 9,
+  },
+  formSpacerDivider: {
+    borderBottomWidth: 2,
+    borderColor: '#eff1f5',
+    position: 'absolute',
+    top: 10,
+    left: 0,
+    right: 0,
+  },
+  btnGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 18,
+    marginHorizontal: -6,
+  },
+  btnGoogle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    backgroundColor: '#0c6064',
+    borderColor: '#a8ddd4',
+  },
+  btnGoogleText: {
+    fontSize: 18,
+    lineHeight: 26,
+    fontWeight: '600',
+    color: '#fff',
+  },
 
   passwordContainer: {
   height: 50,
@@ -329,7 +451,10 @@ eyeButton: {
 });
 /**
  * References
- * Firebase, 2026. Password Authentication. [source code]. Available: <https://firebase.google.com/docs/auth/web/password-auth> [Accessed 28 August 2026].
+ * Expo, 2026. Environment variables in Expo. [online] Available at: <https://docs.expo.dev/guides/environment-variables/> [Accessed 30 August 2026].
+ * Firebase, 2026a. Password Authentication. [source code]. Available: <https://firebase.google.com/docs/auth/web/password-auth> [Accessed 28 August 2026].
+ * Firebase, 2026b. Authenticate Using Google with React Native. (Version 10.0) [Source Code] Available at: <https://firebase.google.com/docs/auth/react-native/google-signin> [Accessed 22 September 2026].
  * React Native, 2026. Alert. [source code]. Available: <https://reactnative.dev/docs/alert> [Accessed 28 August 2026].
+ * React Native Google Sign In, 2026. Google Sign In. (Version 10.0) [Source Code] Available at: <https://react-native-google-signin.github.io/docs/setting-up/expo> [Accessed 22 September 2026].
  * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
  */
