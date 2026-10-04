@@ -2350,6 +2350,119 @@ tbody tr:last-child td {
   color: var(--accent);
 }
 
+
+
+
+.dashboard-row.map-row > .panel {
+    flex: 1 1 100%;
+}
+
+
+@media (min-width: 901px) {
+    .lower-row > .panel {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+}
+
+
+
+
+/* Section tabs */
+.section-tabs {
+    display: flex;
+    gap: 4px;
+    width: max-content;
+    max-width: 100%;
+    margin: 0 auto 16px;
+    padding: 4px;
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+}
+
+.section-tab {
+    padding: 9px 16px;
+    color: var(--muted);
+    background: transparent;
+    border: 0;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: color .2s ease, background .2s ease;
+}
+
+.section-tab:hover {
+    color: var(--text);
+    background: var(--surface-soft);
+}
+
+.section-tab.is-active {
+    color: var(--primary);
+    background: #E8F7F7;
+}
+
+/* Section card with the title and free count */
+.section-card {
+    padding: 16px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.section-title {
+    margin: 0;
+    color: var(--primary);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: .5px;
+}
+
+.section-pill {
+    padding: 4px 10px;
+    color: var(--primary);
+    background: #E8F7F7;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* Bays wrap to fit the width of the card */
+.section-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.section-aisle {
+    height: 30px;
+    margin: 14px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--line);
+    border-radius: 6px;
+}
+
+.section-aisle span {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 6px;
+}
+
+
 /*References
   realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
   Vincent,M. 2016. login / sign up - React - Daily UI #001. (Version 2.0) [Source code] Available at: < https://codepen.io/matthewvincent/pen/JXOKbY > [Accessed 12 Aug. 2026].          
