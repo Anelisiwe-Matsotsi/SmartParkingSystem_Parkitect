@@ -9,7 +9,7 @@ namespace backend2.Models
         public double AvgResolutionTimeHours { get; set; }
 
         // Fields for the violation breakdown and charts
-        public int[] WeeklyChart { get; set; } 
+        public int[] WeeklyChart { get; set; }
         public Dictionary<string, int> ViolationBreakdown { get; set; }
     }
 

@@ -8,8 +8,8 @@ namespace backend2.Models
         [Key]
         public int ticketID { get; set; }
 
-    public string? reportingUserID { get; set; }
-        public string userID { get; set; }= string.Empty;
+        public string? reportingUserID { get; set; }
+        public string userID { get; set; } = string.Empty;
 
         [Required]
         public string bayID { get; set; } = string.Empty;
@@ -18,9 +18,9 @@ namespace backend2.Models
         public string bayNumber { get; set; } = string.Empty;
 
         [Required]
-        public string sectionID { get; set; }= string.Empty;
+        public string sectionID { get; set; } = string.Empty;
 
-       [Required]
+        [Required]
         public string reason { get; set; } = string.Empty;
 
         public string? description { get; set; } // question mark because it is optional

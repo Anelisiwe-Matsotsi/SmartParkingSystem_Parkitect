@@ -7,7 +7,7 @@ namespace backend2.Services
     //(Jovanovic, 2024)
     public class RulesAlerts : BackgroundService
     {
-        private readonly IServiceProvider  _serviceProvider;
+        private readonly IServiceProvider _serviceProvider;
 
         //rules are stored in array to be fetched
         //(StackOverflow, 2010)
@@ -38,7 +38,7 @@ namespace backend2.Services
             "Respect other drivers"
         };
 
-        public RulesAlerts(IServiceProvider  serviceProvider)
+        public RulesAlerts(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
         }

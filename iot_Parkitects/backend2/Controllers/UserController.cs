@@ -37,12 +37,12 @@ namespace backend2.Controllers
         [HttpPost("sync")]
         public async Task<IActionResult> SyncUser([FromBody] UserSyncDto dto)
         {
-            if (string.IsNullOrEmpty(dto.FirebaseUid)) 
+            if (string.IsNullOrEmpty(dto.FirebaseUid))
                 return BadRequest("Firebase UID is required.");
 
             // Checks if this user already synced to avoid duplicates using Entity Framework (Microsoft, 2026b)
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == dto.FirebaseUid);
-            
+
             if (existingUser != null)
             {
                 return Ok(new { message = "User already exists", user = existingUser });

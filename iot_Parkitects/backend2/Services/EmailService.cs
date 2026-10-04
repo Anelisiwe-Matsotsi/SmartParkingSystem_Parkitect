@@ -23,7 +23,7 @@ namespace backend2.Services
 
         //method to send a email
         //(Bravo, 2021)
-        public async Task SendTicketEmailAsync (string toEmail, string subject, string body)
+        public async Task SendTicketEmailAsync(string toEmail, string subject, string body)
         {
             if (string.IsNullOrWhiteSpace(toEmail))
             {

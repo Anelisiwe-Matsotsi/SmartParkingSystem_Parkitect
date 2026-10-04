@@ -12,7 +12,7 @@ namespace backend2.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IExpoPushService _pushService;
-        
+
         public NotificationController(ApplicationDbContext context, IExpoPushService pushService)
         {
             _context = context;
@@ -25,7 +25,7 @@ namespace backend2.Controllers
         {
             var existing = await _context.PushToken.FirstOrDefaultAsync(t => t.userID == dto.userID &&
                         t.token == dto.token);
-            
+
             if (existing == null)
             {
                 //registering new push token details in object

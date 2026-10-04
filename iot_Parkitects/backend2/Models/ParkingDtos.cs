@@ -34,24 +34,24 @@ namespace backend2.Models
         public int SensorID { get; set; }
         public int DistanceReadingCm { get; set; }
 
-        public bool? IsOccupied { get; set;}
+        public bool? IsOccupied { get; set; }
     }
 
 
     public class BeaconBayDto
-{
-    public string NodeKey { get; set; } = string.Empty;
-    public int BayID { get; set; }
-    public string BayNumber { get; set; } = string.Empty;
-    public string SectionName { get; set; } = string.Empty;
-    public bool IsOccupied { get; set; }
-}
+    {
+        public string NodeKey { get; set; } = string.Empty;
+        public int BayID { get; set; }
+        public string BayNumber { get; set; } = string.Empty;
+        public string SectionName { get; set; } = string.Empty;
+        public bool IsOccupied { get; set; }
+    }
 
-public class ParkVehicleDto
-{
-    public string FirebaseUid { get; set; } = string.Empty;
-    public int BayID { get; set; }
-}
+    public class ParkVehicleDto
+    {
+        public string FirebaseUid { get; set; } = string.Empty;
+        public int BayID { get; set; }
+    }
 }
 
 /*

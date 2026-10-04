@@ -19,23 +19,23 @@ namespace backend2.Controllers
 
         //GET: api/Permissions/user/{firebaseUid}, this gets the saved permissions for the user that is logged in
         [HttpGet("user/{firebaseUid}")]
-        public async Task<IActionResult>GetPermissions(string firebaseUid)
+        public async Task<IActionResult> GetPermissions(string firebaseUid)
         {
             //(Adeebabu, 2025)
             //find the user using their firebase uid
             var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
 
             //if the user does not exist 
-            if(user == null)
+            if (user == null)
             {
-                 return NotFound("User was not found.");
+                return NotFound("User was not found.");
             }
 
             //find the permissions that belong to the logged in user
             var permissions = await _context.Permissions.FirstOrDefaultAsync(p => p.userID == user.UserId);
 
             //a new user likey does not have any permissions saved
-            if(permissions == null)
+            if (permissions == null)
             {
                 return NotFound("No permissions have been saved yet.");
             }
@@ -50,7 +50,7 @@ namespace backend2.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
 
             //if the user does not exit
-            if(user == null)
+            if (user == null)
             {
                 return NotFound("User was not found.");
             }
@@ -58,7 +58,7 @@ namespace backend2.Controllers
             //checks if the user has a permissions record
             var permissions = await _context.Permissions.FirstOrDefaultAsync(p => p.userID == user.UserId);
 
-            if(permissions == null)
+            if (permissions == null)
             {
                 //created a new permissions record
                 permissions = new Permissions
@@ -75,7 +75,7 @@ namespace backend2.Controllers
             {
                 //updates the existing permissions
                 permissions.bluetooth = updatedPermissions.bluetooth;
-                permissions.location =updatedPermissions.location;
+                permissions.location = updatedPermissions.location;
                 permissions.ruleAlerts = updatedPermissions.ruleAlerts;
             }
 
