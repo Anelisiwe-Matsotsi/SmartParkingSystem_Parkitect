@@ -1,26 +1,22 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import ParkingBay from './ParkingBay';
 import SectionTabs from './SectionTabs';
+import { SECTIONS, normalize } from '@/utils/parkingLayout';
 
-// Each number in "groups" is a block of bays; an aisle is drawn between blocks
-const SECTIONS: Record<string, { prefix: string; title: string; groups: number[] }> = {
-  'Section A': { prefix: 'A', title: 'Building A', groups: [16, 16] },
-  'Section B': { prefix: 'B', title: 'Building B', groups: [62] },
-  'Section C': { prefix: 'C', title: 'Building C', groups: [20, 19] },
-  'Section D': { prefix: 'D', title: 'Building D', groups: [24, 23] },
-  'Section E': { prefix: 'E', title: 'Building E', groups: [40, 40] },
+// the bay the user searched for (nonce makes searching the same bay twice work again)
+type SearchTarget = { section: string; bay: string; nonce: number };
+
+type Props = {
+  mapData: any;
+  searchTarget?: SearchTarget | null;
+  onBayLocated?: (windowY: number) => void; // tells the home screen where the bay is so it can scroll there
 };
 
-// "A-03", "A03" and "a3" all become "A3" so they match the generated ids
-const normalize = (raw: string) => {
-  const m = String(raw ?? '').trim().match(/^([A-Za-z])\s*-?\s*0*(\d+)$/);
-  return m ? `${m[1].toUpperCase()}${m[2]}` : String(raw ?? '').toUpperCase();
-};
-
-export default function ParkingLayout({ mapData }: { mapData: any }) {
+export default function ParkingLayout({ mapData, searchTarget, onBayLocated }: Props) {
   const [activeSection, setActiveSection] = useState('Section A');
   const config = SECTIONS[activeSection];
+  const highlightRef = useRef<View>(null);
 
   const section = mapData?.sections?.find((s: any) =>
     s.sectionName?.toUpperCase().includes(activeSection.toUpperCase())
@@ -32,6 +28,23 @@ export default function ParkingLayout({ mapData }: { mapData: any }) {
     section?.bays?.forEach((b: any) => map.set(normalize(b.bayNumber), b));
     return map;
   }, [section]);
+
+  // when a bay is searched: switch to its section, then ask the home screen to scroll to it
+  useEffect(() => {
+    if (!searchTarget) return;
+
+    setActiveSection(searchTarget.section);
+
+    const timer = setTimeout(() => {
+      highlightRef.current?.measureInWindow((_x, y) => onBayLocated?.(y));
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [searchTarget]);
+
+  // only highlight while the searched bay's section is the one being shown
+  const highlighted =
+    searchTarget && searchTarget.section === activeSection ? searchTarget.bay : null;
 
   const isOccupied = (i: number) => {
     const realBay = bayLookup.get(`${config.prefix}${i}`);
@@ -70,12 +83,19 @@ export default function ParkingLayout({ mapData }: { mapData: any }) {
               <View style={styles.bayGrid}>
                 {Array.from({ length: count }, (_, k) => {
                   const i = start + k;
+                  const isHighlighted = highlighted === `${config.prefix}${i}`;
                   return (
-                    <ParkingBay
+                    <View
                       key={`${config.prefix}-${i}`}
-                      id={`${config.prefix}-${i}`}
-                      occupied={isOccupied(i)}
-                    />
+                      ref={isHighlighted ? highlightRef : undefined}
+                      collapsable={false}
+                    >
+                      <ParkingBay
+                        id={`${config.prefix}-${i}`}
+                        occupied={isOccupied(i)}
+                        highlighted={isHighlighted}
+                      />
+                    </View>
                   );
                 })}
               </View>

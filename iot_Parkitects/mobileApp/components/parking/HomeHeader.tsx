@@ -30,9 +30,10 @@ import axios from 'axios';
 // props to recieve live count
 type Props = {
   availableSpaces: number;
+  onSearch?:(query: string) => boolean;
 };
 
-export default function HomeHeader({ availableSpaces }: Props) {
+export default function HomeHeader({ availableSpaces, onSearch}: Props) {
   const router = useRouter();
   const [scanning, setScanning] = useState(false);
   
@@ -238,7 +239,7 @@ Alert.alert(
 </TouchableOpacity>
         {/* Search Bar Container */}
         <View style={styles.search}>
-          <SearchBar />
+          <SearchBar onSearch={onSearch} />
         </View>
        
 

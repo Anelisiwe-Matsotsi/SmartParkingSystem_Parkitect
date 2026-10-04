@@ -5,14 +5,16 @@ import { View, Text, StyleSheet, Image } from "react-native";
 type Props = {
   id: string;
   occupied?: boolean;
+  highlighted?: boolean; // true for the bay the user searched for
 };
 
 export default function ParkingBay({
   id,
   occupied = false,
+  highlighted = false,
 }: Props) {
   return (
-    <View style={styles.bay}>
+    <View style={[styles.bay, highlighted && styles.highlighted]}>
       {occupied ? (
         <Image source={require('@/assets/images/car.png')} style={{ width: 50, height: 25, resizeMode: 'contain' }} />
       ) : (
@@ -34,6 +36,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     margin: 2,
+  },
+  highlighted: {
+    backgroundColor: "#E8F7F7",
+    borderColor: "#0B5D6B",
+    borderWidth: 2,
   },
   empty: {
     width: 14,
