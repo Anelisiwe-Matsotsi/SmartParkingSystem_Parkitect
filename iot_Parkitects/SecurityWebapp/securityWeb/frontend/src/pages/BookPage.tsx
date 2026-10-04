@@ -203,7 +203,7 @@ export const BookPage: React.FC = () => {
           <p>Total parking bays</p>
 
           <strong className="stat-value">
-            14
+            {mapData ? totalBays : "-"}
           </strong>
 
           <small>
@@ -232,7 +232,7 @@ export const BookPage: React.FC = () => {
           <p>Currently occupied</p>
 
           <strong className="stat-value">
-            6
+            {mapData ? occupiedBays : "-"}
           </strong>
 
           <small>
@@ -261,7 +261,7 @@ export const BookPage: React.FC = () => {
           <p>Available spaces</p>
 
           <strong className="stat-value">
-            8
+            {mapData ? availableBays : "-"}
           </strong>
 
           <small>

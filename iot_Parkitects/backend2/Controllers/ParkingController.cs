@@ -313,6 +313,38 @@ public async Task<IActionResult> StartSession([FromBody] StartSessionDto dto)
             return Ok(bays);
         }
 
+        //GET: api/Parking/bay/A1 (details and current occupant for one bay)
+        [HttpGet("bay/{bayNumber}")]
+        public async Task<ActionResult<BayDetailsDto>> GetBayDetails(string bayNumber)
+        {
+            var bay = await _context.ParkingBays
+                .Include(b => b.Sensor)
+                .Include(b => b.ParkingSection)
+                .FirstOrDefaultAsync(b => b.bayNumber == bayNumber);
+
+            if (bay == null) return NotFound("Parking bay was not found.");
+
+            var session = await _context.ParkingSessions
+                .Where(s => s.bayID == bay.bayID && s.endDate == null)
+                .OrderByDescending(s => s.startDate)
+                .FirstOrDefaultAsync();
+
+            var user = session == null ? null : await _context.Users.FindAsync(session.userID);
+
+            return Ok(new BayDetailsDto
+            {
+                BayID = bay.bayID,
+                BayNumber = bay.bayNumber,
+                SectionName = bay.ParkingSection?.sectionName ?? "",
+                IsOccupied = bay.isOccupied,
+                HasPhysicalSensor = bay.Sensor != null,
+                DistanceReadingCm = bay.Sensor?.distanceReadingCm,
+                OccupantName = user?.Name,
+                OccupantNumber = user?.UserNumber,
+                ParkedSince = session?.startDate
+            });
+        }
+
     }
 
 
