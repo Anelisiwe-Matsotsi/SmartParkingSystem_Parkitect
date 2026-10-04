@@ -17,11 +17,10 @@ import { verifyBeforeUpdateEmail, EmailAuthProvider,
   reauthenticateWithCredential, updatePassword,} from 'firebase/auth';
 import { ThemedText } from '@/components/themed-text';
 import { useAccessibility } from '@/context/accessibilityContext';
-const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
 
 export default function AccountScreen() {
   const router = useRouter();
-
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [userNumber, setUserNumber] = useState('');

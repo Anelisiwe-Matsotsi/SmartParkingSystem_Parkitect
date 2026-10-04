@@ -3,6 +3,11 @@ import { AccessibilityInfo, useColorScheme } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/theme';
 import * as Speech from 'expo-speech';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../config/firebaseConfig';
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 //(Cusick, 2025)
 //declaring the types of color and size options the user has
@@ -33,12 +38,13 @@ interface AccessibilityContextValue extends AccessibilityState {
   theme: typeof Colors.light;
   osReduceMotionEnabled: boolean;
   osScreenReaderEnabled: boolean;
+  shouldReduceMotion: boolean;
   setTextSize: (v: TextSize) => void;
   setColorMode: (v: ColorMode) => void;
   setReduceMotion: (v: boolean) => void;
   setScreenReader: (v: boolean) => void;
   setHapticFeedback: (v: boolean) => void;
-  loadFromServer: (settings: Partial<AccessibilityState>) => void;
+  loadFromServer: (settings: Partial<AccessibilityState> & {theme?: string}) => void;
   triggerScreenReader: (text: string) => void;
   triggerHaptic: (style?: Haptics.ImpactFeedbackStyle) => void;
 }
@@ -88,14 +94,58 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
 
   //(Patel, 2025)
   //calls the loadfromserver to load the settings that have been chosen by the user and saved otherwise default settings are left the same
-  const loadFromServer = useCallback((settings: Partial<AccessibilityState>) => {
-    if (settings.textSize) setTextSize(settings.textSize);
-    if (settings.colorMode) setColorMode(settings.colorMode);
-      //(Balasubramanian, 2023)
+const loadFromServer = useCallback((settings: Partial<AccessibilityState> & { theme?: string }) => {
+    if (settings.textSize && ['small', 'medium', 'large'].includes(settings.textSize)) {
+      setTextSize(settings.textSize);
+    }      //(Balasubramanian, 2023)
+    const savedMode = settings.theme ?? settings.colorMode; //saves the mode as theme
+    if (savedMode === 'light' || savedMode === 'dark') setColorMode(savedMode);
     if (settings.reduceMotion !== undefined) setReduceMotion(settings.reduceMotion);
     if (settings.screenReader !== undefined) setScreenReader(settings.screenReader);
     if (settings.hapticFeedback !== undefined) setHapticFeedback(settings.hapticFeedback);
   }, []);
+
+    const [loaded, setLoaded] = useState(false);
+
+
+
+    //settings start loading from the login page to save user preference (starts as default)
+  useEffect(() => {
+    AsyncStorage.getItem('accessibilitySettings')
+      .then((saved) => {
+        if (saved) loadFromServer(JSON.parse(saved));
+      })
+      .finally(() => setLoaded(true));
+  }, [loadFromServer]);
+
+
+  //saves a copy on the phone every time a setting changes
+  useEffect(() => {
+    if (!loaded) return;
+    AsyncStorage.setItem(
+      'accessibilitySettings',
+      JSON.stringify({ textSize, colorMode, reduceMotion, screenReader, hapticFeedback })
+    );
+  }, [loaded, textSize, colorMode, reduceMotion, screenReader, hapticFeedback]);
+
+
+  //loads the settings saved in the database when a user is logged in
+  useEffect(() => {
+    const loginPreference = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/Settings/user/${user.uid}`);
+        if (response.ok) {
+          loadFromServer(await response.json());
+        }
+      } catch (error) {
+        console.warn('Could not load accessibility settings', error);
+      }
+    });
+    return loginPreference;
+  }, [loadFromServer]);
+
+
 
   //(Balasubramanian, 2023)
   const triggerHaptic = useCallback(
@@ -110,16 +160,17 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   //(Balasubramanian, 2023)
   const triggerScreenReader = useCallback(
     (text: string) => {
-      if (screenReader) {
+      if (screenReader && !osScreenReaderEnabled) { //in-app speech will not read if operating system speech is also on
         Speech.stop();
         Speech.speak(text);
       }
     },
-    [screenReader]
+    [screenReader,osScreenReaderEnabled]
   );
 
   const scale = scaleMap[textSize];
   const theme = Colors[colorMode];
+  const shouldReduceMotion = reduceMotion || osReduceMotionEnabled; //reducing motion starts if the users turns it on in the app or the OS has it on
 
   //(Senturk, 2026)
   return (
@@ -128,6 +179,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         textSize,
         colorMode,
         reduceMotion,
+        shouldReduceMotion,
         screenReader,
         hapticFeedback,
         scale,

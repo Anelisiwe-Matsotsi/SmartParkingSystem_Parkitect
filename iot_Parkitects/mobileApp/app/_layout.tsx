@@ -8,7 +8,7 @@ import * as Notifications from 'expo-notifications';
 import { LanguageProvider } from '../context/languageContext';
 
 function RootLayoutNav() {
-  const { colorMode } = useAccessibility();
+  const { colorMode, shouldReduceMotion } = useAccessibility();
   const router = useRouter();
 
   //when the user click notification from the notification bar they will be taken to the notifications page
@@ -23,7 +23,7 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorMode === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack initialRouteName="landing" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: shouldReduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       <StatusBar style={colorMode === 'dark' ? 'light' : 'dark'} />

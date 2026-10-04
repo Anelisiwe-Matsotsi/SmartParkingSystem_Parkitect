@@ -29,12 +29,18 @@ export function ThemedText({
         const flattened = StyleSheet.flatten([typeStyle, style]);
         const baseFontSize = flattened.fontSize ?? 16;
 
+        //making the line height grow if the user chooses large text
+        const ownStyle = StyleSheet.flatten(style) || {};
+        const baseLineHeight = ownStyle.fontSize && !ownStyle.lineHeight ? undefined : flattened.lineHeight;
+        const { lineHeight: _ignored, ...restOfStyle } = flattened;
+
   return (
     <Text
       style={[
         { color },
-        flattened,
+        restOfStyle,
         { fontSize: baseFontSize * scale },
+        baseLineHeight ? { lineHeight: baseLineHeight * scale } : null,
       ]}
       {...rest}
     />

@@ -12,7 +12,6 @@ import { useRouter } from 'expo-router';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import { ThemedText } from '@/components/themed-text';
 import { useAccessibility } from '@/context/accessibilityContext';
-const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
 
 //(StackOverflow, 2022)
 //the rule item interface is declared with attributes that the array will contain
@@ -79,7 +78,7 @@ const RULES: RuleItem[] = [
 
 export default function RulesScreen() {
   const router = useRouter();
-  const { theme } = useAccessibility();
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
 
   return (
     <SafeAreaView style={styles.safeArea}>
