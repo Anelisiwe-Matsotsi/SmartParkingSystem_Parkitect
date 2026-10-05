@@ -142,7 +142,6 @@ export const SideBar: React.FC<SideBarProps> = ({
           </span>
 
           <i
-            className="more-mark fa-solid fa-ellipsis"
             aria-hidden="true"
           ></i>
 

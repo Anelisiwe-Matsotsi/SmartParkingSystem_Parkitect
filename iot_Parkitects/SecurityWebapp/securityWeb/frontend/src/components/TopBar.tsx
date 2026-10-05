@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../config/firebase";
-import { getNotifications, getWebSettings, saveWebSettings } from "../services/api";
+import { getNotifications, getWebSettings, saveWebSettings, defaultWebSettings } from "../services/api";
 import type { AppNotification, WebSettings } from "../services/api";
 import {applyAppearance, cacheAppearance, readCachedAppearance, resetAppearance} from "../utils/appearance";
 
@@ -17,7 +17,7 @@ const timeAgo = (value: string) => {
 };
 
 export const TopBar: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState( () => document.documentElement.getAttribute("data-theme") === "dark");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [userName, setUserName] = useState("");
@@ -59,11 +59,13 @@ export const TopBar: React.FC = () => {
 
       try {
         // Fetch the saved settings for this Firebase UID.
-        const settings = await getWebSettings(uid);
+        const fetched = await getWebSettings(uid);
 
         // Ignore responses for an account that has changed or signed out.
         if (!active || auth.currentUser?.uid !== uid) return;
 
+        const settings: WebSettings = {...defaultWebSettings, ...fetched};
+        console.log("[TopBar] server darkMode:", fetched?.darkMode, "| cached darkMode:", cached.darkMode);
         savedSettings.current = settings;
 
         // Applies dark mode, compact tables, larger text and reduced motion on every page
@@ -205,18 +207,22 @@ useEffect(() => {
         detail: { darkMode: newValue, uid },
     })
       );
-          //saves the choice so it is still there after logging out and back in
-    if (!savedSettings.current) return;
 
+      const base: WebSettings =
+      savedSettings.current ?? { ...defaultWebSettings, ...readCachedAppearance(uid) };
+
+    //saves the choice so it is still there after logging out and back in
     try {
       savedSettings.current = await saveWebSettings(uid, {
-        ...savedSettings.current,
+        ...base,
         darkMode: newValue,
       });
+      console.log("[TopBar] theme saved to server:", savedSettings.current?.darkMode);
     } catch (error) {
       console.error("Could not save the theme:", error);
     }
   };
+
 
   const isUnread = (item: AppNotification) => new Date(item.time).getTime() > lastReadTime;
   const unreadCount = notifications.filter(isUnread).length;
