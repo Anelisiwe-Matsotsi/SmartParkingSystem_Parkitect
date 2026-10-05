@@ -136,6 +136,8 @@ export default function Example() {
       Alert.alert('You have refused to allow this app to access your photos!', 'Permission to access media files is required')
       return;
     }
+
+
     const result = await ImagePicker.launchImageLibraryAsync({ // user Explore the result
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.7,
@@ -146,6 +148,40 @@ export default function Example() {
       setForm({ ...form, imageUri: result.assets[0].uri });
     }
   };
+
+  /* Kindacode.com, 2022
+   Take a photo with the camera */
+  const openCamera = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert(
+        'You have refused to allow this app to access your camera!',
+        'Permission to access the camera is required'
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setForm(prev => ({ ...prev, imageUri: result.assets[0].uri }));
+    }
+  };
+
+  // Lets the user choose between camera and gallery
+  const chooseImageSource = () => {
+    triggerHaptic();
+    Alert.alert('Add Image Evidence', 'How would you like to add an image?', [
+      { text: 'Take Photo', onPress: openCamera },
+      { text: 'Choose from Gallery', onPress: pickImage },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
+
   /*  Hiếu,2022 -Upload image to backend API (Azure blob via the asp.net core) */
   const uploadImageToAzure = async (uri: string): Promise<string | null> => {
     const formData = new FormData();
@@ -336,10 +372,12 @@ export default function Example() {
         </View>
 
         <Text style={styles.sectionTitle}>Add Image Evidence (Optional)</Text>
-        <TouchableOpacity style={[styles.cancelReason, { backgroundColor: theme.surface }]} onPress={pickImage}>
+        <TouchableOpacity
+          style={[styles.cancelReason, { backgroundColor: theme.surface }]}
+          onPress={chooseImageSource}>
           <FeatherIcon name="camera" size={29} color="#6b7280" />
           <Text style={[styles.sectionSubtitle, { marginLeft: 12 }]}>
-            {form.imageUri ? 'Image Selected' : 'Upload Image'}
+            {form.imageUri ? 'Image Selected (tap to change)' : 'Take Photo or Upload Image'}
           </Text>
         </TouchableOpacity>
 
