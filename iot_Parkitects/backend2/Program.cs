@@ -61,7 +61,7 @@ namespace backend2
             {
                 options.AddPolicy("AllowAllClients", policy =>
                 {
-                    policy.AllowAnyOrigin()
+                    policy.WithOrigins("parkitech-ckgbebdyhaf7bvh0.southafricanorth-01.azurewebsites.net")
                           .AllowAnyMethod()
                           .AllowAnyHeader();
                 });
