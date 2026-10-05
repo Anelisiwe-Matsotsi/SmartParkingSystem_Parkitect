@@ -31,10 +31,17 @@ import axios from "axios";
 // props to recieve live count
 type Props = {
   availableSpaces: number;
-  onSearch?:(query: string) => boolean;
+  onSearch?: (query: string) => boolean;
+  isLive?: boolean;
+  lastUpdated?: Date | null;
 };
 
-export default function HomeHeader({ availableSpaces, onSearch}: Props) {
+export default function HomeHeader({
+  availableSpaces,
+  onSearch,
+  isLive = true,
+  lastUpdated = null,
+}: Props) {
   const router = useRouter();
   const [scanning, setScanning] = useState(false);
   const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
@@ -82,10 +89,15 @@ const initials = profileName
     <SafeAreaView style={[styles.wrapper, { backgroundColor: theme.background }]}>
       <View style={styles.container}>
         <View style={styles.topRow}>
-          <TouchableOpacity style={styles.locationBadge}>
-            <View style={styles.locationDot} />
-            <Text style={styles.locationText}>LIVE</Text>
-          </TouchableOpacity>
+          <View style={[styles.locationBadge, !isLive && styles.locationBadgeOffline]}>
+            <View
+              style={[
+                styles.locationDot,
+                { backgroundColor: isLive ? '#22C55E' : '#EF4444' },
+              ]}
+            />
+            <Text style={styles.locationText}>{isLive ? 'LIVE' : 'OFFLINE'}</Text>
+          </View>
 
           <View style={styles.rightButtons}>
             <TouchableOpacity style={styles.iconButton} onPress={() => { triggerHaptic(); router.push('/notifications'); }}>
@@ -101,6 +113,12 @@ const initials = profileName
         <Text style={styles.heading}>
           {availableSpaces} Bays Left
         </Text>
+
+        {lastUpdated && (
+          <Text style={styles.updatedText}>
+            {isLive ? 'Updated' : 'Last updated'} {lastUpdated.toLocaleTimeString()}
+          </Text>
+        )}
 
   {availableSpaces <= 1 && (     
   <TouchableOpacity style={styles.parkingButton}
@@ -367,6 +385,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
 
+  locationBadgeOffline: {
+    backgroundColor: "#FEE2E2",
+  },
+
   locationDot: {
     width: 6,
     height: 6,
@@ -409,6 +431,15 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     alignItems:'center',
     marginLeft:75,
+  },
+
+  updatedText: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: "#9cafa7",
+    marginTop: 4,
+    marginBottom: 8,
+    textAlign: "center",
   },
 
   subtitle: {

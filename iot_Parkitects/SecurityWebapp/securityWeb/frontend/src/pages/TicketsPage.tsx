@@ -16,7 +16,8 @@ import FormLabel from "@mui/material/FormLabel";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
 import type { Ticket } from "../models/ticket";
-import { getTickets, createTicket, uploadTicketImage, updateTicket, deleteTicket, getOccupiedBays } from "../services/api";
+import { auth } from "../config/firebase";
+import { getTickets, createTicket, uploadTicketImage, updateTicket, deleteTicket, getOccupiedBays, getUserByFirebaseUid } from "../services/api";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -44,6 +45,10 @@ export const TicketsPage: React.FC = () => {
 
   const [occupiedBays, setOccupiedBays] = useState<{ bayID: number; bayNumber: string }[]>([]);
 
+  // names of the users who reported the tickets, looked up once and kept here
+  const [names, setNames] = useState<Record<string, string>>({});
+  const requestedNames = useRef(new Set<string>());
+
 
 
 
@@ -67,6 +72,22 @@ export const TicketsPage: React.FC = () => {
 
     loadTickets();
   }, []);
+
+  // Resolve each unique reporter's name once and cache it (same idea as the ticket responses page)
+  useEffect(() => {
+    const missing = [...new Set(tickets.map((t) => t.reportingUserID))]
+      .filter((uid): uid is string => !!uid && !requestedNames.current.has(uid));
+
+    missing.forEach(async (uid) => {
+      requestedNames.current.add(uid);
+      try {
+        const user = await getUserByFirebaseUid(uid);
+        setNames((prev) => ({ ...prev, [uid]: user.name }));
+      } catch {
+        setNames((prev) => ({ ...prev, [uid]: "" }));
+      }
+    });
+  }, [tickets]);
 
   const handleClickOpen = async () => {
     try {
@@ -192,6 +213,7 @@ export const TicketsPage: React.FC = () => {
       const newTicket: Ticket = {
         ticketID: 0,
         userID: "",
+        reportingUserID: auth.currentUser?.uid ?? null, // the person issuing the ticket
         bayID: selectedBay,
         bayNumber: selectedBay,
         sectionID: `${selectedBay.charAt(0)}-Block`,
@@ -220,6 +242,14 @@ export const TicketsPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // initials for the avatar in the ticket footer, e.g. "Sipho Gumede" -> "SG"
+  const initialsFor = (name: string) =>
+    name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+
+  // name of the user who reported the ticket ("" while loading or if it is unknown)
+  const reporterName = (ticket: Ticket) =>
+    ticket.reportingUserID ? names[ticket.reportingUserID] ?? "" : "";
 
   return (
     <section
@@ -429,7 +459,15 @@ export const TicketsPage: React.FC = () => {
 
             <div className="project-footer">
               <div className="avatar-stack">
-                <i>SG</i>
+                <i
+                  title={
+                    reporterName(ticket)
+                      ? `Reported by ${reporterName(ticket)}`
+                      : "Reporter unknown"
+                  }
+                >
+                  {initialsFor(reporterName(ticket)) || "?"}
+                </i>
               </div>
 
               <strong>
@@ -615,6 +653,6 @@ export default TicketsPage;
 {/*References
   realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
   Material UI.2026.Dialog. (Version 2.0) [Source code] . Available at: < https://mui.com/material-ui/react-dialog/#scrolling-long-content> [Accessed 12 Aug. 2026]. 
-  rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
+  rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code] . Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
  */
 }

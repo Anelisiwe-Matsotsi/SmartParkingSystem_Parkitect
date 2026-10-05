@@ -17,27 +17,47 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const { theme, triggerScreenReader } = useAccessibility();
 
+ // live status: true while the map keeps refreshing, false when a refresh fails
+  const [isLive, setIsLive] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+
   // the bay the user searched for, used to switch the map to its section and highlight it
   const [searchTarget, setSearchTarget] =
     useState<{ section: string; bay: string; nonce: number } | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const scrollY = useRef(0);
 
+
   const lastJson = useRef('');
   // Fetch the data globally on the home screen
   const fetchMapData = async () => {
+      // give up after 5 seconds so a dead connection shows as not live quickly
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+
     try {
-      const res = await fetch(`${API_URL}/api/Parking/map`);
+      const res = await fetch(`${API_URL}/api/Parking/map`, { signal: controller.signal });
+
       if (res.ok) {
         const text = await res.text();
         if (text !== lastJson.current) {   // only update when the data actually changed
-        lastJson.current = text;
-        setMapData(JSON.parse(text));
+          lastJson.current = text;
+          setMapData(JSON.parse(text));
+        }
+
+        // the fetch itself worked, so we are live even if the data did not change
+        setLastUpdated(new Date());
+        setIsLive(true);
+      } else {
+        setIsLive(false);
       }
-    }
     } catch (err) {
       console.warn('Map Fetch Error: ', err);
+      setIsLive(false);
     } finally {
+      clearTimeout(timeout);
       setLoading(false);
     }
   };
@@ -92,7 +112,12 @@ export default function HomeScreen() {
       >
         
         {/* Pass live data to Header */}
-        <HomeHeader availableSpaces={availableBays} onSearch={handleSearch} />
+        <HomeHeader
+          availableSpaces={availableBays}
+          onSearch={handleSearch}
+          isLive={isLive}
+          lastUpdated={lastUpdated}
+        />
         
         {isLimited && showAlert && (
           <AlertBanner
