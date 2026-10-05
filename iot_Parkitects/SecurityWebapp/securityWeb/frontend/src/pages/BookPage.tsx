@@ -619,6 +619,7 @@ export const BookPage: React.FC = () => {
           <button
             className="button soft full-button"
             type="button"
+            onClick={() => navigate("/settings", { state: { section: "System" } })}
           >
             View parking system details
           </button>
