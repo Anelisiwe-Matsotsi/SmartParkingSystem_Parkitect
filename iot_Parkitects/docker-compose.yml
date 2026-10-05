@@ -19,7 +19,7 @@ services:
     container_name: parkitects-backend2
     environment:
       - ConnectionStrings__DefaultConnection=Server=tcp:parkitects-db.database.windows.net,1433;Initial Catalog=ParkitechDB;Persist Security Info=False;User ID=parkitects-db;Password=Password1!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
-      - AzureBlobStorage__ConnectionString=DefaultEndpointsProtocol=https;AccountName=parkitechs;AccountKey=Q6+U/rkRMfxiFRM9xtx/UV11z4Qs9lcEN1s8EjJDaKNvTZzVOicMuXxxkXe5y1I14VXdOAm30+xP+AStqmbyHw==;EndpointSuffix=core.windows.net
+      - ConnectionStrings__AzureBlobStorage=DefaultEndpointsProtocol=https;AccountName=parkitechs;AccountKey=Q6+U/rkRMfxiFRM9xtx/UV11z4Qs9lcEN1s8EjJDaKNvTZzVOicMuXxxkXe5y1I14VXdOAm30+xP+AStqmbyHw==;EndpointSuffix=core.windows.net
       - ASPNETCORE_URLS=http://0.0.0.0:5000 # <-- FORCES C# TO LISTEN ON 5000 INTERNALLY
       - ASPNETCORE_ENVIRONMENT=Development
       - TZ=Africa/Johannesburg # <-- Sets timezone to South Africa to send rule push notifications at noon (Pranjal, 2024)

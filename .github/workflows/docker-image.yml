@@ -2,7 +2,7 @@ name: Advanced CI/CD Integration Pipeline
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "Docker-Workflow" ]
   pull_request:
     branches: [ "main", "master" ]
 
@@ -79,8 +79,12 @@ jobs:
         echo "Querying the tickets index..."
         curl -X GET http://localhost:8080/api/Tickets --fail --verbose
 
+    - name: Show container logs on failure
+      if: failure()
+      run: docker compose logs --no-color
+
     - name: Tear Down and Logs
       if: always()
       run: |
-        docker compose logs backend2 > backend2-container-debug.log
+        docker compose logs backend2-service > backend2-container-debug.log
         docker compose down --volumes
