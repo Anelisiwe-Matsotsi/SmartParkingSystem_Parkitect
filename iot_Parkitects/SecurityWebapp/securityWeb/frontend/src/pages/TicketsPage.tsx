@@ -49,6 +49,16 @@ export const TicketsPage: React.FC = () => {
   const [names, setNames] = useState<Record<string, string>>({});
   const requestedNames = useRef(new Set<string>());
 
+  //filter for the ticket list, open tickets are everything that is not resolved yet
+  const [filter, setFilter] = useState<"Open" | "Resolved" | "All">("Open");
+
+  //tickets that are shown on the page depending on the selected filter
+  const visibleTickets = tickets.filter((t) => {
+    if (filter === "Open") return t.status !== "Resolved";
+    if (filter === "Resolved") return t.status === "Resolved";
+    return true;
+  });
+
 
 
 
@@ -162,6 +172,12 @@ export const TicketsPage: React.FC = () => {
 
   //handles the approve button for tickets that are valid
   const handleApprove = async (ticket: Ticket) => {
+    //only tickets that are still pending can be approved
+    if (ticket.status !== "Pending") {
+      setActiveTicket(null);
+      return;
+    }
+
     try {
       await updateTicket({ ...ticket, status: "Notified" }, ticket.ticketID);
       setTickets((prev) => prev.map((t) => (t.ticketID == ticket.ticketID ? { ...t, status: "Notified" } : t)));
@@ -277,6 +293,21 @@ export const TicketsPage: React.FC = () => {
         </button>
       </div>
 
+      {/* filter between open, resolved and all tickets */}
+      <div role="group" aria-label="Filter tickets" style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+        {(["Open", "Resolved", "All"] as const).map((option) => (
+          <button
+            key={option}
+            type="button"
+            className={`button ${filter === option ? "primary" : "secondary"}`}
+            aria-pressed={filter === option}
+            onClick={() => setFilter(option)}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+
 
       <div className="project-grid tickets-grid">
 
@@ -292,7 +323,13 @@ export const TicketsPage: React.FC = () => {
           </p>
         )}
 
-        {tickets.map((ticket) => (
+        {!loading && tickets.length > 0 && visibleTickets.length === 0 && (
+          <p role="status">
+            No {filter === "All" ? "" : filter.toLowerCase()} tickets to show.
+          </p>
+        )}
+
+        {visibleTickets.map((ticket) => (
           <article
             key={ticket.ticketID}
             className="project-card ticket-card searchable"
@@ -316,68 +353,71 @@ export const TicketsPage: React.FC = () => {
                       : "review"
                     }`}
                 >
-                  {ticket.status}
+                  {ticket.status === "Resolved" ? "Done" : ticket.status}
                 </span>
               </div>
 
-              <div
-                className="ticket-menu"
-                ref={
-                  activeTicket === ticket.ticketID
-                    ? menuRef
-                    : null
-                }
-              >
-
-                <button
-                  type="button"
-                  aria-label={`More options for ticket ${ticket.ticketID}`}
-                  aria-expanded={
+              {/* resolved tickets are finished so they do not get the approve / reject menu */}
+              {ticket.status !== "Resolved" && (
+                <div
+                  className="ticket-menu"
+                  ref={
                     activeTicket === ticket.ticketID
-                  }
-                  aria-controls={
-                    activeTicket === ticket.ticketID
-                      ? `ticket-actions-${ticket.ticketID}`
-                      : undefined
-                  }
-                  onClick={() =>
-                    handleTicketMenu(ticket.ticketID)
+                      ? menuRef
+                      : null
                   }
                 >
-                  <i
-                    className="fa-solid fa-ellipsis"
-                    aria-hidden="true"
-                  ></i>
-                </button>
 
-                {activeTicket === ticket.ticketID && (
-                  <div
-                    id={`ticket-actions-${ticket.ticketID}`}
-                    className="ticket-actions"
-                    role="menu"
-                    aria-label={`Actions for ticket ${ticket.ticketID}`}
+                  <button
+                    type="button"
+                    aria-label={`More options for ticket ${ticket.ticketID}`}
+                    aria-expanded={
+                      activeTicket === ticket.ticketID
+                    }
+                    aria-controls={
+                      activeTicket === ticket.ticketID
+                        ? `ticket-actions-${ticket.ticketID}`
+                        : undefined
+                    }
+                    onClick={() =>
+                      handleTicketMenu(ticket.ticketID)
+                    }
                   >
-                    <button
-                      type="button"
-                      className="approve"
-                      role="menuitem"
-                      onClick={() => handleApprove(ticket)}
-                    >
-                      Approve
-                    </button>
+                    <i
+                      className="fa-solid fa-ellipsis"
+                      aria-hidden="true"
+                    ></i>
+                  </button>
 
-                    <button
-                      type="button"
-                      className="reject"
-                      role="menuitem"
-                      onClick={() => handleReject(ticket.ticketID)}
+                  {activeTicket === ticket.ticketID && (
+                    <div
+                      id={`ticket-actions-${ticket.ticketID}`}
+                      className="ticket-actions"
+                      role="menu"
+                      aria-label={`Actions for ticket ${ticket.ticketID}`}
                     >
-                      Reject
-                    </button>
-                  </div>
-                )}
+                      <button
+                        type="button"
+                        className="approve"
+                        role="menuitem"
+                        onClick={() => handleApprove(ticket)}
+                      >
+                        Approve
+                      </button>
 
-              </div>
+                      <button
+                        type="button"
+                        className="reject"
+                        role="menuitem"
+                        onClick={() => handleReject(ticket.ticketID)}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+
+                </div>
+              )}
             </div>
 
             <h2>

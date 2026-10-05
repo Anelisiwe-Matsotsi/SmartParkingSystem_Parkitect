@@ -219,6 +219,29 @@ namespace backend2.Controllers
                 }
             }
 
+            //If security is happy with the response, let the user know the ticket is done
+            else if (existing.status == "Resolved" && previousStatus == "Awaiting review")
+            {
+                //get the matching firebaseUid and userID
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == existing.userID);
+
+                //calling the Preferences table 
+                var settings = user != null ? await _context.Preferences.FirstOrDefaultAsync(s => s.userID == user.UserId) : null;
+
+                bool pushNotifications = settings?.pushNotifications ?? true;
+
+                //Send resolved notice only if push notifications are enabled
+                if (pushNotifications)
+                {
+                    await _pushService.NotifyUserAsync(
+                        existing.userID,
+                        "Ticket resolved",
+                        $"Ticket #{existing.ticketID} has been marked as resolved.",
+                        new { ticketId = existing.ticketID }
+                    );
+                }
+            }
+
             return NoContent();
         }
 

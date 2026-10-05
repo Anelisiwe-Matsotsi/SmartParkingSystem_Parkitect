@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTicketPolling } from "../hooks/ticketResponse";
-import { updateTicket, deleteTicket, getUserByFirebaseUid } from "../services/api";
+import { updateTicket, getUserByFirebaseUid } from "../services/api";
 
 export const TicketResponsesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -41,9 +41,10 @@ export const TicketResponsesPage: React.FC = () => {
     navigate("/tickets");
   };
 
+  //marks the ticket as resolved so it stays on record instead of being deleted
   const handleMarkDone = async () => {
     if (!activeTicket) return;
-    await deleteTicket(activeTicket.ticketID);
+    await updateTicket({ ...activeTicket, status: "Resolved" }, activeTicket.ticketID);
     navigate("/tickets");
   };
 
