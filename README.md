@@ -32,25 +32,6 @@
 
 ---
 
-## Installation
-
-Clone project or download zip file, open in Visual Studio Code
-
-In VS code terminal for Mobile App :
-
-```bash
-cd iot_Parkitect
-cd mobileApp
-npm start 
-```
-In VS code terminal for Web App :
-
-```bash
-cd iot_Parkitect
-cd SecurityWeb
-npm run dev 
-```
-
 # 📌 About the Project
 
 **Parkitects** is a smart parking ecosystem developed as part of the team's Work Integrated Learning (WIL) project.
@@ -201,7 +182,6 @@ The user's name is also used to dynamically generate the initials displayed in t
 
 The application provides user-specific settings, including:
 
-* 🌐 Language
 * 📍 Location
 * 📧 Email notifications
 * 🔔 Push notifications
@@ -230,44 +210,43 @@ The backend acts as the central application layer connecting the mobile applicat
 
 ## 📱 Mobile Technology & Purpose
 
-React Native: Mobile application framework
-Expo: Development and native tooling
-Expo Router: Application navigation
-TypeScript: Type-safe mobile development 
-Axios: HTTP communication
-Firebase Authentication: User authentication 
-AsyncStorage: Local mobile storage
-`react-native-ble-plx`: Bluetooth Low Energy functionality
-Expo Sensors: Sensor functionality
+- React Native: Mobile application framework
+- Expo: Development and native tooling
+- Expo Router: Application navigation
+- TypeScript: Type-safe mobile development 
+- Axios: HTTP communication
+- Firebase Authentication: User authentication 
+- AsyncStorage: Local mobile storage
+- `react-native-ble-plx`: Bluetooth Low Energy functionality
+- Expo Sensors: Sensor functionality
 
 ---
 
 ## ⚙️ Backend Technology & Purpose
 
-C#: Backend programming language
-.NET 10: Backend framework/runtime 
-ASP.NET Core: REST API
-Entity Framework Core: Database access
-SQL Server: Relational data storage
-REST: Communication between applications
+- C#: Backend programming language
+- .NET 10: Backend framework/runtime 
+- ASP.NET Core: REST API for Communication between applications
+- Entity Framework Core: Database access
+- Azure SQL Database: Online data storage
 
 ---
 
 ## 🖥️ Web Technology & Purpose
 
-React: Frontend framework 
-Vite: Frontend build/development tooling
-Node.js: JavaScript runtime/build environment
-Nginx: Web application serving 
+- React: Frontend framework 
+- Vite: Frontend build/development tooling
+- Node.js: JavaScript runtime/build environment
+- Nginx: Web application serving 
 
 ---
 
 ## 🐳 Infrastructure Technology & Purpose
 
-Docker: Containerisation 
-Docker Compose: Multi-container orchestration  
-SQL Server 2022: Database container  
-Firebase: Authentication and selected cloud functionality 
+- Docker: Containerisation 
+- Docker Compose: Multi-container orchestration  
+- Azure SQL Server: Scalability and Security  
+- Firebase: Authentication and selected cloud functionality 
 
 ---
 
@@ -355,18 +334,12 @@ The backend uses Entity Framework Core to communicate with SQL Server.
 
 # 🗄️ Database
 
-Parkitects uses **Microsoft SQL Server 2022** for persistent application data.
+Parkitects uses **Microsoft Azure SQL Server** for automated operations and elastic scaling.
 
 The database setup scripts are located under:
 
 ```text
-ParkitectsDB/
-```
-
-The initial database script is:
-
-```text
-ParkitectsDB/init-database.sql
+iot_Parkitects/backend2/Data/SQl SCRIPT.sql
 ```
 
 The backend uses an `ApplicationDbContext` to expose application entities through Entity Framework Core.
@@ -544,7 +517,6 @@ The project uses Docker Compose to run the main application services together.
 The primary services are:
 
 ```text
-parkitects-db-service
 backend2-service
 frontend-service
 ```
@@ -557,7 +529,6 @@ parkitects-network
 
 ### Service Overview & Purpose
 
-`parkitects-db-service`: SQL Server database
 `backend2-service`: .NET 10 backend API      
 `frontend-service`: Security web application
 
@@ -597,8 +568,8 @@ iot_Parkitects/
 │           ├── package.json
 │           └── ...
 │
-├── 📁 ParkitectsDB/
-│   └── init-database.sql
+├── 🐳 .github/workflows/
+│   └── docker-image.yml
 │
 ├── 🐳 docker-compose.yml
 ├── 🚫 .dockerignore
@@ -630,13 +601,13 @@ For mobile development, a suitable Android device or emulator is also required.
 From the project root:
 
 ```powershell
-cd "C:\Users\27609\OneDrive\Documents\insy7315-2026-wil-coddell357\iot_Parkitects"
+cd "C:\Users\Documents\insy7315-2026-wil-coddell357\iot_Parkitects"
 ```
 
 Then run:
 
 ```powershell
-docker compose up --build
+docker compose up --build -d
 ```
 
 This builds and starts the Docker services.
@@ -644,7 +615,6 @@ This builds and starts the Docker services.
 The main services are:
 
 ```text
-🗄️ SQL Server
 ⚙️ .NET Backend
 🖥️ Security Web Application
 ```
@@ -660,7 +630,7 @@ cd backend2
 dotnet run
 ```
 
-The backend listens on the configured API address.
+The backend listens on the hosted API address.
 
 When running inside Docker, the application listens internally on:
 
@@ -730,7 +700,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 This prevents the backend address from being hard-coded throughout the application.
 
-The correct API address must be configured according to the environment in which the application is running.
+The correct API address must be configured according to the environment in which the application is running if locally otherwise the API address has been hosted on azure web app service and deployed successfully.
 
 ---
 
@@ -921,7 +891,7 @@ By combining:
        +
 ⚙️ REST APIs
        +
-🗄️ SQL Server
+🗄️ Azure SQL Server
        +
 🛡️ Security Management
        +
@@ -933,24 +903,24 @@ the system creates a centralised platform that supports both the **parking user*
 
 # 📚 References
 
-Material UI.2026. Material UI components. (Version 2.0) [Source code] . Available at: <https://mui.com/material-ui/all-components/ > [Accessed 12 Aug. 2026]. 
-npm. 2024. react-native-circular-progress. (Version 2.0) [Source code] Available at: <https://www.npmjs.com/package/react-native-circular-progress?activeTab=readme > [Accessed 17 Aug. 2026].
+Material UI.2026. Material UI components. (Version 2.0) [Source code] . Available at: <https://mui.com/material-ui/all-components/ > [Accessed 12 August 2026]. 
+npm. 2024. react-native-circular-progress. (Version 2.0) [Source code] Available at: <https://www.npmjs.com/package/react-native-circular-progress?activeTab=readme > [Accessed 17 August 2026].
 
-Expo Documentation.2024.Create a project. [online]  Available at: <https://docs.expo.dev/get-started/create-a-project/ > [Accessed 17 Aug. 2026].
+Expo Documentation.2024.Create a project. [online]  Available at: <https://docs.expo.dev/get-started/create-a-project/ > [Accessed 17 August 2026].
 
-Racisz, T. 2020. Creating an interactive map with React and Firebase. (Version 2.0) [Source code] .Available at: <https://medium.com/@travisracisz/creating-an-interactive-map-with-react-and-firebase-fa183cef15c9 > [Accessed 5 Aug. 2026].
+Racisz, T. 2020. Creating an interactive map with React and Firebase. (Version 2.0) [Source code] .Available at: <https://medium.com/@travisracisz/creating-an-interactive-map-with-react-and-firebase-fa183cef15c9 > [Accessed 5 August 2026].
  
- realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
+ realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 August 2026]. 
 
-rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
+rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 August 2026].
           
-Vincent,M. 2016. login / sign up - React - Daily UI #001. (Version 2.0) [Source code] Available at: < https://codepen.io/matthewvincent/pen/JXOKbY > [Accessed 12 Aug. 2026]. 
+Vincent,M. 2016. login / sign up - React - Daily UI #001. (Version 2.0) [Source code] Available at: < https://codepen.io/matthewvincent/pen/JXOKbY > [Accessed 12 August 2026]. 
 
-Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
+Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 August 2026].
 
-npm. 2024. react-native-circular-progress. (Version 2.0) [Source code] Available at: <https://www.npmjs.com/package/react-native-circular-progress?activeTab=readme > [Accessed 17 Aug. 2026].
+npm. 2024. react-native-circular-progress. (Version 2.0) [Source code] Available at: <https://www.npmjs.com/package/react-native-circular-progress?activeTab=readme > [Accessed 17 August 2026].
  
-Yilmaz.2018. car park. (Version 2.0) [Source code] Available at: <https://codepen.io/tenkyu/pen/zaJwaR> [Accessed 17 Aug. 2026].
+Yilmaz.2018. car park. (Version 2.0) [Source code] Available at: <https://codepen.io/tenkyu/pen/zaJwaR> [Accessed 17 August 2026].
 
 
 
