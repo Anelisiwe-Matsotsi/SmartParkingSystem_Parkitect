@@ -1,44 +1,105 @@
+import { useMemo, useState } from "react";
 import ParkingBay from "../components/ParkingBay";
+import SectionTabs from "../components/SectionTabs";
+import { normalizeBay } from "../services/parking";
+import type { BayMap, ParkingMap } from "../services/api";
 
 type ParkingLayoutProps = {
   onBayClick: (id: string) => void
+  // live data from api/Parking/map (same shape the mobile app uses)
+  mapData: ParkingMap | null
 }
-export default function ParkingLayout({onBayClick}: ParkingLayoutProps) {
+
+// Each number in "groups" is a block of bays; an aisle is drawn between blocks
+const SECTIONS: Record<string, { prefix: string; title: string; groups: number[] }> = {
+  "Section A": { prefix: "A", title: "Building A", groups: [16, 16] },
+  "Section B": { prefix: "B", title: "Building B", groups: [62] },
+  "Section C": { prefix: "C", title: "Building C", groups: [20, 19] },
+  "Section D": { prefix: "D", title: "Building D", groups: [24, 23] },
+  "Section E": { prefix: "E", title: "Building E", groups: [40, 40] },
+};
+
+export default function ParkingLayout({onBayClick, mapData}: ParkingLayoutProps) {
+
+  const [activeSection, setActiveSection] = useState("Section A");
+  const config = SECTIONS[activeSection];
+
+  // every bay from the live data, keyed by its normalized number (A1, E37 ...)
+  const bayLookup = useMemo(() => {
+    const lookup = new Map<string, BayMap>();
+    mapData?.sections?.forEach((section) =>
+      section.bays?.forEach((bay) => lookup.set(normalizeBay(bay.bayNumber), bay))
+    );
+    return lookup;
+  }, [mapData]);
+
+  // free bays in this section (bays that are not in the live data yet are not counted)
+  const slots = config.groups.reduce((a, b) => a + b, 0);
+  let total = 0;
+  let freeCount = 0;
+  for (let i = 1; i <= slots; i++) {
+    const bayCode = `${config.prefix}${i}`;
+    const realBay = bayLookup.get(bayCode);
+    const defaultOccupancy = !(bayCode === "A1" || bayCode === "A2");
+    const isOccupied = realBay ? realBay.isOccupied : defaultOccupancy;
+
+    total++;
+    if (!isOccupied) freeCount++;
+  }
+
+  let nextBay = 1;
+
   return (
     <div className="parking-layout">
 
-      <div className="parking-map">
+      <SectionTabs selectedSection={activeSection} onSelectSection={setActiveSection} />
 
-        {/* Left parking row */}
-        <div className="parking-column">
-          <ParkingBay id="A-01" occupied onClick={onBayClick} />
-          <ParkingBay id="A-02" onClick={onBayClick} />
-          <ParkingBay id="A-03" occupied onClick={onBayClick} />
-          <ParkingBay id="A-04" onClick={onBayClick}/>
-          <ParkingBay id="A-05" onClick={onBayClick}/>
-        </div>
+      <div className="section-card">
 
-        {/* Road / aisle */}
-        <div className="parking-road">
-
-          <span className="road-text">
-            AISLE
+        <div className="section-header">
+          <h3 className="section-title">{config.title}</h3>
+          <span className="section-pill">
+            {mapData ? `${freeCount} of ${total} free` : "Loading..."}
           </span>
-
-          <span className="entry">
-            ENTRY
-          </span>
-
         </div>
 
-        {/* Right parking row */}
-        <div className="parking-column">
-          <ParkingBay id="A-06" onClick={onBayClick}/>
-          <ParkingBay id="A-07" occupied onClick={onBayClick}/>
-          <ParkingBay id="A-08" onClick={onBayClick}/>
-          <ParkingBay id="A-09" occupied onClick={onBayClick}/>
-          <ParkingBay id="A-10" onClick={onBayClick}/>
-        </div>
+        {config.groups.map((count, groupIndex) => {
+          const start = nextBay;
+          nextBay += count;
+
+          return (
+            <div key={groupIndex}>
+
+              {/* Road / aisle */}
+              {groupIndex > 0 && (
+                <div className="section-aisle"><span>AISLE</span></div>
+              )}
+
+              <div className="section-grid">
+                {Array.from({ length: count }, (_, k) => {
+                  const i = start + k;
+                  const bayCode = `${config.prefix}${i}`;
+                  const realBay = bayLookup.get(bayCode);
+
+                  // Fallback logic (for bays that are not in the live data yet)
+                  // Defaults all the bays to occupied (true) except for A1 and A2 which remain available (false) for hardware testing
+                  const defaultOccupancy = !(bayCode === "A1" || bayCode === "A2");
+                  const isBayOccupied = realBay ? realBay.isOccupied : defaultOccupancy;
+
+                  return (
+                    <ParkingBay
+                      key={`${config.prefix}-${i}`}
+                      id={`${config.prefix}-${String(i).padStart(2, "0")}`}
+                      occupied={isBayOccupied} // bays missing from the data show as empty
+                      onClick={onBayClick}
+                    />
+                  );
+                })}
+              </div>
+
+            </div>
+          );
+        })}
 
       </div>
 

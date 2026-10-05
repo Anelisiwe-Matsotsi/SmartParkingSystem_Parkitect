@@ -52,6 +52,19 @@ namespace backend2.Models
         public string FirebaseUid { get; set; } = string.Empty;
         public int BayID { get; set; }
     }
+
+public class BayDetailsDto
+    {
+        public int BayID { get; set; }
+        public string BayNumber { get; set; } = string.Empty;
+        public string SectionName { get; set; } = string.Empty;
+        public bool IsOccupied { get; set; }
+        public bool HasPhysicalSensor { get; set; }
+        public int? DistanceReadingCm { get; set; }
+        public string? OccupantName { get; set; }
+        public string? OccupantNumber { get; set; }
+        public DateTime? ParkedSince { get; set; }
+    }
 }
 
 /*
