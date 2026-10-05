@@ -102,7 +102,7 @@ const initials = profileName
           {availableSpaces} Bays Left
         </Text>
 
-       
+  {availableSpaces <= 1 && (     
   <TouchableOpacity style={styles.parkingButton}
   onPress={async () => {
     triggerHaptic();
@@ -135,6 +135,7 @@ const initials = profileName
   </View>
     <Feather name="chevron-right" size={20} color="#FFFFFF" />
 </TouchableOpacity>
+  )}
 
           <TouchableOpacity
   style={styles.parkingButton}
