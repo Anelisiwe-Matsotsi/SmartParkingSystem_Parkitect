@@ -31,6 +31,17 @@ const VisuallyHiddenInput = styled("input")({
   width: 1,
 });
 
+const DISPLAY_TIME_ZONE = "Africa/Johannesburg";
+
+const toUtcDate = (value: string) => new Date(/(Z|[+-]\d{2}:?\d{2})$/.test(value) ? value : value + "Z");
+
+const formatTime = (value: string) =>
+  toUtcDate(value).toLocaleTimeString("en-ZA", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: DISPLAY_TIME_ZONE,
+  });
 
 export const TicketsPage: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -58,6 +69,8 @@ export const TicketsPage: React.FC = () => {
     if (filter === "Resolved") return t.status === "Resolved";
     return true;
   });
+
+  
 
 
 
@@ -486,13 +499,7 @@ export const TicketsPage: React.FC = () => {
               <span>
                 <small>Issued</small>
                 <strong>
-                  {new Date(ticket.createdAt).toLocaleTimeString(
-                    [],
-                    {
-                      hour: "numeric",
-                      minute: "2-digit",
-                    }
-                  )}
+                  {formatTime(ticket.createdAt)}
                 </strong>
               </span>
             </div>
@@ -511,7 +518,11 @@ export const TicketsPage: React.FC = () => {
               </div>
 
               <strong>
-                {new Date(ticket.createdAt).toLocaleDateString()}
+                {new Date(ticket.createdAt).toLocaleDateString("en-GB",{
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
               </strong>
             </div>
 
