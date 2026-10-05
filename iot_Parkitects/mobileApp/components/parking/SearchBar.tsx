@@ -51,7 +51,7 @@ import { useAccessibility } from '@/context/accessibilityContext';
     return (
         <View style={styles.search}>
             <TextInput
-            placeholder="Search parking bay..."
+            placeholder="Search for parking bay"
             placeholderTextColor={Colors.light.muted}
             style={styles.searchInput}
             value={text}
