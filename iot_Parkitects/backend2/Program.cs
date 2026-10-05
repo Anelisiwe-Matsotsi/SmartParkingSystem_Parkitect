@@ -61,9 +61,9 @@ namespace backend2
             {
                 options.AddPolicy("AllowAllClients", policy =>
                 {
-                    policy.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader();
+                    policy.WithOrigins("http://localhost:8081")
+                           .AllowAnyMethod()
+                           .AllowAnyHeader();
                 });
             });
 
