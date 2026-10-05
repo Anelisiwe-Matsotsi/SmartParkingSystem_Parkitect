@@ -122,7 +122,7 @@ export const AnalyticsPage: React.FC = () => {
 
     // Draw the table starting slightly below the header (Parastoo, 2026)
     autoTable(doc, {
-      startY: 100,
+      startY: 105,
       head: [tableColumn],
       body: tableRows,
       theme: 'striped',
@@ -322,7 +322,7 @@ export const AnalyticsPage: React.FC = () => {
 
 
       {/* PARKING HISTORY */}
-      <div className="parking-history panel">
+      <div className="parking-history panel" style={{ marginTop: "12px" }}>
 
         <div className="panel-heading">
 
