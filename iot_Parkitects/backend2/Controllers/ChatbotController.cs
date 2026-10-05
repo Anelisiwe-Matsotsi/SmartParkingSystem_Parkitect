@@ -10,9 +10,9 @@ namespace backend2.Controllers
     [ApiController]
     public class ChatBotController : Controller
     {
-        
+
         private ApplicationDbContext _context;
-        
+
         // Set the applicationDbContext when the controller is called
         public ChatBotController(ApplicationDbContext context)
         {

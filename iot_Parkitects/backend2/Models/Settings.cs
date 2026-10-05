@@ -15,7 +15,7 @@ namespace backend2.Models
         public string? location { get; set; }
         public bool emailNotifications { get; set; } = false;
         public bool pushNotifications { get; set; } = true;
-        
+
         //accessibility settings
         public string textSize { get; set; } = "medium";
         public string theme { get; set; } = "default";

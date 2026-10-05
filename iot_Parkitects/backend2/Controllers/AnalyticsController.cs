@@ -29,7 +29,7 @@ namespace backend2.Controllers
                 .ToListAsync();
 
             // Format the data into strings in-memory using the renamed ParkingHistory class (Microsoft, 2026b)
-            var history = rawHistory.Select(h => new ParkingHistory 
+            var history = rawHistory.Select(h => new ParkingHistory
             {
                 // Access the joined data directly through the navigation properties
                 Bay = h.ParkingBay?.bayNumber ?? "Unknown",
@@ -37,7 +37,7 @@ namespace backend2.Controllers
                 UserType = h.User?.UserRole ?? "Unknown",
                 TimeIn = h.startDate.ToString("hh:mm tt"),
                 TimeOut = h.endDate.HasValue ? h.endDate.Value.ToString("hh:mm tt") : "—",
-                Duration = h.endDate.HasValue ? 
+                Duration = h.endDate.HasValue ?
                     $"{(h.endDate.Value - h.startDate).Hours}h {(h.endDate.Value - h.startDate).Minutes}m" : "Active",
                 Status = h.endDate.HasValue ? "Completed" : "Parked"
             }).ToList();
@@ -67,25 +67,25 @@ namespace backend2.Controllers
             var weeklyChart = weeklyCounts.Select(count => (int)Math.Round((double)count / maxDayCount * 100)).ToArray();
 
             // Calculate the percentages for the violation chart
-            int getPercentage(string reason) => totalTickets == 0 ? 0 : 
+            int getPercentage(string reason) => totalTickets == 0 ? 0 :
                 (int)Math.Round((double)tickets.Count(t => t.reason == reason) / totalTickets * 100);
 
             int rpPercent = getPercentage("Restricted parking");
             int loPercent = getPercentage("Lights are on");
             int vbPercent = getPercentage("Vehicle outside bay");
-            int psPercent = getPercentage("Parked skew");   
+            int psPercent = getPercentage("Parked skew");
             int otherPercent = 100 - (rpPercent + vbPercent + psPercent); // Remainder
 
             // 
             var resolvedTickets = tickets.Where(t => t.status == "Resolved" && t.updatedAt.HasValue).ToList();
-            
+
             // Create a variable to hold all the summary data to be returned
             var summary = new AnalyticsSummary
             {
                 TicketsIssued = tickets.Count,
                 TicketsResolved = tickets.Count(t => t.status == "Resolved"),
-                AvgResolutionTimeHours = resolvedTickets.Any() 
-                    ? resolvedTickets.Average(t => (t.updatedAt.Value - t.createdAt).TotalHours) 
+                AvgResolutionTimeHours = resolvedTickets.Any()
+                    ? resolvedTickets.Average(t => (t.updatedAt!.Value - t.createdAt).TotalHours)
                     : 0,
                 WeeklyChart = weeklyChart,
                 ViolationBreakdown = new Dictionary<string, int>

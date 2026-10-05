@@ -32,7 +32,7 @@ namespace backend2.Controllers
 
             // Queries Preferences using the integer ID
             var settings = await _context.Preferences.FirstOrDefaultAsync(s => s.userID == user.UserId);
-            
+
             if (settings == null)
             {
                 return Ok(new Settings { userID = user.UserId }); //sets preferences to default values
@@ -56,13 +56,13 @@ namespace backend2.Controllers
 
             if (preferences == null) //default settings for new users
             {
-                
+
                 settings.userID = user.UserId;
                 _context.Preferences.Add(settings);
                 await _context.SaveChangesAsync(); //changes are saved to the DB
                 return Ok(settings);
             }
-                       
+
             //updated is user changes their preferences in settings
             //preferences.language = settings.language;
             preferences.location = settings.location;
@@ -78,37 +78,37 @@ namespace backend2.Controllers
             return Ok(preferences);
         }
 
-            //Web app settings  
-            //gets the user's web settigngs
-            [HttpGet("web/{firebaseUid}")]
-            public async Task<ActionResult<WebSettings>> GetWebSettings(string firebaseUid)
-            {
-                var settings = await _context.WebSettings.FirstOrDefaultAsync(s => s.userID == firebaseUid);
+        //Web app settings  
+        //gets the user's web settigngs
+        [HttpGet("web/{firebaseUid}")]
+        public async Task<ActionResult<WebSettings>> GetWebSettings(string firebaseUid)
+        {
+            var settings = await _context.WebSettings.FirstOrDefaultAsync(s => s.userID == firebaseUid);
 
-                if(settings == null)
-                {
-                    //returns default web settings for new users
-                    return Ok(new WebSettings { userID = firebaseUid });
-                }
+            if (settings == null)
+            {
+                //returns default web settings for new users
+                return Ok(new WebSettings { userID = firebaseUid });
+            }
+            return Ok(settings);
+        }
+
+        //updates user's settings
+        [HttpPut("web/{firebaseUid}")]
+        public async Task<ActionResult<WebSettings>> UpdateWebSettings(string firebaseUid, WebSettings settings)
+        {
+            //(Adeebabu, 2025)
+            var existingSettings = await _context.WebSettings.FirstOrDefaultAsync(s => s.userID == firebaseUid);
+
+            if (existingSettings == null)
+            {
+                //creates new web settings for new users
+                settings.settingsID = 0;
+                settings.userID = firebaseUid;
+                _context.WebSettings.Add(settings);
+                await _context.SaveChangesAsync(); //changes are saved to the DB
                 return Ok(settings);
             }
-
-            //updates user's settings
-            [HttpPut("web/{firebaseUid}")]
-            public async Task<ActionResult<WebSettings>> UpdateWebSettings(string firebaseUid, WebSettings settings)
-            {
-                //(Adeebabu, 2025)
-                var existingSettings = await _context.WebSettings.FirstOrDefaultAsync(s => s.userID == firebaseUid);
-                
-                if(existingSettings == null)
-                {
-                    //creates new web settings for new users
-                    settings.settingsID = 0; 
-                    settings.userID = firebaseUid;
-                    _context.WebSettings.Add(settings);
-                    await _context.SaveChangesAsync(); //changes are saved to the DB
-                    return Ok(settings);
-                }
 
             //Web security settings
             existingSettings.darkMode = settings.darkMode;
@@ -123,9 +123,9 @@ namespace backend2.Controllers
 
             await _context.SaveChangesAsync(); //changes are saved to the DB
             return Ok(existingSettings);
-            }
         }
     }
+}
 
 /*
  * References

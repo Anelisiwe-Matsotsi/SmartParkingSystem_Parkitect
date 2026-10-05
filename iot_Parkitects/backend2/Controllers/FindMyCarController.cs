@@ -35,8 +35,8 @@ namespace backend2.Controllers
             }
 
             // Returns the GPS coordinates and bay number to the mobile app (Microsoft, 2026a)
-            return Ok(new 
-            { 
+            return Ok(new
+            {
                 bayId = occupiedBay.bayID,
                 bayNumber = occupiedBay.bayNumber,
                 latitude = occupiedBay.latitude,

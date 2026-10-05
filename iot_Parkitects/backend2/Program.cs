@@ -15,14 +15,14 @@ namespace backend2
             //Chandra, S 2026.
             // Add services to the container.
 
- // DB configuration
+            // DB configuration
             // This connects our app to the SQL db using the connection string in appsettings.json (Microsoft, 2026)
-         
-          var connectionString = Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING")
-          ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-          builder.Services.AddDbContext<ApplicationDbContext>(options =>
-          options.UseSqlServer(connectionString));
+            var connectionString = Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING")
+            ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseSqlServer(connectionString));
 
             // Configure Azure Blob Storage
             builder.Services.AddSingleton(sp =>
@@ -31,9 +31,9 @@ namespace backend2
                 return new BlobServiceClient(config.GetConnectionString("AzureBlobStorage"));
             });
 
-          //prints the server and database name on startup
-          var csb = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
-          Console.WriteLine($"[DB] Using {csb.DataSource} / {csb.InitialCatalog}");
+            //prints the server and database name on startup
+            var csb = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
+            Console.WriteLine($"[DB] Using {csb.DataSource} / {csb.InitialCatalog}");
 
             builder.Services.AddControllers();
 
@@ -41,20 +41,20 @@ namespace backend2
             builder.Services.AddHttpClient("ExpoPush", client =>
             {
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
-              //  client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
+                //  client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
             });
             builder.Services.AddScoped<IExpoPushService, ExpoPushService>();
 
             //register the email service
             builder.Services.AddScoped<IEmailService, EmailService>();
-            
+
             //(Jovanovic, 2022)
             //configure the background task to send rule notifications.
-            builder.Services.AddHostedService<RulesAlerts>(); 
+            builder.Services.AddHostedService<RulesAlerts>();
 
             builder.Services.AddOpenApi(); // Keeps the native engine
 
-           
+
 
             // This allows our Expo mobile app and web app to send POST requests to this backend (Microsoft, 2026)
             builder.Services.AddCors(options =>

@@ -24,7 +24,7 @@ namespace backend2.Services
             firebaseClient
                 .Child("ParkingLots/Lot_A/nodes/Node_01/bays")
                 .AsObservable<FirebaseBayData>()
-                .Subscribe(d => 
+                .Subscribe(d =>
                 {
                     // Run the update logic on a separate thread to avoid blocking the Firebase listener
                     Task.Run(() => HandleBayUpdateAsync(d.Key, d.Object));
@@ -66,7 +66,7 @@ namespace backend2.Services
                             startDate = DateTime.UtcNow
                         };
                         context.ParkingSessions.Add(newSession);
-                        
+
                         // Update the live bay status in SQL
                         bay.isOccupied = true;
                         await context.SaveChangesAsync();
@@ -82,7 +82,7 @@ namespace backend2.Services
                 if (openSession != null)
                 {
                     openSession.endDate = DateTime.UtcNow;
-                    
+
                     // Update the live bay status in SQL
                     bay.isOccupied = false;
                     await context.SaveChangesAsync();
