@@ -1,40 +1,46 @@
 //(rudderz243,2026)
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState , useCallback} from "react";
 import { auth } from "../config/firebase";
-import { onAuthStateChanged, updateEmail, updateProfile } from "firebase/auth"; //(Firebase, 2026)
+import { onAuthStateChanged, updateProfile } from "firebase/auth"; //(Firebase, 2026)
+import { defaultWebSettings, getParkingHistory, getSystemStatus, getWebSettings, saveWebSettings, syncUserProfile } from "../services/api";
+import type { SystemStatus, WebSettings } from "../services/api"; 
+import { applyAppearance, cacheAppearance, readCachedAppearance, resetAppearance } from "../utils/appearance";
 
-const getUserSettingsKey = (uid: string, setting: string) =>
-  `parkitects_${uid}_${setting}`;
 
-type Preferences = {
-  darkMode: boolean;
-  compactTables: boolean;
-  largerText: boolean;
-  reducedMotion: boolean;
-  rememberDevice: boolean;
-};
+//(Stack Overflow, 2023)
+type Status = { type: "success" | "error" | "info"; message: string } | null;
+const SECTIONS = ["General", "Notifications", "System"];
+//(Stack Overflow, 2023)
+const errorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : "Something went wrong.";
 
-type Notifications = {
-  ticketUpdates: boolean;
-  parkingAlerts: boolean;
-  systemAlerts: boolean;
-  alertSound: boolean;
-};
 
-const defaultPreferences: Preferences = {
-  darkMode: false,
-  compactTables: false,
-  largerText: false,
-  reducedMotion: false,
-  rememberDevice: false,
-};
+//Reusable on/off so every toggle behaves the same way
+const Toggle: React.FC<{
+  //(Schuyler, 2021)
+  label: string;
+  description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}> = ({ label, description, checked, onChange }) => (
+  <div className="setting-line">
+    <span>
+      <strong>{label}</strong>
+      <small>{description}</small>
+    </span>
 
-const defaultNotifications: Notifications = {
-  ticketUpdates: true,
-  parkingAlerts: true,
-  systemAlerts: true,
-  alertSound: true,
-};
+    <label className="switch">
+      <input
+        type="checkbox"
+        aria-label={label}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span></span>
+    </label>
+  </div>
+);
+
 
 
 export const SettingsPage: React.FC = () => {
@@ -47,31 +53,34 @@ export const SettingsPage: React.FC = () => {
   const [userEmail, setUserEmail] = useState("");
   const [profileLoaded, setProfileLoaded] = useState(false);
 
+    const [settings, setSettings] = useState<WebSettings>(defaultWebSettings);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
-  //Web security settings
-  const [notifications, setNotifications] = useState<Notifications>(defaultNotifications);
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<Status>(null);
 
-  //(Leiberman, 2021)
-  const [preferences, setPreferences] = useState<Preferences>(defaultPreferences);
+  const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
+  const [exporting, setExporting] = useState(false);
 
+  const { darkMode, compactTables, largerText, reducedMotion } = settings;
+
+  //(Stack Over, 2020)
+  const updateSetting = <K extends keyof WebSettings>(key: K, value: WebSettings[K]) =>
+    setSettings((current) => (current[key] === value ? current : { ...current, [key]: value }));
+
+
+  //(CoddyKit, 2026)
     useEffect(() => {
 
     const handleThemeChange = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      const currentUid = auth.currentUser?.uid;
 
-      const customEvent =
-        event as CustomEvent;
-        const currentUid =auth.currentUser?.uid;
-        const eventUid = customEvent.detail?.uid;
+      if (detail?.uid && currentUid && detail.uid !== currentUid) {
+        return;
+      }
 
-        if(eventUid && currentUid && eventUid !== currentUid)
-        {
-          return;
-        }
-
-      setPreferences((current) => ({
-        ...current,
-        darkMode: Boolean(customEvent.detail?.darkMode),
-      }));
+      updateSetting("darkMode", Boolean(detail?.darkMode));
     };
 
     window.addEventListener("themeChange", handleThemeChange);
@@ -82,102 +91,83 @@ export const SettingsPage: React.FC = () => {
   }, []);
 
   // Apply appearance preferences and cache them for this user.
-  useEffect(() => {
-    const theme = preferences.darkMode ? "dark" : "light";
+ useEffect(() => {
+    if (!settingsLoaded) return;
+
+    applyAppearance({ darkMode, compactTables, largerText, reducedMotion });
+
     const uid = auth.currentUser?.uid;
-
-    document.documentElement.setAttribute("data-theme", theme);
-
-    if (uid) {
-      localStorage.setItem(
-        getUserSettingsKey(uid, "theme"),
-        theme
-      );
-    }
-  }, [preferences.darkMode]);
+    window.dispatchEvent(new CustomEvent("themeChange", { detail: { darkMode, uid } }));
+  }, [settingsLoaded, darkMode, compactTables, largerText, reducedMotion]);
 
   useEffect(() => {
-    const value = String(preferences.compactTables);
-    const uid = auth.currentUser?.uid;
-
-    document.documentElement.setAttribute("data-compact", value);
-
-    if (uid) {
-      localStorage.setItem(
-        getUserSettingsKey(uid, "compactTables"),
-        value
-      );
-    }
-  }, [preferences.compactTables]);
-
-  useEffect(() => {
-    const value = String(preferences.largerText);
-    const uid = auth.currentUser?.uid;
-
-    document.documentElement.setAttribute("data-larger-text", value);
-
-    if (uid) {
-      localStorage.setItem(
-        getUserSettingsKey(uid, "largerText"),
-        value
-      );
-    }
-  }, [preferences.largerText]);
-
-  useEffect(() => {
-    const value = String(preferences.reducedMotion);
-    const uid = auth.currentUser?.uid;
-
-    document.documentElement.setAttribute("data-reduced-motion", value);
-
-    if (uid) {
-      localStorage.setItem(
-        getUserSettingsKey(uid, "reducedMotion"),
-        value
-      );
-    }
-  }, [preferences.reducedMotion]);
-
-  useEffect(() => {
+    return () => {
     const uid = auth.currentUser?.uid;
 
     if (uid) {
-      localStorage.setItem(
-        getUserSettingsKey(uid, "rememberDevice"),
-        String(preferences.rememberDevice)
+        const saved = readCachedAppearance(uid);
+        applyAppearance(saved);
+        window.dispatchEvent(
+          new CustomEvent("themeChange", { detail: { darkMode: saved.darkMode, uid } })
       );
     }
-  }, [preferences.rememberDevice]);
+       window.dispatchEvent(new CustomEvent("profileUnload"));
+       
+
+    };
+  }, []);
 
 
   //This loads the current user's details
   useEffect(() => {
+    let active = true;
 
     //Firebase loads the logged in user
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async(currentUser) => {
 
     
       if (!currentUser) {
         setUserName("");
         setUserEmail("");
         setProfileLoaded(false);
+        setSettings(defaultWebSettings);
+        setSettingsLoaded(false);
+        resetAppearance();
         return;
       }
-
-      //Gets the user's name from firebase
-
 
       //get's the logged in user's name from firebase
       setUserName(currentUser.displayName || "");
       //get's the user's email from firebase
       setUserEmail(currentUser.email || "");
       setProfileLoaded(true);
-      
+    const uid = currentUser.uid;
+
+      try {
+        const saved = await getWebSettings(uid);
+
+        if (!active || auth.currentUser?.uid !== uid) return;
+
+        setSettings(saved);
+        cacheAppearance(uid, saved);
+      } catch (error) {
+        console.error("Error loading settings:", error);
+        if (!active || auth.currentUser?.uid !== uid) return;
+
+        setSettings((current) => ({ ...current, ...readCachedAppearance(uid) }));
+        setStatus({
+          type: "error",
+          message: "Could not load your saved settings from the server. Showing this browser's settings instead.",
+        });
+      } finally {
+        if (active && auth.currentUser?.uid === uid) setSettingsLoaded(true);
+      }
     });
-
-    return() => unsubscribe();
-
-  }, []);
+    return() => {
+      active = false;
+      unsubscribe();
+  };
+},[]);
 
   //(Akbulut, 2022)
   //This sends the user's details to the top bar so it can be displayed in the profile section
@@ -196,190 +186,142 @@ export const SettingsPage: React.FC = () => {
     );
   }, [profileLoaded, userName, userEmail]);
 
-
+  //Loads the real sensor status
   useEffect(() => {
-    return () => {
-      window.dispatchEvent(new CustomEvent("profileUnload"));
-    };
-  }, []);
+    if (activeSection !== "System") return;
 
-    // Load settings belonging to the signed-in user.
-  useEffect(() => {
     let active = true;
 
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (!currentUser) {
-        if (!active) return;
-
-        setPreferences(defaultPreferences);
-        setNotifications(defaultNotifications);
-
-        document.documentElement.setAttribute("data-theme", "light");
-        document.documentElement.setAttribute("data-compact", "false");
-        document.documentElement.setAttribute("data-larger-text", "false");
-        document.documentElement.setAttribute("data-reduced-motion", "false");
-
-        return;
-      }
-
-      const uid = currentUser.uid;
-
-      try {
-        const response = await fetch(`/api/Settings/web/${uid}`);
-
-        if (!response.ok) {
-          throw new Error(`Failed to load settings (${response.status}).`);
-        }
-
-        const settings = await response.json();
-
-        // Do not apply a response belonging to an account that signed out.
-        if (!active || auth.currentUser?.uid !== uid) return;
-
-        const loadedPreferences: Preferences = {
-          darkMode:
-            settings.darkMode ??
-            (localStorage.getItem(getUserSettingsKey(uid, "theme")) === "dark"),
-          compactTables:
-            settings.compactTables ??
-            (localStorage.getItem(getUserSettingsKey(uid, "compactTables")) === "true"),
-          largerText:
-            settings.largerText ??
-            (localStorage.getItem(getUserSettingsKey(uid, "largerText")) === "true"),
-          reducedMotion:
-            settings.reducedMotion ??
-            (localStorage.getItem(getUserSettingsKey(uid, "reducedMotion")) === "true"),
-          rememberDevice:
-            settings.rememberDevice ??
-            (localStorage.getItem(getUserSettingsKey(uid, "rememberDevice")) === "true"),
-        };
-
-        setPreferences(loadedPreferences);
-
-        setNotifications({
-          ticketUpdates: settings.ticketUpdates ?? true,
-          parkingAlerts: settings.parkingAlerts ?? true,
-          systemAlerts: settings.systemAlerts ?? true,
-          alertSound: settings.alertSound ?? true,
-        });
-
-        // Keep the top bar synchronised with this user's saved theme.
-        window.dispatchEvent(
-          new CustomEvent("themeChange", {
-            detail: {
-              darkMode: loadedPreferences.darkMode,
-              uid,
-            },
-          })
-        );
-      } catch (error) {
-        console.error("Error loading settings:", error);
-      }
+    getSystemStatus().then((result) => {
+      if (active) setSystemStatus(result);
     });
 
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      active = false;
+    };
+  }, [activeSection]);
 
-  //Saves the user's settings 
-  const handleSave = async () => {
+  //Saves the user's settings
+  const handleSave = useCallback(async () => {
     const currentUser = auth.currentUser;
 
-    if(!currentUser) {
-      alert("Please log in first.");
+    if (!currentUser) {
+      setStatus({ type: "error", message: "Please log in first." });
       return;
     }
 
+    const uid = currentUser.uid;
+    const trimmedName = userName.trim();
+    const trimmedEmail = userEmail.trim();
+
+    if (trimmedName === "") {
+      setStatus({ type: "error", message: "Full name cannot be empty." });
+      setActiveSection("General");
+      return;
+    }
+    setSaving(true);
+    setStatus(null);
+
+    const problems: string[] = [];
+
+    //Settings are saved
     try {
-      //Updates the user's name in firebase
-      if(userName.trim() !== ""){
-        await updateProfile(currentUser, {
-          displayName: userName.trim(),
-        });
-      }
+      const saved = await saveWebSettings(uid, settings);
 
-      //Updates user's email in firebase
-      if(userEmail.trim() !== "" && userEmail.trim() !== currentUser.email){
-        await updateEmail(
-          currentUser,
-          userEmail.trim()
-        );
-      }
-      
-      //saves the settings to the backend
-      const response = await fetch(
-        `/api/Settings/web/${currentUser.uid}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userID: currentUser.uid,
+      cacheAppearance(uid, saved);
+      applyAppearance(saved);
+      //(Leiberman, 2021)
+      localStorage.setItem(`parkitects_${uid}_alertSound`, String(saved.alertSound));
 
-            // Web settings
-            darkMode: preferences.darkMode,
-            compactTables: preferences.compactTables,
-            largerText: preferences.largerText,
-            reducedMotion: preferences.reducedMotion,
-            rememberDevice: preferences.rememberDevice,
-
-            //Notification settings
-            ticketUpdates: notifications.ticketUpdates,
-            parkingAlerts: notifications.parkingAlerts,
-            systemAlerts: notifications.systemAlerts,
-            alertSound: notifications.alertSound,
-          }),
-        }
+      //(Akbulut, 2022)
+      window.dispatchEvent(
+        new CustomEvent("themeChange", { detail: { darkMode: saved.darkMode, uid } })
       );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Settings save failed (${response.status}): ${errorText}`);
-      }
-
-      const uid = currentUser.uid;
-
-      //this is so the selected theme stays active after navigating to other screens
-      localStorage.setItem(
-        "theme", preferences.darkMode ? "dark" : "light" //(Leiberman, 2021)
-      );
-      localStorage.setItem(
-        "compactTables", preferences.compactTables ? "true" : "false"
-      );
-      localStorage.setItem(
-        "largerText", preferences.largerText ? "true" : "false"
-      );
-      localStorage.setItem(
-        "reducedMotion", preferences.reducedMotion ? "true" : "false"
-      );
-      localStorage.setItem(
-        "rememberDevice", preferences.rememberDevice ? "true" : "false");
-        localStorage.setItem(
-          "alertSound", notifications.alertSound ? "true" : "false"
-        );
-
-        window.dispatchEvent(
-        new CustomEvent("themeChange", {
-          detail: {
-            darkMode: preferences.darkMode,
-            uid,
-          },
-        })
-      );
-
-
-        window.dispatchEvent(new CustomEvent("profileLoad", {
-          detail: {
-            name: userName,
-            email: userEmail
-          },
-        }));
-
-      alert("Settings saved successfully.");
+      window.dispatchEvent(new CustomEvent("webSettingsSaved", { detail: saved }));
     } catch (error) {
       console.error("Error saving settings:", error);
-      alert("Failed to save settings.");
+      problems.push(`Settings were not saved: ${errorMessage(error)}`);
     }
+
+    if (trimmedName !== (currentUser.displayName || "")) {
+      try {
+        await updateProfile(currentUser, { displayName: trimmedName });
+        await syncUserProfile(uid, trimmedName, currentUser.email || trimmedEmail).catch((error) =>
+          console.error("Could not sync name to the database:", error)
+        );
+      } catch (error) {
+        console.error("Error updating name:", error);
+        problems.push(`Name was not updated: ${errorMessage(error)}`);
+      }
+    }
+
+
+    //(Akbulut, 2022)
+    setUserName(auth.currentUser?.displayName || trimmedName);
+    setUserEmail(auth.currentUser?.email || "");
+    window.dispatchEvent(
+      new CustomEvent("profileLoad", {
+        detail: {
+          name: auth.currentUser?.displayName || trimmedName,
+          email: auth.currentUser?.email || "",
+        },
+      })
+    );
+
+    if (problems.length > 0) {
+      setStatus({ type: "error", message: problems.join(" ") });
+    } else {
+      setStatus({
+        type: "success",
+        message: ["Settings saved successfully."].join(" "),
+      });
+    }
+
+    setSaving(false);
+  }, [settings, userName, userEmail]);
+
+  //Downloads the parking history as a CSV file
+  const handleExport = async () => {
+    setExporting(true);
+    setStatus(null);
+
+    try {
+      const rows = await getParkingHistory();
+
+      if (rows.length === 0) {
+        setStatus({ type: "info", message: "There is no parking data to export yet." });
+        return;
+      }
+
+      const escape = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+      const header = ["Bay", "User", "User type", "Time in", "Time out", "Duration", "Status"];
+      const lines = rows.map((row) =>
+        [row.bay, row.user, row.userType, row.timeIn, row.timeOut, row.duration, row.status]
+          .map(escape)
+          .join(",")
+      );
+
+
+      //(Code-Maven, 2026)
+      const csv = "\uFEFF" + [header.map(escape).join(","), ...lines].join("\r\n");
+      const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `parkitects-parking-data-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      setStatus({ type: "success", message: `Exported ${rows.length} parking records.` });
+    } catch (error) {
+      console.error("Error exporting parking data:", error);
+      setStatus({ type: "error", message: `Could not export parking data: ${errorMessage(error)}` });
+    } finally {
+      setExporting(false);
+    }
+  
   };
   
   return (
@@ -406,10 +348,23 @@ export const SettingsPage: React.FC = () => {
           className="button primary"
           type="button"
           onClick={handleSave}
+          disabled={saving || !settingsLoaded}
         >
-          Save changes
+          {saving ? "Saving..." : "Save changes"}
         </button>
       </div>
+
+            {status && (
+        <div
+          className={`settings-banner ${status.type}`}
+          role={status.type === "error" ? "alert" : "status"}
+        >
+          <span>{status.message}</span>
+          <button type="button" aria-label="Dismiss message" onClick={() => setStatus(null)}>
+            ×
+          </button>
+        </div>
+      )}
 
       <div className="settings-layout">
 
@@ -418,12 +373,7 @@ export const SettingsPage: React.FC = () => {
           className="settings-nav"
           aria-label="Settings sections"
         >
-          {[
-            "General",
-            "Notifications",
-            "Security",
-            "System",
-          ].map((section) => (
+          {SECTIONS.map((section) => (
             <button
               key={section}
               type="button"
@@ -432,7 +382,7 @@ export const SettingsPage: React.FC = () => {
                   ? "is-active"
                   : ""
               }
-              onClick={() => setActiveSection(section)}
+              onClick={() => { if (section === "System") setSystemStatus(null);setActiveSection(section);}}
             >
               {section}
             </button>
@@ -469,7 +419,7 @@ export const SettingsPage: React.FC = () => {
                     <input
                       type="email"
                       value={userEmail}
-                      onChange={(e) => setUserEmail(e.target.value)}
+                      readOnly title="Contact an administrator to change your email address."
                     />
                   </label>
                 </div>
@@ -482,144 +432,34 @@ export const SettingsPage: React.FC = () => {
                   Choose how the Parkitects dashboard appears.
                 </p>
 
-                {/* DARK MODE */}
-                <div className="setting-line">
-                  <span>
-                    <strong>Dark theme</strong>
+                 <Toggle
+                  label="Dark theme"
+                  description="Use a darker interface in low-light environments."
+                  checked={settings.darkMode}
+                  onChange={(value) => updateSetting("darkMode", value)}
+                />
 
-                    <small>
-                      Use a darker interface in low-light environments.
-                    </small>
-                  </span>
+                <Toggle
+                  label="Compact tables"
+                  description="Display more parking records in tables."
+                  checked={settings.compactTables}
+                  onChange={(value) => updateSetting("compactTables", value)}
+                />
 
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={preferences.darkMode}
-                      onChange={(e) => {
-                        const darkMode = e.target.checked;
+                <Toggle
+                  label="Larger text"
+                  description="Increase text size throughout the Parkitects dashboard."
+                  checked={settings.largerText}
+                  onChange={(value) => updateSetting("largerText", value)}
+                />
 
-                        setPreferences({
-                          ...preferences,
-                          darkMode: darkMode, 
-                        });
-                        //saves the theme
-                        localStorage.setItem(
-                          "theme", darkMode ? "dark" : "light"
-                        );
-                      }}
-                    />
+                <Toggle
+                  label="Reduce motion"
+                  description="Reduce animations and movement throughout the dashboard."
+                  checked={settings.reducedMotion}
+                  onChange={(value) => updateSetting("reducedMotion", value)}
+                />
 
-                    <span></span>
-                  </label>
-                </div>
-
-                {/* COMPACT TABLES */}
-                <div className="setting-line">
-                  <span>
-                    <strong>Compact tables</strong>
-
-                    <small>
-                      Display more parking records in tables.
-                    </small>
-                  </span>
-
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={preferences.compactTables}
-                      onChange={(e) =>
-                        setPreferences({
-                          ...preferences,
-                          compactTables: e.target.checked,
-                        })
-                      }
-                    />
-
-                    <span></span>
-                  </label>
-                </div>
-
-                                {/* LARGER TEXT */}
-
-                <div className="setting-line">
-
-                  <span>
-
-                    <strong>
-                      Larger text
-                    </strong>
-
-                    <small>
-                      Increase text size throughout
-                      the Parkitects dashboard.
-                    </small>
-
-                  </span>
-
-
-                  <label className="switch">
-
-                    <input
-                      type="checkbox"
-                      checked={
-                        preferences.largerText
-                      }
-                      onChange={(e) =>
-                        setPreferences({
-                          ...preferences,
-                          largerText:
-                            e.target.checked,
-                        })
-                      }
-                    />
-
-                    <span></span>
-
-                  </label>
-
-                </div>
-
-
-                {/* REDUCE MOTION */}
-
-                <div className="setting-line">
-
-                  <span>
-
-                    <strong>
-                      Reduce motion
-                    </strong>
-
-                    <small>
-                      Reduce animations and movement
-                      throughout the dashboard.
-                    </small>
-
-                  </span>
-
-
-                  <label className="switch">
-
-                    <input
-                      type="checkbox"
-                      checked={
-                        preferences.reducedMotion
-                      }
-                      onChange={(e) =>
-                        setPreferences({
-                          ...preferences,
-                          reducedMotion:
-                            e.target.checked,
-                        })
-                      }
-                    />
-
-                    <span></span>
-
-                  </label>
-
-                </div>
               </article>
             </>
           )}
@@ -635,188 +475,36 @@ export const SettingsPage: React.FC = () => {
                 notified about.
               </p>
 
-              {/* TICKET UPDATES */}
-              <div className="setting-line">
-                <span>
-                  <strong>Ticket updates</strong>
+              <Toggle
+                label="Ticket updates"
+                description="Receive notifications when a ticket is created, disputed, or resolved."
+                checked={settings.ticketUpdates}
+                onChange={(value) => updateSetting("ticketUpdates", value)}
+              />
 
-                  <small>
-                    Receive notifications when a ticket is created,
-                    disputed, or resolved.
-                  </small>
-                </span>
+              <Toggle
+                label="Parking alerts"
+                description="Receive alerts about parking capacity and bay availability."
+                checked={settings.parkingAlerts}
+                onChange={(value) => updateSetting("parkingAlerts", value)}
+              />
 
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={notifications.ticketUpdates}
-                    onChange={(e) =>
-                      setNotifications({
-                        ...notifications,
-                        ticketUpdates: e.target.checked,
-                      })
-                    }
-                  />
+              <Toggle
+                label="System alerts"
+                description="Receive important system and sensor notifications."
+                checked={settings.systemAlerts}
+                onChange={(value) => updateSetting("systemAlerts", value)}
+              />
 
-                  <span></span>
-                </label>
-              </div>
-
-              {/* PARKING ALERTS */}
-              <div className="setting-line">
-                <span>
-                  <strong>Parking alerts</strong>
-
-                  <small>
-                    Receive alerts about parking capacity and bay
-                    availability.
-                  </small>
-                </span>
-
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={notifications.parkingAlerts}
-                    onChange={(e) =>
-                      setNotifications({
-                        ...notifications,
-                        parkingAlerts: e.target.checked,
-                      })
-                    }
-                  />
-
-                  <span></span>
-                </label>
-              </div>
-
-              {/* SYSTEM ALERTS */}
-              <div className="setting-line">
-                <span>
-                  <strong>System alerts</strong>
-
-                  <small>
-                    Receive important system and sensor notifications.
-                  </small>
-                </span>
-
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={notifications.systemAlerts}
-                    onChange={(e) =>
-                      setNotifications({
-                        ...notifications,
-                        systemAlerts: e.target.checked,
-                      })
-                    }
-                  />
-
-                  <span></span>
-                </label>
-              </div>
-                            {/* ALERT SOUND */}
-
-              <div className="setting-line">
-
-                <span>
-
-                  <strong>
-                    Alert sound
-                  </strong>
-
-                  <small>
-                    Play a sound when important
-                    parking or system alerts are received.
-                  </small>
-
-                </span>
-
-
-                <label className="switch">
-
-                  <input
-                    type="checkbox"
-                    checked={
-                      notifications.alertSound
-                    }
-                    onChange={(e) =>
-                      setNotifications({
-                        ...notifications,
-                        alertSound:
-                          e.target.checked,
-                      })
-                    }
-                  />
-
-                  <span></span>
-
-                </label>
-
-              </div>
+              <Toggle
+                label="Alert sound"
+                description="Play a sound when important parking or system alerts are received."
+                checked={settings.alertSound}
+                onChange={(value) => updateSetting("alertSound", value)}
+              />
 
             </article>
           )}
-
-          {/* SECURITY SETTINGS */}
-          {activeSection === "Security" && (
-
-            <article className="panel setting-group searchable">
-
-              <h2>
-                Security
-              </h2>
-
-              <p>
-                Manage security preferences for
-                your Parkitects web account.
-              </p>
-
-
-              {/* REMEMBER DEVICE */}
-
-              <div className="setting-line">
-
-                <span>
-
-                  <strong>
-                    Remember this device
-                  </strong>
-
-                  <small>
-                    Remember this browser so you
-                    do not need to verify the device
-                    as often.
-                  </small>
-
-                </span>
-
-
-                <label className="switch">
-
-                  <input
-                    type="checkbox"
-                    checked={
-                      preferences.rememberDevice
-                    }
-                    onChange={(e) =>
-                      setPreferences({
-                        ...preferences,
-                        rememberDevice:
-                          e.target.checked,
-                      })
-                    }
-                  />
-
-                  <span></span>
-
-                </label>
-
-              </div>
-
-            </article>
-
-          )}
-
 
           {/* SYSTEM SETTINGS */}
           {activeSection === "System" && (
@@ -835,12 +523,25 @@ export const SettingsPage: React.FC = () => {
                     <strong>Parking sensors</strong>
 
                     <small>
-                      Monitor the connection status of parking bay sensors.
+                        {systemStatus && systemStatus.online
+                        ? `${systemStatus.baysWithSensors} of ${systemStatus.totalBays} parking bays have a sensor.`
+                        : "Monitor the connection status of parking bay sensors."}
                     </small>
                   </span>
 
-                  <span className="status success">
-                    Connected
+                  <span className={`status ${
+                      systemStatus && systemStatus.online && systemStatus.baysWithSensors > 0
+                        ? "success"
+                        : "pending"
+                    }`}
+                  >
+                    {systemStatus === null
+                      ? "Checking..."
+                      : !systemStatus.online
+                        ? "Unknown"
+                        : systemStatus.baysWithSensors > 0
+                          ? "Connected"
+                          : "No sensors"}
                   </span>
                 </div>
 
@@ -853,8 +554,13 @@ export const SettingsPage: React.FC = () => {
                     </small>
                   </span>
 
-                  <span className="status success">
-                    Operational
+                  <span className={`status ${systemStatus === null || systemStatus.online ? "success" : "danger"}`}
+                  >
+                    {systemStatus === null
+                      ? "Checking..."
+                      : systemStatus.online
+                        ? "Operational"
+                        : "Unavailable"}
                   </span>
                 </div>
 
@@ -871,8 +577,10 @@ export const SettingsPage: React.FC = () => {
                 <button
                   className="button secondary"
                   type="button"
+                  onClick={handleExport}
+                  disabled={exporting}
                 >
-                  Export parking data
+                 {exporting ? "Exporting..." : "Export parking data"}
                 </button>
 
               </article>
@@ -889,10 +597,15 @@ export const SettingsPage: React.FC = () => {
 export default SettingsPage;
 {/*References
   Akbulut, U. 2022. JavaScript: Understanding CustomEvent and dispatchEvent. (Version 2.0) [Source Code] Available at:<https://medium.com/cstech/javascript-understanding-customevent-and-dispatchevent-a33d10075818> [Accessed 1 October 2026].
+  CoddyKit. 2026. Building a Persistent Settings Screen. (Version 2.0) [Source code] Available at:<https://www.coddykit.com/courses/learn_react_native/building-a-persistent-settings-screen-10685241> [Accessed 4 October 2026].
+  Code-Maven. 2026.Create and download data in CSV format using plain JavaScript.(Version 2.0) [Source code] Available at:<https://code-maven.com/create-and-download-csv-with-javascript> [Accessed 4 October 2026].
   Firebase. 2026. Manage Users in Firebase. (Version 2.0) [Source Code] Available at:<https://firebase.google.com/docs/auth/web/manage-users> [Accessed 27 September 2026].
   Leiberman, L. 2021. Dark Mode 2.0 : With Local Storage. (Version 2.0) [Source Code] Available at:<https://dr-lucasleibs.medium.com/dark-mode-2-0-with-local-storage-6f992683204d> [Accessed 27 September 2026].
   Mustafamulla. 2024. How to Implement Dark Mode in React with Tailwind CSS. (Version 2.0) [Source Code] Available at:<https://medium.com/@mustafamulla765/how-to-implement-dark-mode-in-react-with-tailwind-css-94df7522ed82> [Accessed 25 September 2026].
   realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 August 2026].        
   rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 August 2026].
-           */}
+  Schuyler, A.2021. Create a Simple Reusable Toggle Switch Component In React.(Version 2.0) [Source code] Available at:<https://medium.com/@aaron_schuyler/create-a-simple-reusable-toggle-switch-component-in-react-a82a1ded1b17> [Accessed 4 October 2026].
+  Stack Overflow. 2023.What's the correct type for error in useRouteError() from react-router-dom? (Version 2.0) [Source code] Available at:<https://stackoverflow.com/questions/75944820/whats-the-correct-type-for-error-in-userouteerror-from-react-router-dom> [Accessed 4 October 2026].
+  Stack Overflow. 2020. How do you dynamically update a key-value pair on a typed object in TypeScript.(Veersion 2.0) [Source code] Available at:<https://stackoverflow.com/questions/62987779/how-do-you-dynamically-update-a-key-value-pair-on-a-typed-object-in-typescript> [Accessed 4 October 2026].
+  */}
        

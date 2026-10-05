@@ -102,6 +102,28 @@ namespace backend2.Controllers
 
             if (existingSettings == null)
             {
+                 //(Adeebabu, 2025)
+                 var existingSettings = await _context.WebSettings.FirstOrDefaultAsync(s => s.userID == userID);
+                 if(existingSettings == null)
+                if (string.IsNullOrWhiteSpace(firebaseUid))
+                {
+                    return BadRequest("A user id is required.");
+                }
+
+                //(Adeebabu, 2025)
+                var existingSettings = await _context.WebSettings.FirstOrDefaultAsync(s => s.userID == firebaseUid);
+                
+                if(existingSettings == null)
+                {
+                    //creates new web settings for new users
+                    settings.settingsID = 0; 
+                    settings.userID = userID;
+                    _context.WebSettings.Add(settings);
+                    return Ok(settings);
+                }
+                else
+                {
+
                 //creates new web settings for new users
                 settings.settingsID = 0;
                 settings.userID = firebaseUid;
@@ -110,18 +132,35 @@ namespace backend2.Controllers
                 return Ok(settings);
             }
 
-            //Web security settings
-            existingSettings.darkMode = settings.darkMode;
-            existingSettings.compactTables = settings.compactTables;
-            existingSettings.ticketUpdates = settings.ticketUpdates;
-            existingSettings.parkingAlerts = settings.parkingAlerts;
-            existingSettings.systemAlerts = settings.systemAlerts;
-            existingSettings.alertSound = settings.alertSound;
-            existingSettings.rememberDevice = settings.rememberDevice;
-            existingSettings.largerText = settings.largerText;
-            existingSettings.reducedMotion = settings.reducedMotion;
 
-            await _context.SaveChangesAsync(); //changes are saved to the DB
+                    //Web security settings
+                    existingSettings.darkMode = settings.darkMode;
+                    existingSettings.compactTables = settings.compactTables;
+                    existingSettings.ticketUpdates = settings.ticketUpdates;
+                    existingSettings.parkingAlerts = settings.parkingAlerts;
+                    existingSettings.systemAlerts = settings.systemAlerts;
+                    existingSettings.alertSound = settings.alertSound;
+                    existingSettings.rememberDevice = settings.rememberDevice;
+                    existingSettings.largerText = settings.largerText;
+                    existingSettings.reducedMotion = settings.reducedMotion;
+                }
+                try
+                {
+                    await _context.SaveChangesAsync(); //changes are saved to the DB
+                }
+                catch(DbUpdateException ex)
+                {
+                    //Settings.userID has a foreign key to User.firebaseUid, so this happens when the account has no row in the User table
+                    var detail = ex.InnerException?.Message ?? ex.Message;
+
+                    if (detail.Contains("FOREIGN KEY", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Conflict("Settings could not be saved because this account has no matching row in the User table.");
+                    }
+
+                    return StatusCode(500, $"Settings could not be saved: {detail}");
+                }
+
             return Ok(existingSettings);
         }
     }

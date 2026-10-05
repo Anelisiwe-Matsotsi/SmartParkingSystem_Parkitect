@@ -21,62 +21,72 @@
     --radius: 18px;
     --sidebar: 248px;
 }
-[data-text-size="large"] {
+[data-larger-text="true"] {
     font-size: 16px;
 }
 
-[data-text-size="large"] .page-heading h1 {
+[data-larger-text="true"] body {
+    font-size: 16px;
+}
+
+[data-larger-text="true"] .page-heading h1 {
     font-size: clamp(30px, 3.2vw, 38px);
 }
 
-[data-text-size="large"] .page-heading p {
+[data-larger-text="true"] .page-heading p {
     font-size: 14px;
 }
 
-[data-text-size="large"] .panel-heading h2,
-[data-text-size="large"] .project-card h2,
-[data-text-size="large"] .setting-group h2 {
+[data-larger-text="true"] .panel-heading h2,
+[data-larger-text="true"] .project-card h2,
+[data-larger-text="true"] .setting-group h2 {
     font-size: 18px;
 }
 
-[data-text-size="large"] .setting-group > p {
+[data-larger-text="true"] .setting-group > p {
     font-size: 14px;
 }
 
-[data-text-size="large"] .setting-line {
+[data-larger-text="true"] .setting-line {
     font-size: 15px;
 }
 
-[data-text-size="large"] .setting-line small {
+[data-larger-text="true"] .setting-line small {
     font-size: 12px;
 }
 
-[data-text-size="large"] .nav-item {
+[data-larger-text="true"] .nav-item {
     font-size: 14px;
 }
 
-[data-text-size="large"] .button {
+[data-larger-text="true"] .button {
     font-size: 14px;
 }
 
-[data-reduce-motion="true"] *,
-[data-reduce-motion="true"] *::before,
-[data-reduce-motion="true"] *::after {
+[data-larger-text="true"] th,
+[data-larger-text="true"] td {
+    font-size: 13px;
+}
+
+[data-reduced-motion="true"] *,
+[data-reduced-motion="true"] *::before,
+[data-reduced-motion="true"] *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
 }
 
-[data-reduce-motion="true"] .page.is-active {
+[data-reduced-motion="true"] .page.is-active {
     animation: none !important;
 }
 
-[data-reduce-motion="true"] .button:hover,
-[data-reduce-motion="true"] .nav-item:hover,
-[data-reduce-motion="true"] .parking-bay:hover {
+[data-reduced-motion="true"] .button:hover,
+[data-reduced-motion="true"] .nav-item:hover,
+[data-reduced-motion="true"] .parking-bay:hover {
     transform: none !important;
 }
+
 
 
 
@@ -2956,6 +2966,53 @@ tbody tr:last-child td {
 }
 
 
+Web-Settings
+.status.danger { color: #b3261e; background: #fde8e6; }
+[data-theme="dark"] .status.danger { color: #f2a29b; background: #4a2320; }
+
+.settings-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+}
+
+.settings-banner.success { color: #187a55; background: #e5f7ef; border-color: #b8e6d1; }
+.settings-banner.error { color: #b3261e; background: #fde8e6; border-color: #f6c5c1; }
+.settings-banner.info { color: #55708e; background: #edf2f7; border-color: #d3deea; }
+
+[data-theme="dark"] .settings-banner.success { color: #72d9ac; background: #183a30; border-color: #245244; }
+[data-theme="dark"] .settings-banner.error { color: #f2a29b; background: #4a2320; border-color: #6a312d; }
+[data-theme="dark"] .settings-banner.info { color: #b0c4db; background: #293443; border-color: #3a4757; }
+
+.settings-banner button {
+    border: 0;
+    background: transparent;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.notice-empty {
+    margin: 0;
+    padding: 16px;
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+}
+
 
 
 .dashboard-row.map-row > .panel {
@@ -3066,7 +3123,6 @@ tbody tr:last-child td {
     font-weight: 700;
     letter-spacing: 6px;
 }
-
 
 /*References
   realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
