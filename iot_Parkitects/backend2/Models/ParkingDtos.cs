@@ -53,7 +53,7 @@ namespace backend2.Models
         public int BayID { get; set; }
     }
 
-public class BayDetailsDto
+    public class BayDetailsDto
     {
         public int BayID { get; set; }
         public string BayNumber { get; set; } = string.Empty;
