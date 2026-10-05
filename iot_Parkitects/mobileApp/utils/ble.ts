@@ -1,26 +1,19 @@
-/**
- * Everything the app needs from Bluetooth Low Energy, in one place:
- *  1. A single, lazily created BleManager
- *  2. Permission checks (silent) and permission requests (shows the system dialog)
- *  3. Bluetooth on/off state
- *  4. A short "scan and average" that returns the nearest parking beacons
- *
+ /**
+ * (Ankara, 2025),
  * Requires: npx expo install react-native-ble-plx   (dev build only, not Expo Go)
  */
 import { PermissionsAndroid, Platform } from 'react-native';
 import { BleManager, State } from 'react-native-ble-plx';
 
-// The ESP32 advertises as PARK_BEACON_NODE_1, PARK_BEACON_NODE_2, ...
+//(Ble-plx Documentation, 2025)
 const BEACON_PREFIX = 'Parkitects Beacon';
 
-// Ignore beacons weaker than this (very far away). Tune it while testing in the lot.
+//(OneClick IT Consultancy, 2023)
 const MIN_RSSI = -90;
 
-/* 1. Manager                                                                  */
-
-// Created on first use, not at import time. On iOS, creating a BleManager is
-// what triggers the Bluetooth permission prompt, so we don't want it to fire
-// just because some file imported this module.
+//A single, lazily created BleManager
+//need this in the main
+//(Ankara, 2025)
 let manager: BleManager | null = null;
 
 export function getBleManager(): BleManager {
@@ -29,16 +22,9 @@ export function getBleManager(): BleManager {
 }
 
 
-/* 2. Permissions                                                              */
+//Permission checks (silent) and permission requests (shows the system dialog)
 
-// Android 12+ (API 31+) uses BLUETOOTH_SCAN + BLUETOOTH_CONNECT. We also ask for
-// precise location, because we use beacon proximity to work out where someone
-// parked (so the "neverForLocation" flag is NOT set). Android 11 and below need
-// location for BLE scanning anyway.
-//
-// They are asked in groups, in this order:
-//   1. "Nearby devices" (BLUETOOTH_SCAN + BLUETOOTH_CONNECT), Android 12+ only
-//   2. Location
+//(Ble-plx Documentation, 2025)
 const androidPermissionGroups = () => {
   const P = PermissionsAndroid.PERMISSIONS;
   return Number(Platform.Version) >= 31
@@ -48,8 +34,11 @@ const androidPermissionGroups = () => {
 
 const androidPermissions = () => androidPermissionGroups().flat();
 
+
+
+
 /**
- * Silent check: never shows a dialog. Use it to decide what the UI should show.
+ * Silent check: never shows a dialog. Used  to decide what the UI should show.
  * iOS has no separate runtime check here; the Bluetooth *state* tells us
  * whether it's authorised (see isBluetoothOn).
  */
@@ -70,13 +59,13 @@ export type PermissionResult = 'granted' | 'denied' | 'blocked';
  *  - 'denied'  : user said no this time, we can ask again later
  *  - 'blocked' : user chose "don't ask again", the only way forward is system settings
  */
+//(Ble-plx Documentation, 2025)
 export async function requestBlePermissions(): Promise<PermissionResult> {
-  if (Platform.OS !== 'android') return 'granted'; // iOS asks when the manager is first used
+  if (Platform.OS !== 'android') return 'granted';
 
   for (const group of androidPermissionGroups()) {
     const results = await PermissionsAndroid.requestMultiple(group);
 
-    // Temporary: shows in the Metro terminal which permission the system answered, and how.
     console.log('[BLE] Android', Platform.Version, 'permission results:', results);
 
     const values = Object.values(results);
@@ -87,7 +76,7 @@ export async function requestBlePermissions(): Promise<PermissionResult> {
 }
 
 
-/* 3. Bluetooth state                                                          */
+//Bluetooth on/off state
 
 export async function isBluetoothOn(): Promise<boolean> {
   return (await getBleManager().state()) === State.PoweredOn;
@@ -107,15 +96,16 @@ export async function tryEnableBluetooth(): Promise<boolean> {
   }
 }
 
-/* 4. Scanning for parking beacons                                             */
-
+//Scanning for parking beacons 
 export type NearbyNode = {
-  name: string;    // "PARK_BEACON_NODE_1"  (what the ESP32 advertises)
-  nodeKey: string; // "Node_01"             (the key used in Firebase)
-  label: string;   // "Node 1"              (what we show the user)
-  rssi: number;    // averaged signal strength in dBm, closer to 0 = closer
+  name: string;
+  nodeKey: string;
+  label: string;
+  rssi: number;
 };
 
+//A short "scan and average" that returns the nearest parking beacons
+//(Ankara, 2025)
 const beaconNumber = (name: string) => name.match(/(\d+)\s*$/)?.[1] ?? '0';
 
 export const toFirebaseNodeKey = (name: string) =>
@@ -128,10 +118,14 @@ export function stopScan() {
 }
 
 /**
+ * (Ble-plx Documentation, 2025)
  * Scans for `durationMs`, collects every RSSI reading per beacon, averages them,
  * and returns the beacons sorted strongest (closest) first.
  * Call stopScan() if the screen closes early.
  */
+
+//
+//(OneClick IT Consultancy, 2023)
 export function scanNearbyNodes(durationMs = 4000): Promise<NearbyNode[]> {
   const readings = new Map<string, number[]>();
 
@@ -150,7 +144,7 @@ export function scanNearbyNodes(durationMs = 4000): Promise<NearbyNode[]> {
       resolve(nodes);
     }, durationMs);
 
-    // allowDuplicates matters on iOS; Android reports repeat adverts by default.
+    //(Ble-plx Documentation, 2025)
     getBleManager().startDeviceScan(null, { allowDuplicates: true }, (error, device) => {
       if (error) {
         clearTimeout(timer);
@@ -168,5 +162,9 @@ export function scanNearbyNodes(durationMs = 4000): Promise<NearbyNode[]> {
     });
   });
 }
-//https://dev.to/harmonyos/estimating-distance-to-ble-beacons-using-rssi-and-txpower-in-harmonyos-2nic
-//https://dotintent.github.io/react-native-ble-plx/
+
+/*References
+Ankara, A.E., 2025. How to Build a High Performance BLE & iBeacon Manager Using the Singleton Pattern in HarmonyOS NEXT. [online] Medium. Available at: <https://medium.com/huawei-developers/designing-a-singleton-based-blemanager-for-ibeacon-scanning-in-harmonyos-next-19db8595bd4a> [Accessed 3 October 2026]
+Ble-plx Documentation, 2025. react-native-ble-plx 3.3.0 Documentation. [online] Available at: <https://dotintent.github.io/react-native-ble-plx/> [Accessed 3 October 2026]
+OneClick IT Consultancy, 2023. Measuring Distance Between Beacon & Device. [online] Available at: <https://www.oneclickitsolution.com/blog/measuring-distance-between-beacon-device> [Accessed 3 October 2026]
+*/

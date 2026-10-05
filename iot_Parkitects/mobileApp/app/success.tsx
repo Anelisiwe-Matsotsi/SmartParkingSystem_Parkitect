@@ -1,18 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import * as Haptics from 'expo-haptics';
 import {
   StyleSheet,
   SafeAreaView,
   View,
-  Text,
   TouchableOpacity,
 } from 'react-native';
 import FeatherIcon from '@expo/vector-icons/Feather';
-import { push } from 'expo-router/build/global-state/routing';
 import { router } from 'expo-router';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 
 export default function Success() {
+  const { theme, triggerHaptic, triggerScreenReader } = useAccessibility();
+
+  useEffect(() => {
+    triggerHaptic(Haptics.ImpactFeedbackStyle.Medium);
+    triggerScreenReader('Thank you. Your ticket has been sent to security');
+  }, []);
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F7FAFB' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={styles.container}>
         <View style={styles.alert}>
           <View style={styles.alertIcon}>
@@ -22,9 +30,9 @@ export default function Success() {
               size={42} />
           </View>
 
-          <Text style={styles.alertTitle}>Thank You</Text>
+          <Text style={[styles.alertTitle, { color: theme.heading }]}>Thank You</Text>
 
-          <Text style={styles.alertMessage}>
+          <Text style={[styles.alertMessage, { color: theme.muted }]}>
             Your ticket has been sent to security
             {'\n'}
             and will be reviewed as soon as possible
@@ -33,6 +41,7 @@ export default function Success() {
           <TouchableOpacity
             onPress={() => {
               // handle onPress
+              triggerHaptic();
               router.push('/(tabs)')
             }}>
             <View style={styles.btn}>

@@ -6,13 +6,13 @@ namespace backend2.Data
     public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
-     // Tells Entity Framework to create tables related to the application models (Microsoft, 2026)
-       // // public DbSet<Analytics> Analytics { get; set; }
-      //  // public DbSet<Chatbot> Chatbot { get; set; }
-       // // public DbSet<FindMyCar> FindMyCar { get; set; }
-      //  // public DbSet<Notifications> Notifications { get; set; }
-      //  // public DbSet<Parking> Parking { get; set; }
-        public DbSet<Settings> Settings { get; set; }
+        // Tells Entity Framework to create tables related to the application models (Microsoft, 2026)
+        // // public DbSet<Analytics> Analytics { get; set; }
+        //  // public DbSet<Chatbot> Chatbot { get; set; }
+        // // public DbSet<FindMyCar> FindMyCar { get; set; }
+        //  // public DbSet<Notifications> Notifications { get; set; }
+        //  // public DbSet<Parking> Parking { get; set; }
+        public DbSet<Settings> Preferences { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
 
         public DbSet<User> Users { get; set; }
@@ -23,20 +23,21 @@ namespace backend2.Data
         public DbSet<PushToken> PushToken { get; set; }
         public DbSet<Notifications> Notifications { get; set; }
 
-       public DbSet<ParkingLot> ParkingLots { get; set; }
+        public DbSet<ParkingLot> ParkingLots { get; set; }
         public DbSet<ParkingSection> ParkingSections { get; set; }
         public DbSet<ParkingBay> ParkingBays { get; set; }
-        public DbSet<Sensor> Sensors { get; set; }   
-         public DbSet<Permissions> Permissions {get; set;}
+        public DbSet<Sensor> Sensors { get; set; }
+        public DbSet<Permissions> Permissions { get; set; }
 
-  public DbSet<ParkingSession> ParkingSessions { get; set; }
+        public DbSet<ParkingSession> ParkingSessions { get; set; }
 
+        public DbSet<WebSettings> WebSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-// Configure parking relationships for the Map
+            // Configure parking relationships for the Map
             modelBuilder.Entity<ParkingSection>()
                 .HasOne(ps => ps.ParkingLot)
                 .WithMany(pl => pl.ParkingSections)
@@ -56,9 +57,11 @@ namespace backend2.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
 
-            
+
             // Forces EF Core to map inheritance to separate tables linked by primary keys (Microsoft, 2026)
             modelBuilder.Entity<User>().UseTptMappingStrategy();
+            modelBuilder.Entity<Settings>().ToTable("Preferences");
+            modelBuilder.Entity<WebSettings>().ToTable("Settings");
         }
     }
 }

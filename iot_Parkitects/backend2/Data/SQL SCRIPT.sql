@@ -1,16 +1,3 @@
-USE master;
-GO
-
--- Create the ParkitectDB database only if it does not already exist
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'ParkitectsDB')
-BEGIN
-    CREATE DATABASE ParkitectsDB;
-END
-GO
-
--- Switch to the ParkitectDB database
-USE ParkitectsDB;
-GO
 
 -- User Related Tables
 -- Create the User table
@@ -135,7 +122,6 @@ CREATE TABLE Preferences (
     colorMode NVARCHAR(255),
     screenReader BIT NOT NULL,
     hapticFeedback BIT NOT NULL,
-    language NVARCHAR(255),
     location NVARCHAR(255),
     emailNotifications BIT NOT NULL,
     pushNotifications BIT NOT NULL,
@@ -143,6 +129,24 @@ CREATE TABLE Preferences (
     reduceMotion BIT NOT NULL,
     CONSTRAINT FK_Preferences_User FOREIGN KEY (userID) REFERENCES [User](userID) ON DELETE CASCADE
 
+);
+
+-- Settings table (security web app)
+CREATE TABLE Settings (
+    settingsID INT PRIMARY KEY IDENTITY(1,1),
+    -- Stores the firebase uid of the user
+    userID NVARCHAR(255) NOT NULL UNIQUE,
+    darkMode BIT NOT NULL DEFAULT 0,
+    compactTables BIT NOT NULL DEFAULT 0,
+    ticketUpdates BIT NOT NULL DEFAULT 1,
+    parkingAlerts BIT NOT NULL DEFAULT 1,
+    systemAlerts BIT NOT NULL DEFAULT 1,
+    alertSound BIT NOT NULL DEFAULT 1,
+    rememberDevice BIT NOT NULL DEFAULT 0,
+    largerText BIT NOT NULL DEFAULT 0,
+    reducedMotion BIT NOT NULL DEFAULT 0,
+    CONSTRAINT FK_Settings_User FOREIGN KEY (userID)
+        REFERENCES [User](firebaseUid) ON DELETE CASCADE
 );
 
 
@@ -172,7 +176,8 @@ CREATE TABLE ChatBot (
 );
 
 -- Create Notification table
-CREATE TABLE Notification (
+-- named Notifications (plural) because the backend queries [Notifications]
+CREATE TABLE Notifications (
     notificationID INT PRIMARY KEY IDENTITY(1,1),
     notificationType NVARCHAR(255) NOT NULL,
     title NVARCHAR(255) NOT NULL,

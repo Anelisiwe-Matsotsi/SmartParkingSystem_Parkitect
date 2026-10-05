@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "206377666582-hnirrur335l0gfipk4hti5tv3so9o7ou.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nattyexpo.MobileApp",
+            "certificate_hash": "10019782a213fcc531821ce00538c2907df66a57"
+          }
+        },
+        {
           "client_id": "206377666582-1o9boqp6g914ommhl5km4ehjehv8ln8s.apps.googleusercontent.com",
           "client_type": 3
         }

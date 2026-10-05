@@ -1,25 +1,18 @@
 //(Withfra.me, 2022)
-/**
- *
- * Shown straight after sign-in. 
- *  1. The switches show the REAL state of the phone (asked fresh every time the
- *     screen opens, the app returns from Settings, or Bluetooth changes).
- *  2. A returning user who already confirmed once, and has Bluetooth ready, is
- *     forwarded to the tabs without seeing this screen at all.
- */
 import React, { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   StyleSheet,
   View,
   TouchableOpacity,
-  Text,
   ScrollView,
   Switch,
   Alert,
   AppState,
   Linking,
 } from 'react-native';
+import { ThemedText as Text } from '@/components/themed-text';
+import { useAccessibility } from '@/context/accessibilityContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FeatherIcon from '@expo/vector-icons/Feather';
 import * as Location from 'expo-location';
@@ -37,7 +30,8 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function Permissions() {
   const router = useRouter();
-
+  const { theme, triggerHaptic } = useAccessibility();
+//  (kumar.2023)
   // Settings opens this screen with ?from=settings so it doesn't auto-skip
   const { from } = useLocalSearchParams<{ from?: string }>();
   const fromSettings = from === 'settings';
@@ -116,6 +110,7 @@ export default function Permissions() {
 
   // An app cannot revoke an OS permission, so turning a switch OFF sends the user to Settings.
   const toggleBluetooth = async (on: boolean) => {
+    triggerHaptic();
     if (!on) {
       Linking.openSettings();
       return;
@@ -134,6 +129,7 @@ export default function Permissions() {
   };
 
   const toggleLocation = async (on: boolean) => {
+    triggerHaptic();
     if (!on) {
       Linking.openSettings();
       return;
@@ -145,6 +141,7 @@ export default function Permissions() {
   };
 
   const handleConfirm = async () => {
+    triggerHaptic();
     // Bluetooth is required: it's how we confirm which bay you parked in.
     if (!perms.bluetooth && !fromSettings) {
       Alert.alert(
@@ -159,7 +156,6 @@ export default function Permissions() {
     // Saves what the phone granted plus the rule-alerts choice. Same URL style as the
     // Settings and Preferences endpoints: the controller turns the Firebase UID into
     // User.userID (Permissions.userID is an INT foreign key).
-    // Push and email notifications are controlled from the Settings screen, not here.
     if (uid) {
       try {
         const res = await fetch(`${API_BASE_URL}/api/Permissions/user/${uid}`, {
@@ -189,7 +185,7 @@ export default function Permissions() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F7FAFB' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={styles.header}>
         <View style={styles.headerActions}>
           <TouchableOpacity
@@ -202,18 +198,18 @@ export default function Permissions() {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.title}>Permissions</Text>
+        <Text style={[styles.title, { color: theme.heading }]}>Permissions</Text>
 
         <Text style={styles.subtitle}>Stay on track with Parkitech</Text>
       </View>
 
-      <ScrollView>
+      <ScrollView removeClippedSubviews={false}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Permissions</Text>
 
-          <View style={styles.sectionItem}>
+          <View style={[styles.sectionItem, { backgroundColor: theme.surface }]}>
             <View style={styles.sectionInfo}>
-              <Text style={styles.sectionName}>Bluetooth</Text>
+              <Text style={[styles.sectionName, { color: theme.heading }]}>Bluetooth</Text>
 
               <Text style={styles.sectionDescription}>
                 Required. Confirms which bay you parked in.
@@ -235,9 +231,9 @@ export default function Permissions() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Additional Settings (optional)</Text>
 
-          <View style={styles.sectionItem}>
+          <View style={[styles.sectionItem, { backgroundColor: theme.surface }]}>
             <View style={styles.sectionInfo}>
-              <Text style={styles.sectionName}>Location</Text>
+              <Text style={[styles.sectionName, { color: theme.heading }]}>Location</Text>
 
               <Text style={styles.sectionDescription}>
                 Guides you across the lot when you use Find My Car.
@@ -251,15 +247,15 @@ export default function Permissions() {
             />
           </View>
 
-          <View style={styles.sectionItem}>
+          <View style={[styles.sectionItem, { backgroundColor: theme.surface }]}>
             <View style={styles.sectionInfo}>
-              <Text style={styles.sectionName}>Rule alerts</Text>
+              <Text style={[styles.sectionName, { color: theme.heading }]}>Rule alerts</Text>
 
               <Text style={styles.sectionDescription}>Receive daily parking rules.</Text>
             </View>
 
             <Switch
-              onValueChange={ruleAlerts => setPerms(p => ({ ...p, ruleAlerts }))}
+              onValueChange={ruleAlerts => { triggerHaptic(); setPerms(p => ({ ...p, ruleAlerts })); }}
               trackColor={{ false: '#757575', true: '#107c84' }}
               value={perms.ruleAlerts}
             />
@@ -374,7 +370,7 @@ const styles = StyleSheet.create({
     color: '#889797',
     marginTop: 4,
   },
-  /** Button */
+
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -398,6 +394,5 @@ const styles = StyleSheet.create({
 /**
  * References
  * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
-       https://www.spritle.com/blog/react-native-expo-app-gateway-to-connect-and-communicate-with-ble-devices/
-
+   kumar.2023. React Native Expo App: Gateway to Connect & Communicate BLE. [online] Spritle software. Available at: < https://www.spritle.com/blog/react-native-expo-app-gateway-to-connect-and-communicate-with-ble-devices/ > [Accessed 3 October 2026].
 */

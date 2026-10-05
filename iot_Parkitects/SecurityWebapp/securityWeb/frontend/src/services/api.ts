@@ -4,7 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 //gets the users name through firebase ID
 export async function getUserByFirebaseUid(firebaseUid: string): Promise<{name: string}> {
-  const response = await fetch(`${API_URL}/User/user/${firebaseUid}`);
+  const response = await fetch(`${API_URL}/User/profile/${firebaseUid}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch user");

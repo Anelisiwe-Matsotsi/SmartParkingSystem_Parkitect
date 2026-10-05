@@ -1,11 +1,13 @@
- //(Withfra.me, 2022)
- import React from 'react';
+//(Withfra.me, 2022)
+ import React, { useState } from 'react';
  import {
  StyleSheet,
   View,
   Text,
   TextInput,
   TouchableOpacity,
+  Keyboard,
+  Alert,
  } from 'react-native';
 
  import {Feather} from '@expo/vector-icons';
@@ -16,18 +18,53 @@ import { Radius } from
 '@/constants/radius';
 import { Spacing } from
 '@/constants/spacing';
+import { useAccessibility } from '@/context/accessibilityContext';
 
- export default function SearchBar() {
+ // onSearch returns true when the bay was found (or the box was cleared)
+ type Props = {
+  onSearch?: (query: string) => boolean;
+ };
+
+ export default function SearchBar({ onSearch }: Props) {
+    const [text, setText] = useState('');
+
+    // runs the search when the user presses enter on the keyboard or taps the search button
+    const submit = () => {
+        Keyboard.dismiss();
+        if (!onSearch || text.trim() === '') return;
+
+        const found = onSearch(text);
+        if (!found) {
+            Alert.alert(
+                'Bay not found',
+                'Enter a bay like A1 or E12.'
+            );
+        }
+    };
+
+    // clearing the box removes the highlight on the map
+    const handleChange = (value: string) => {
+        setText(value);
+        if (value.trim() === '') onSearch?.('');
+    };
+
     return (
         <View style={styles.search}>
             <TextInput
             placeholder="Search parking bay..."
             placeholderTextColor={Colors.light.muted}
             style={styles.searchInput}
+            value={text}
+            onChangeText={handleChange}
+            onSubmitEditing={submit}
+            returnKeyType="search"
+            autoCapitalize="characters"
+            autoCorrect={false}
+            maxLength={6}
         />
 
         <View style={styles.searchFloating}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={submit}>
                 <View style={styles.searchButton}>
                     <Feather
                     name="search"
@@ -78,5 +115,5 @@ import { Spacing } from
 });
 /**
  * References
- * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 2.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
+ * Withfra.me. 2022. Ready to Use React Native Components - WithFrame | withfra.me. (Version 10.0) [Source code] Available at:<https://withfra.me/components > [Accessed 17 Aug. 2026].
  */

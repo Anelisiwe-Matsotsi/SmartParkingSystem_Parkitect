@@ -1,5 +1,5 @@
 //(rudderz243,2026)
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -8,6 +8,10 @@ import TableContainer from "@mui/material/TableContainer";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import TableHead from "@mui/material/TableHead";
+
+// (Parastoo, 2026))
+import jsPDF from "jspdf"; 
+import autoTable from "jspdf-autotable";
 
 interface ParkingHistory {
   bay: string;
@@ -19,120 +23,132 @@ interface ParkingHistory {
   status: string;
 }
 
-const rows: ParkingHistory[] = [
-  {
-    bay: "A01",
-    user: "Student #1024",
-    userType: "Student",
-    timeIn: "08:02 AM",
-    timeOut: "08:47 AM",
-    duration: "45 min",
-    status: "Completed",
-  },
-  {
-    bay: "A01",
-    user: "Student #1842",
-    userType: "Student",
-    timeIn: "09:03 AM",
-    timeOut: "10:21 AM",
-    duration: "1h 18m",
-    status: "Completed",
-  },
-  {
-    bay: "A02",
-    user: "Lecturer #018",
-    userType: "Lecturer",
-    timeIn: "08:15 AM",
-    timeOut: "12:10 PM",
-    duration: "3h 55m",
-    status: "Completed",
-  },
-  {
-    bay: "A03",
-    user: "Student #0931",
-    userType: "Student",
-    timeIn: "08:31 AM",
-    timeOut: "09:42 AM",
-    duration: "1h 11m",
-    status: "Completed",
-  },
-  {
-    bay: "B01",
-    user: "Student #3312",
-    userType: "Student",
-    timeIn: "08:45 AM",
-    timeOut: "10:12 AM",
-    duration: "1h 27m",
-    status: "Completed",
-  },
-  {
-    bay: "B04",
-    user: "Visitor #042",
-    userType: "Visitor",
-    timeIn: "09:10 AM",
-    timeOut: "09:55 AM",
-    duration: "45 min",
-    status: "Completed",
-  },
-  {
-    bay: "B07",
-    user: "Student #2214",
-    userType: "Student",
-    timeIn: "09:22 AM",
-    timeOut: "—",
-    duration: "Active",
-    status: "Parked",
-  },
-  {
-    bay: "C02",
-    user: "Lecturer #031",
-    userType: "Lecturer",
-    timeIn: "07:54 AM",
-    timeOut: "01:05 PM",
-    duration: "5h 11m",
-    status: "Completed",
-  },
-  {
-    bay: "C07",
-    user: "Student #1187",
-    userType: "Student",
-    timeIn: "10:14 AM",
-    timeOut: "11:03 AM",
-    duration: "49 min",
-    status: "Completed",
-  },
-  {
-    bay: "D01",
-    user: "Student #4421",
-    userType: "Student",
-    timeIn: "10:32 AM",
-    timeOut: "—",
-    duration: "Active",
-    status: "Parked",
-  },
-  {
-    bay: "D05",
-    user: "Visitor #019",
-    userType: "Visitor",
-    timeIn: "11:02 AM",
-    timeOut: "12:15 PM",
-    duration: "1h 13m",
-    status: "Completed",
-  },
-  {
-    bay: "D22",
-    user: "Student #3021",
-    userType: "Student",
-    timeIn: "11:25 AM",
-    timeOut: "12:40 PM",
-    duration: "1h 15m",
-    status: "Completed",
-  },
-];
+
 
 export const AnalyticsPage: React.FC = () => {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
+  // state to hold the dynamic data
+  const [rows, setRows] = useState<ParkingHistory[]>([]);
+  const [summary, setSummary] = useState({ issued: 0, resolved: 0, avgTime: 0, 
+    weeklyChart: [0, 0, 0, 0, 0, 0, 0], // Set the default chart values to 0
+    breakdown: { RP: 0, LO: 0, VB: 0, PS: 0, OT: 0 }  // Set the default violation report values to 0
+  });
+
+  const[isLoading, setIsLoading] = useState(true);
+
+  // Function to extract the fetch logic 
+  const fetchAnalyticsData = async (isPolling = false) => {
+
+    if(!isPolling) {
+      setIsLoading(true);
+    }
+
+    try {
+      const historyResponse = await fetch("http://localhost:8080/api/Analytics/history");
+      const historyData = await historyResponse.json();
+      setRows(historyData);
+
+      const summaryResponse = await fetch("http://localhost:8080/api/Analytics/summary");
+      const summaryData = await summaryResponse.json();
+      setSummary({
+          issued: summaryData.ticketsIssued,
+          resolved: summaryData.ticketsResolved,
+          avgTime: summaryData.avgResolutionTimeHours.toFixed(1),
+          weeklyChart: summaryData.weeklyChart,
+          breakdown: summaryData.violationBreakdown
+      });
+    } catch (error) {
+      console.error("Failed to fetch analytics data:", error);
+    } finally {
+      setIsLoading(false); // Stop loading whether it succeeds or fails
+    }
+  };
+
+  // Generates and downloads a PDF report using the current dashboard state (Parastoo, 2026)
+  const handleDownloadReport = () => {
+    const doc = new jsPDF();
+
+    // Report Header
+    doc.setFontSize(20);
+    doc.text("Parkitects Analytics Report", 14, 22);
+    
+    // Add a generation timestamp
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+    // Summary Statistics
+    doc.setFontSize(14);
+    doc.setTextColor(20, 20, 20);
+    doc.text("System Summary", 14, 45);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
+    doc.text(`Tickets Issued: ${summary.issued}`, 14, 55);
+    doc.text(`Tickets Resolved: ${summary.resolved}`, 14, 62);
+    doc.text(`Avg. Resolution Time: ${summary.avgTime} hrs`, 14, 69);
+
+    // Violation Breakdown
+    doc.setFontSize(14);
+    doc.setTextColor(20, 20, 20);
+    doc.text("Violation Breakdown", 100, 45);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
+    doc.text(`Restricted Parking: ${summary.breakdown.RP}%`, 100, 55);
+    doc.text(`Lights Are On: ${summary.breakdown.LO}%`, 100, 62);
+    doc.text(`Vehicle Outside Bay: ${summary.breakdown.VB}%`, 100, 69);
+    doc.text(`Parked Skew: ${summary.breakdown.PS}%`, 100, 76);
+    doc.text(`Other: ${summary.breakdown.OT}%`, 100, 83);
+
+    // Parking History Table
+    doc.setFontSize(14);
+    doc.setTextColor(20, 20, 20);
+    doc.text("Historical Parking Records", 14, 102);
+
+    // Map the React state array into a format that jspdf-autotable can read
+    const tableColumn = ["Bay", "User", "Type", "Time In", "Time Out", "Duration", "Status"];
+    const tableRows = rows.map(row => [
+      row.bay, 
+      row.user, 
+      row.userType, 
+      row.timeIn, 
+      row.timeOut, 
+      row.duration, 
+      row.status
+    ]);
+
+    // Draw the table starting slightly below the header (Parastoo, 2026)
+    autoTable(doc, {
+      startY: 100,
+      head: [tableColumn],
+      body: tableRows,
+      theme: 'striped',
+      headStyles: { fillColor: [11, 93, 107] }, 
+    });
+
+    // Trigger the file download
+    doc.save("Parkitects_Analytics_Report.pdf");
+  };
+  
+
+  // (Meta Platforms, Inc., 2026)
+  useEffect(() => {
+    fetchAnalyticsData();
+
+    // Set up the polling interval every 30 seconds
+    const intervalId = setInterval(() => {
+      fetchAnalyticsData(true); // Pass true to indicate this is a background poll
+    }, 30000);
+
+    // Cleanup function runs when the component unmounts to stop the interval
+    return () => {
+      clearInterval(intervalId);
+    };
+
+  }, []);
 
   const handleChangePage = (
     _event: unknown,
@@ -171,71 +187,44 @@ export const AnalyticsPage: React.FC = () => {
           </p>
         </div>
 
-        <button
-          className="button primary"
-          type="button"
-        >
-          Download Report
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {/* Button to refresh the data */}
+          <button 
+            className="button secondary" 
+            type="button" 
+            onClick={() => fetchAnalyticsData()}
+          >
+            {isLoading ? "Refreshing..." : "Refresh Data"}
+          </button>
+
+          <button
+            className="button primary"
+            type="button"
+            onClick={handleDownloadReport}
+            disabled={isLoading || rows.length === 0}
+          >
+            Download Report
+          </button>
+        </div>
       </div>
 
 
       {/* INSIGHT CARDS */}
       <div className="insight-strip">
-
-        <article
-          className="searchable"
-          data-search="tickets issued parking violations"
-        >
-          <span>
-            Tickets issued
-          </span>
-
-          <strong>
-            42
-          </strong>
-
-          <small className="change up">
-            ↑ 12.4%
-          </small>
+        <article className="searchable" data-search="tickets issued parking violations">
+          <span>Tickets issued</span>
+          <strong>{summary.issued}</strong> 
         </article>
 
-
-        <article
-          className="searchable"
-          data-search="tickets resolved completed"
-        >
-          <span>
-            Tickets resolved
-          </span>
-
-          <strong>
-            31
-          </strong>
-
-          <small className="change up">
-            ↑ 8.7%
-          </small>
+        <article className="searchable" data-search="tickets resolved completed">
+          <span>Tickets resolved</span>
+          <strong>{summary.resolved}</strong> 
         </article>
 
-
-        <article
-          className="searchable"
-          data-search="ticket resolution time"
-        >
-          <span>
-            Avg. resolution time
-          </span>
-
-          <strong>
-            2.4 hrs
-          </strong>
-
-          <small className="change down">
-            ↓ 14.2%
-          </small>
+        <article className="searchable" data-search="ticket resolution time">
+          <span>Avg. resolution time</span>
+          <strong>{summary.avgTime} hrs</strong> 
         </article>
-
       </div>
 
 
@@ -266,39 +255,16 @@ export const AnalyticsPage: React.FC = () => {
           </div>
 
 
-          <div
-            className="bar-chart"
-            aria-label="Parking tickets issued throughout the week"
-          >
-            <span style={{ height: "45%" }}>
-              <i>Mon</i>
-            </span>
-
-            <span style={{ height: "62%" }}>
-              <i>Tue</i>
-            </span>
-
-            <span style={{ height: "54%" }}>
-              <i>Wed</i>
-            </span>
-
-            <span style={{ height: "76%" }}>
-              <i>Thu</i>
-            </span>
-
-            <span style={{ height: "92%" }}>
-              <i>Fri</i>
-            </span>
-
-            <span style={{ height: "68%" }}>
-              <i>Sat</i>
-            </span>
-
-            <span style={{ height: "58%" }}>
-              <i>Sun</i>
-            </span>
+          <div className="bar-chart" aria-label="Parking tickets issued throughout the week">
+            {/* Maps the calculated height percentages to the bar styles dynamically */}
+            <span style={{ height: `${summary.weeklyChart[0]}%` }}><i>Mon</i></span>
+            <span style={{ height: `${summary.weeklyChart[1]}%` }}><i>Tue</i></span>
+            <span style={{ height: `${summary.weeklyChart[2]}%` }}><i>Wed</i></span>
+            <span style={{ height: `${summary.weeklyChart[3]}%` }}><i>Thu</i></span>
+            <span style={{ height: `${summary.weeklyChart[4]}%` }}><i>Fri</i></span>
+            <span style={{ height: `${summary.weeklyChart[5]}%` }}><i>Sat</i></span>
+            <span style={{ height: `${summary.weeklyChart[6]}%` }}><i>Sun</i></span>
           </div>
-
         </article>
 
 
@@ -324,51 +290,30 @@ export const AnalyticsPage: React.FC = () => {
 
 
           <div className="region-list">
-
             <div>
-              <span>
-                <i>RP</i>
-                Restricted parking
-              </span>
-
-              <strong>
-                42%
-              </strong>
+              <span><i>RP</i>Restricted parking</span>
+              <strong>{summary.breakdown.RP}%</strong>
             </div>
 
             <div>
-              <span>
-                <i>OT</i>
-                Overstayed parking
-              </span>
-
-              <strong>
-                27%
-              </strong>
+              <span><i>LO</i>Lights are on</span>
+              <strong>{summary.breakdown.LO}%</strong>
             </div>
 
             <div>
-              <span>
-                <i>IB</i>
-                Incorrect bay
-              </span>
-
-              <strong>
-                18%
-              </strong>
+              <span><i>VB</i>Vehicle outside bay</span>
+              <strong>{summary.breakdown.VB}%</strong>
+            </div>
+            
+            <div>
+              <span><i>PS</i>Parked skew</span>
+              <strong>{summary.breakdown.PS}%</strong>
             </div>
 
             <div>
-              <span>
-                <i>OT</i>
-                Other
-              </span>
-
-              <strong>
-                13%
-              </strong>
+              <span><i>OT</i>Other</span>
+              <strong>{summary.breakdown.OT}%</strong>
             </div>
-
           </div>
 
         </article>
@@ -549,7 +494,9 @@ export const AnalyticsPage: React.FC = () => {
 export default AnalyticsPage;
 
 {/*References
-        Material UI.2026. Table. (Version 2.0) [Source code] . Available at: <https://mui.com/material-ui/react-table/ > [Accessed 12 Aug. 2026]. 
-    realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026].        
-        rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
-           */}
+    Material UI.2026. Table. (Version 2.0) [Source code] . Available at: <https://mui.com/material-ui/react-table/> [Accessed 12 August 2026]. 
+    Meta Platforms, Inc. 2026. Synchronizing with Effects – React. [Online] Available at: <https://react.dev/learn/synchronizing-with-effects> [Accessed 2 October 2026].
+    Parastoo. 2026. jspdf-autotable - npm. [Online] Available at: <https://www.npmjs.com/package/jspdf-autotable> [Accessed 2 October 2026].
+    realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 August 2026].        
+    rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 August 2026].
+*/}

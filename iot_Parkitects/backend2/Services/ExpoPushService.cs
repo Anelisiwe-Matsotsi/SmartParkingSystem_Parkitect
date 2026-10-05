@@ -38,15 +38,15 @@ namespace backend2.Services
                 body,
                 data,
                 sound = "default",
-                channelId = "default",   
+                channelId = "default",
                 priority = "high"
 
             };//makes sure that notification pops up when app is open
             //(Glyph, Putten and Nasstrom,2022)
             var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-           var response = await _httpClient.PostAsync(ExpoPushUrl, content);
-           var result = await response.Content.ReadAsStringAsync();
-           Console.WriteLine($"[Push] {(int)response.StatusCode}: {result}"); 
+            var response = await _httpClient.PostAsync(ExpoPushUrl, content);
+            var result = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[Push] {(int)response.StatusCode}: {result}");
         }
 
         //sends the message from the json object to the specific firebase user ID
