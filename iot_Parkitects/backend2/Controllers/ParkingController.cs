@@ -1,4 +1,4 @@
-// [Ref: 1]
+// Imports (Microsoft, 2026a)
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend2.Data;
@@ -6,6 +6,7 @@ using backend2.Models;
 
 namespace backend2.Controllers
 {
+    // Sets up the API routing (Microsoft, 2026a)
     [Route("api/[controller]")]
     [ApiController]
     public class ParkingController : ControllerBase
@@ -24,6 +25,7 @@ namespace backend2.Controllers
             // Seed base parking lot data if database is uninitialized
             await EnsureDatabaseSeededAsync();
 
+            // Queries the DB to include related entities (Microsoft, 2026b)
             var sections = await _context.ParkingSections
                 .Include(s => s.ParkingBays)
                     .ThenInclude(b => b.Sensor)
@@ -132,12 +134,12 @@ namespace backend2.Controllers
                 var bays = new List<ParkingBay>();
                 for (int i = 1; i <= 70; i++)
                 {
-                    bool isBayOccupied = random.Next(0, 2) == 1;
+                    bool isBayOccupied = true;
 
                     // Physical sensors are assigned to Bay A1 and A2
                     if (label == "A" && (i == 1 || i == 2))
                     {
-                        isBayOccupied = (i == 2);
+                        isBayOccupied = false; // only makes these two bays available
                     }
 
                     bays.Add(new ParkingBay
@@ -272,7 +274,7 @@ namespace backend2.Controllers
 
             var sensor = await _context.Sensors
                 .Include(s => s.ParkingBay)
-                .FirstOrDefaultAsync(s => s.beaconNodeKey == dto.NodeKey && s.firebaseBayKey == dto.BayKey);
+                .FirstOrDefaultAsync(s => s.firebaseBayKey == dto.BayKey);
             if (sensor?.ParkingBay == null) return NotFound("No bay is linked to this sensor.");
             var bay = sensor.ParkingBay;
 
@@ -317,9 +319,50 @@ namespace backend2.Controllers
             return Ok(bays);
         }
 
+        //GET: api/Parking/bay/A1 (details and current occupant for one bay)
+        [HttpGet("bay/{bayNumber}")]
+        public async Task<ActionResult<BayDetailsDto>> GetBayDetails(string bayNumber)
+        {
+            var bay = await _context.ParkingBays
+                .Include(b => b.Sensor)
+                .Include(b => b.ParkingSection)
+                .FirstOrDefaultAsync(b => b.bayNumber == bayNumber);
+
+            if (bay == null) return NotFound("Parking bay was not found.");
+
+            var session = await _context.ParkingSessions
+                .Where(s => s.bayID == bay.bayID && s.endDate == null)
+                .OrderByDescending(s => s.startDate)
+                .FirstOrDefaultAsync();
+
+            var user = session == null ? null : await _context.Users.FindAsync(session.userID);
+
+            return Ok(new BayDetailsDto
+            {
+                BayID = bay.bayID,
+                BayNumber = bay.bayNumber,
+                SectionName = bay.ParkingSection?.sectionName ?? "",
+                IsOccupied = bay.isOccupied,
+                HasPhysicalSensor = bay.Sensor != null,
+                DistanceReadingCm = bay.Sensor?.distanceReadingCm,
+                OccupantName = user?.Name,
+                OccupantNumber = user?.UserNumber,
+                ParkedSince = session?.startDate
+            });
+        }
+
     }
 
 
 
 }
 
+
+
+
+
+/*
+ * References
+ * Microsoft, 2026a. ControllerBase Class. (Version 10.0) [Source Code] Available at: < https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.controllerbase > [Accessed 06 September 2026]
+ * Microsoft, 2026b. Entity Framework Core Querying Data. (Version 10.0) [Source Code] Available at: < https://learn.microsoft.com/en-us/ef/core/querying/ > [Accessed 06 September 2026]
+ */

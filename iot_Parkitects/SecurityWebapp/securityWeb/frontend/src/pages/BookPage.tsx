@@ -1,13 +1,135 @@
 //(rudderz243,2026)
-import React, { useState} from "react";
+import React, { useState, useEffect} from "react";
 import ParkingLayout from "../components/ParkingLayout.tsx";
 import { useNavigate } from "react-router-dom";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../config/firebase";
+import { getTickets, getParkingMap, getBayDetails } from "../services/api";
+import type { ParkingMap, BayDetails } from "../services/api";
+import { findBay, normalizeBay } from "../services/parking";
 
+
+//(paul2009, 2021)
+const greeting = () => {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+};
+
+
+const toDate = (iso: string) =>
+  new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`);
 
 export const BookPage: React.FC = () => {
  
   const [selectedBay, setSelectedBay] = useState<string | null>(null);
+  const [ticketsToday, setTicketsToday] = useState(0);
+  const [userName, setUserName] = useState("");
+  const [mapData, setMapData] = useState<ParkingMap | null>(null);
+  const [mapError, setMapError] = useState(false);
+  const [bayDetails, setBayDetails] = useState<BayDetails | null>(null);
   const navigate = useNavigate();
+
+  // logged in user's name for the greeting
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (u) => setUserName(u?.displayName?.split(" ")[0] || ""),
+      (err) => {
+        console.error("Auth state error:", err);
+        setUserName("");
+      }
+    );
+    return unsubscribe;
+  }, []);
+
+  // tickets reported today
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const tickets = await getTickets();
+        const today = new Date().toDateString();
+        const count = tickets.filter(
+          (t) => toDate(t.createdAt).toDateString() === today
+        ).length;
+        if (active) setTicketsToday(count);
+      } catch (err) {
+        console.error("Failed to load tickets:", err);
+      }
+    };
+    load();
+    const id = setInterval(load, 30000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, []);
+
+  // live parking map data (same endpoint the mobile app polls every 4 seconds)
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const data = await getParkingMap();
+        if (active) {
+          setMapData(data);
+          setMapError(false);
+        }
+      } catch (err) {
+        console.error("Failed to load parking map:", err);
+        if (active) setMapError(true);
+      }
+    };
+    load();
+    const id = setInterval(load, 4000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, []);
+
+  // details and current occupant for the selected bay, kept live while it is selected
+  useEffect(() => {
+    setBayDetails(null);
+    if (!selectedBay) return;
+
+    let active = true;
+    const load = async () => {
+      try {
+        const details = await getBayDetails(normalizeBay(selectedBay));
+        if (active) setBayDetails(details);
+      } catch (err) {
+        console.error("Failed to load bay details:", err);
+      }
+    };
+    load();
+    const id = setInterval(load, 4000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, [selectedBay]);
+
+  // live numbers for the panels below the map
+  const totalBays = mapData?.totalBays ?? 0;
+  const occupiedBays = mapData?.occupiedBays ?? 0;
+  const availableBays = mapData?.availableBays ?? 0;
+  const occupiedPct = totalBays ? Math.round((occupiedBays / totalBays) * 100) : 0;
+  const availablePct = totalBays ? 100 - occupiedPct : 0;
+  const sensorCount =
+    mapData?.sections?.reduce(
+      (n, s) => n + (s.bays?.filter((b) => b.hasPhysicalSensor).length ?? 0),
+      0
+    ) ?? 0;
+
+  // bay details from the server when available, otherwise whatever the live map says
+  const bayInfo = bayDetails ?? (selectedBay ? findBay(mapData, selectedBay) : null);
+  const parkedSinceLabel = bayDetails?.parkedSince
+    ? toDate(bayDetails.parkedSince).toLocaleString([], { dateStyle: "short", timeStyle: "short" })
+    : "";
+
   // where return starts = the actual HTML/display area
   return (
 
@@ -28,7 +150,7 @@ export const BookPage: React.FC = () => {
           </p>
 
           <h1 id="dashboardTitle">
-            Good morning
+            {greeting()}{userName ? `, ${userName}` : ""}
           </h1>
 
           <p>
@@ -81,7 +203,7 @@ export const BookPage: React.FC = () => {
           <p>Total parking bays</p>
 
           <strong className="stat-value">
-            14
+            {mapData ? totalBays : "-"}
           </strong>
 
           <small>
@@ -110,7 +232,7 @@ export const BookPage: React.FC = () => {
           <p>Currently occupied</p>
 
           <strong className="stat-value">
-            6
+            {mapData ? occupiedBays : "-"}
           </strong>
 
           <small>
@@ -139,7 +261,7 @@ export const BookPage: React.FC = () => {
           <p>Available spaces</p>
 
           <strong className="stat-value">
-            8
+            {mapData ? availableBays : "-"}
           </strong>
 
           <small>
@@ -168,7 +290,7 @@ export const BookPage: React.FC = () => {
           <p>Tickets today</p>
 
           <strong className="stat-value">
-            0
+            {ticketsToday}
           </strong>
 
           <small>
@@ -180,7 +302,8 @@ export const BookPage: React.FC = () => {
       </div>
 
 
-      <div className="dashboard-row">
+      {/* map-row: the map now has the whole row to itself */}
+      <div className="dashboard-row map-row">
 
         {/* MAP */}
         <article
@@ -222,7 +345,7 @@ export const BookPage: React.FC = () => {
 
             <span>
               <i></i>
-              Live availability
+              {mapError ? "Live data unavailable, retrying" : "Live availability"}
             </span>
 
           </div>
@@ -231,12 +354,7 @@ export const BookPage: React.FC = () => {
 
           <div
             className="chart-box"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: "500px",
-            }}
+            style={{ height: "auto" }}
           >
 
             {/*  <img
@@ -249,98 +367,11 @@ export const BookPage: React.FC = () => {
                   }}
                 /> */}
             <ParkingLayout
+              mapData={mapData}
               onBayClick={(bayId) => setSelectedBay(bayId)}
             />
 
           </div>
-
-        </article>
-
-
-        {/* PARKING OVERVIEW */}
-        <article
-          className="panel conversion-panel searchable"
-          data-search="parking overview availability occupancy"
-        >
-
-          <div className="panel-heading">
-
-            <div>
-
-              <p className="panel-kicker">
-                Availability
-              </p>
-
-              <h2>
-                Parking overview
-              </h2>
-
-            </div>
-
-          </div>
-
-
-          <div className="donut-wrap">
-
-            <div
-              className="donut"
-              role="img"
-              aria-label="43 percent of parking bays occupied"
-            >
-
-              <span>
-
-                <strong>
-                  43%
-                </strong>
-
-                <small>
-                  Occupied
-                </small>
-
-              </span>
-
-            </div>
-
-          </div>
-
-
-          <ul className="channel-list">
-
-            <li>
-              <span>
-                <i className="violet-dot"></i>
-                Total bays
-              </span>
-
-              <strong>
-                14
-              </strong>
-            </li>
-
-            <li>
-              <span>
-                <i className="blue-dot"></i>
-                Occupied
-              </span>
-
-              <strong>
-                6
-              </strong>
-            </li>
-
-            <li>
-              <span>
-                <i className="green-dot"></i>
-                Available
-              </span>
-
-              <strong>
-                8
-              </strong>
-            </li>
-
-          </ul>
 
         </article>
 
@@ -393,25 +424,80 @@ export const BookPage: React.FC = () => {
                   {selectedBay}
                 </h2>
 
-                <p>
-                  <span className="status success">
-                    Sensor Status: Online
+                {bayInfo ? (
 
-                  </span>
-                </p>
+                  <>
 
-                <span className="status pending">
-                  Occupied by:  ST10266906
+                    <p>
+                      <span
+                        className={`status ${bayInfo.isOccupied ? "pending" : "success"}`}
+                      >
+                        {bayInfo.isOccupied ? "Occupied" : "Available"}
 
-                </span>
+                      </span>
+                    </p>
 
+                    <p>
+                      <span className="status review">
+                        {bayInfo.hasPhysicalSensor
+                          ? "Physical sensor linked"
+                          : "No physical sensor"}
 
-                <p>
+                      </span>
+                    </p>
+
+                    {bayInfo.hasPhysicalSensor &&
+                      bayInfo.distanceReadingCm != null && (
+
+                      <p>
+                        <span className="status review">
+                          Sensor reading: {bayInfo.distanceReadingCm} cm
+
+                        </span>
+                      </p>
+
+                    )}
+
+                    {bayInfo.isOccupied && bayDetails && (
+
+                      <>
+
+                        <p>
+                          <span className="status pending">
+                            {bayDetails.occupantName
+                              ? `Occupied by: ${bayDetails.occupantName}${
+                                  bayDetails.occupantNumber ? ` (${bayDetails.occupantNumber})` : ""
+                                }`
+                              : "Occupied by: no registered driver"}
+
+                          </span>
+                        </p>
+
+                        {parkedSinceLabel && (
+
+                          <p>
+                            <span className="status pending">
+                              Since: {parkedSinceLabel}
+
+                            </span>
+                          </p>
+
+                        )}
+
+                      </>
+
+                    )}
+
+                  </>
+
+                ) : (
+
                   <span className="status pending">
-                    Since: 8:00am
+                    No live data for this bay
 
                   </span>
-                </p>
+
+                )}
 
               </div>
 
@@ -472,13 +558,13 @@ export const BookPage: React.FC = () => {
                 </strong>
 
                 <small>
-                  8 of 14 spaces available
+                  {availableBays} of {totalBays} spaces available
                 </small>
 
               </span>
 
               <span className="goal-bar">
-                <i style={{ width: "57%" }}></i>
+                <i style={{ width: `${availablePct}%` }}></i>
               </span>
 
             </div>
@@ -493,13 +579,13 @@ export const BookPage: React.FC = () => {
                 </strong>
 
                 <small>
-                  6 of 14 spaces occupied
+                  {occupiedBays} of {totalBays} spaces occupied
                 </small>
 
               </span>
 
               <span className="goal-bar">
-                <i style={{ width: "43%" }}></i>
+                <i style={{ width: `${occupiedPct}%` }}></i>
               </span>
 
             </div>
@@ -514,13 +600,15 @@ export const BookPage: React.FC = () => {
                 </strong>
 
                 <small>
-                  Sensors reporting normally
+                  {mapError
+                    ? "Live data unavailable"
+                    : `${sensorCount} sensors linked`}
                 </small>
 
               </span>
 
               <span className="goal-bar">
-                <i style={{ width: "100%" }}></i>
+                <i style={{ width: mapError ? "0%" : "100%" }}></i>
               </span>
 
             </div>
@@ -532,8 +620,101 @@ export const BookPage: React.FC = () => {
             className="button soft full-button"
             type="button"
           >
-            View parking details
+            View parking system details
           </button>
+
+        </article>
+
+
+        {/* PARKING OVERVIEW */}
+        <article
+          className="panel conversion-panel searchable"
+          data-search="parking overview availability occupancy"
+        >
+
+          <div className="panel-heading">
+
+            <div>
+
+              <p className="panel-kicker">
+                Availability
+              </p>
+
+              <h2>
+                Parking overview
+              </h2>
+
+            </div>
+
+          </div>
+
+
+          <div className="donut-wrap">
+
+            <div
+              className="donut"
+              role="img"
+              aria-label={`${occupiedPct} percent of parking bays occupied`}
+              style={{
+                background: totalBays
+                  ? `conic-gradient(var(--blue) 0 ${occupiedPct}%, var(--green) ${occupiedPct}% 100%)`
+                  : "var(--line)",
+              }}
+            >
+
+              <span>
+
+                <strong>
+                  {occupiedPct}%
+                </strong>
+
+                <small>
+                  Occupied
+                </small>
+
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <ul className="channel-list">
+
+            <li>
+              <span>
+                <i className="violet-dot"></i>
+                Total bays
+              </span>
+
+              <strong>
+                {totalBays}
+              </strong>
+            </li>
+
+            <li>
+              <span>
+                <i className="blue-dot"></i>
+                Occupied
+              </span>
+
+              <strong>
+                {occupiedBays}
+              </strong>
+            </li>
+
+            <li>
+              <span>
+                <i className="green-dot"></i>
+                Available
+              </span>
+
+              <strong>
+                {availableBays}
+              </strong>
+            </li>
+
+          </ul>
 
         </article>
 
@@ -546,6 +727,7 @@ export const BookPage: React.FC = () => {
 };
 
 {/*References
-           realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
-               rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
-           */}  
+paul2009. 2021. Time-based headings. (Version 2.0) [Source code] Available at:<https://forum.squarespace.com/topic/207309-time-based-headings/> [Accessed 3 October 2026].
+realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
+rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
+           */}

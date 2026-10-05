@@ -4,7 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 //gets the users name through firebase ID
 export async function getUserByFirebaseUid(firebaseUid: string): Promise<{name: string}> {
-  const response = await fetch(`${API_URL}/User/user/${firebaseUid}`);
+  const response = await fetch(`${API_URL}/User/profile/${firebaseUid}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch user");
@@ -234,3 +234,62 @@ export async function getNotifications(): Promise<AppNotification[]> {
 
   return response.json();
 }
+
+}
+//(TypeScript, 2026)
+  //Parking map
+  export interface BayMap {
+    bayID: number;
+    bayNumber: string;
+    isOccupied: boolean;
+    hasPhysicalSensor: boolean;
+    distanceReadingCm: number | null;
+  }
+
+  export interface SectionMap {
+    sectionID: number;
+    sectionName: string;
+    totalBays: number;
+    availableBays: number;
+    bays: BayMap[];
+  }
+
+  export interface ParkingMap {
+    totalBays: number;
+    availableBays: number;
+    occupiedBays: number;
+    sections: SectionMap[];
+  }
+
+  export interface BayDetails {
+  bayID: number;
+  bayNumber: string;
+  sectionName: string;
+  isOccupied: boolean;
+  hasPhysicalSensor: boolean;
+  distanceReadingCm: number | null;
+  occupantName: string | null;
+  occupantNumber: string | null;
+  parkedSince: string | null;
+}
+
+// GET the whole campus map: sections, bays and totals
+export async function getParkingMap(): Promise<ParkingMap> {
+  const response = await fetch(`${API_URL}/Parking/map`);
+  if (!response.ok) throw new Error("Failed to fetch parking map");
+  return response.json();
+}
+
+// GET details and current occupant for one bay, for example: A1
+export async function getBayDetails(bayNumber: string): Promise<BayDetails> {
+  const response = await fetch(
+    `${API_URL}/Parking/bay/${encodeURIComponent(bayNumber)}`
+  );
+  if (!response.ok) throw new Error("Failed to fetch bay details");
+  return response.json();
+}
+
+/**Reference List:
+ * TypeScript. 2026. Object Types. (Version 2.0) [Source Code] Available at:<https://www.typescriptlang.org/docs/handbook/2/objects.html> [Accessed 3 October 2026].
+ * 
+ */

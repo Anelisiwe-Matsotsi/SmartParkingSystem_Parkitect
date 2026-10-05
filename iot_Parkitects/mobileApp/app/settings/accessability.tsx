@@ -83,8 +83,7 @@ export default function Example() {
             await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...existing, textSize, theme: colorMode, reduceMotion, screenReader, hapticFeedback, userID: currentUser.uid }),
-            });
+                body: JSON.stringify({ ...existing, textSize, theme: colorMode, colorMode, reduceMotion, screenReader, hapticFeedback, userID: currentUser.uid }),            });
             triggerHaptic(); //activates the haptic feedback when the user saves it
             router.back(); //sends user back to the previous screen which is settings
         } catch (error) {
@@ -108,7 +107,7 @@ export default function Example() {
         </ThemedText>
       </View>
 
-      <ScrollView>
+      <ScrollView removeClippedSubviews={false}>
         {/* text size preview */}
           <ThemedText
               style={[

@@ -20,7 +20,7 @@ namespace backend2.Models
         [Required]
         public bool isOccupied { get; set; }
 
-      
+
         [ForeignKey("sectionID")]
         public ParkingSection? ParkingSection { get; set; }
 

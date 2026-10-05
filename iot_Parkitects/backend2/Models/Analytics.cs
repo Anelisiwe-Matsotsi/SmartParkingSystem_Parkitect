@@ -9,8 +9,8 @@ namespace backend2.Models
         public double AvgResolutionTimeHours { get; set; }
 
         // Fields for the violation breakdown and charts
-        public int[] WeeklyChart { get; set; } 
-        public Dictionary<string, int> ViolationBreakdown { get; set; }
+        public int[] WeeklyChart { get; set; } = Array.Empty<int>();
+        public Dictionary<string, int> ViolationBreakdown { get; set; } = new(); //new Dictionary<string, int>();
     }
 
     // Formats the response for the parking history table

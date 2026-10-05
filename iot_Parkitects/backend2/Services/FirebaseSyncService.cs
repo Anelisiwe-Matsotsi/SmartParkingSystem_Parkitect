@@ -15,7 +15,7 @@ namespace backend2.Services
             _scopeFactory = scopeFactory;
         }
 
-        // Executes continuously in the background when the application starts (Microsoft, 2026)
+        // Executes continuously in the background when the application starts (Microsoft, 2026a)
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var firebaseClient = new FirebaseClient(FirebaseUrl);
@@ -24,7 +24,7 @@ namespace backend2.Services
             firebaseClient
                 .Child("ParkingLots/Lot_A/nodes/Node_01/bays")
                 .AsObservable<FirebaseBayData>()
-                .Subscribe(d => 
+                .Subscribe(d =>
                 {
                     // Run the update logic on a separate thread to avoid blocking the Firebase listener
                     Task.Run(() => HandleBayUpdateAsync(d.Key, d.Object));
@@ -39,7 +39,7 @@ namespace backend2.Services
             // Ignore empty updates or invalid states
             if (bayData == null) return;
 
-            // Create a new dependency injection scope to access the Scoped DbContext (Microsoft, 2026)
+            // Create a new dependency injection scope to access the Scoped DbContext (Microsoft, 2026b)
             using var scope = _scopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -47,7 +47,7 @@ namespace backend2.Services
             var bay = context.ParkingBays.FirstOrDefault(b => b.bayNumber == bayName);
             if (bay == null) return;
 
-            if (bayData.status == "Occupied" && bayData.occupiedByUserId != "None" && bayData.occupiedByUserId != "Anonymous")
+            if (bayData.status == "Occupied" && bayData.occupiedByUserId != "None" && bayData.occupiedByUserId != "Anonymous" && bayData.occupiedByUserId != null && bayData.occupiedByUserId != "")
             {
                 // Find the integer userID from SQL matching the firebaseUid
                 var user = context.Users.FirstOrDefault(u => u.FirebaseUid == bayData.occupiedByUserId);
@@ -66,7 +66,7 @@ namespace backend2.Services
                             startDate = DateTime.UtcNow
                         };
                         context.ParkingSessions.Add(newSession);
-                        
+
                         // Update the live bay status in SQL
                         bay.isOccupied = true;
                         await context.SaveChangesAsync();
@@ -82,7 +82,7 @@ namespace backend2.Services
                 if (openSession != null)
                 {
                     openSession.endDate = DateTime.UtcNow;
-                    
+
                     // Update the live bay status in SQL
                     bay.isOccupied = false;
                     await context.SaveChangesAsync();
@@ -92,7 +92,7 @@ namespace backend2.Services
     }
 }
 /* References
-   Microsoft. 2026. Background tasks with hosted services in ASP.NET Core. [Online] Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services> [Accessed 1 Oct. 2026].
-   Microsoft. 2026. Dependency injection in ASP.NET Core. [Online] Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection> [Accessed 1 Oct. 2026].
-   Step-Up-Labs. 2026. FirebaseDatabase.net. (Version 4.0) [Source code]. Available at: <https://github.com/step-up-labs/firebase-database-dotnet> [Accessed 1 Oct. 2026].
+   Microsoft, 2026a. Background tasks with hosted services in ASP.NET Core. [Online] Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services> [Accessed 1 October 2026].
+   Microsoft, 2026b. Dependency injection in ASP.NET Core. [Online] Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection> [Accessed 1 October 2026].
+   Step-Up-Labs, 2026. FirebaseDatabase.net. (Version 4.0) [Source code]. Available at: <https://github.com/step-up-labs/firebase-database-dotnet> [Accessed 1 October 2026].
 */

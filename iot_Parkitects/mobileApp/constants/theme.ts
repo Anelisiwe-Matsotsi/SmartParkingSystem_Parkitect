@@ -18,6 +18,7 @@ export const Colors = {
 //Background
 background: '#F7FAFB',
 surface: '#FFFFFF',
+border: '#E2E8F0',
 //Text
     heading: '#102A43',
     text: '#4A5568',
@@ -36,8 +37,8 @@ parkingDisabled: '#CBD5E1',
 
 //Navigation
     tint: '#0B5D6B',
-    icon: '#615da1',
-    tabIconDefault: '#615da1',
+    icon: '#797881',
+    tabIconDefault: '#9e9ea1',
     tabIconSelected: '#0B5D6B',
   },
   dark: {
@@ -49,6 +50,7 @@ parkingDisabled: '#CBD5E1',
 //Background
 background: '#0F172A',
 surface: '#1E293B',
+border: '#334155',
 //Text
     heading: '#F8FAFC',
     text: '#E2E8F0',

@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 //Firebase imports for authentication
 /*Firebase, 2026*/ 
-import {signInWithEmailAndPassword} from "firebase/auth"; 
+import {signInWithEmailAndPassword, signOut} from "firebase/auth"; 
 import {auth} from "../config/firebase";
 
 
@@ -42,10 +42,16 @@ const navigate = useNavigate();//navigates to the dashboard page after successfu
          password
       );
 
-        //Signed in successfully
-        const user = userCredential.user; 
-        console.log("Login successful:", user);
+      //(Stack Overflow, 2021)
+      //this reads the role stored in the user's firebase token
+      const token = await userCredential.user.getIdTokenResult(true);
 
+      //only security personnel can log in here
+      if(token.claims.role !== "security") {
+        await signOut(auth); //this signOut logs students/lecturers out
+        setError("This portal is for security personnel only.");
+        return;
+      }
         navigate("/dashboard");
     } catch (error: any) {
       //displays the error message 
@@ -170,23 +176,6 @@ const navigate = useNavigate();//navigates to the dashboard page after successfu
           Parkitech Security System
         </p>
 
-          <p className="login-footer">
-          Don't have an account?{" "}
-          <button
-            type="button"
-            onClick={() => navigate("/register")}
-            style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-              textDecoration: "underline",
-            }}
-          >
-            Register
-          </button>
-        </p>
-
       </div>
     </main>
   );
@@ -199,5 +188,6 @@ export default Login;
 /* References
 Firebase, 2026. Get Started with Firebase Authentication in React Native. [source code] Available: <https://firebase.google.com/docs/auth/web/start> [Accessed 30 August. 2026].
 Rudderz243, 2026. Frontend tsx. [source code] Available: <http://github.com/rudderz243/insy7314-library/blob/master/frontend/src/pages/BookPage.tsx> [Accessed 12 August. 2026].
+Stack Overflow. 2021.How to use the getIdToken() auth method in firebase version 9? (Version 2.0) [Source code] Available at:<https://stackoverflow.com/questions/70490182/how-to-use-the-getidtoken-auth-method-in-firebase-version-9> [Accessed 3 October 2026].
 Vincent,M. 2016. login / sign up - React - Daily UI #001. (Version 2.0) [Source code] Available at: < https://codepen.io/matthewvincent/pen/JXOKbY > [Accessed 12 August. 2026]. 
 */

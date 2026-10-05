@@ -248,7 +248,7 @@ export const TicketsPage: React.FC = () => {
       </div>
 
 
-      <div className="project-grid">
+      <div className="project-grid tickets-grid">
 
         {loading && tickets.length === 0 && (
           <p role="status">
@@ -265,17 +265,30 @@ export const TicketsPage: React.FC = () => {
         {tickets.map((ticket) => (
           <article
             key={ticket.ticketID}
-            className="project-card searchable"
+            className="project-card ticket-card searchable"
             data-search={`parking ticket ${ticket.bayNumber} ${ticket.reason}`}
           >
             <div className="project-card-top">
 
-              <span className="project-icon violet">
-                <i
-                  className="fa-solid fa-ticket"
-                  aria-hidden="true"
-                ></i>
-              </span>
+              <div className="ticket-card-lead">
+                <span className="project-icon violet">
+                  <i
+                    className="fa-solid fa-ticket"
+                    aria-hidden="true"
+                  ></i>
+                </span>
+
+                <span
+                  className={`status ${ticket.status === "Pending"
+                    ? "pending"
+                    : ticket.status === "Resolved"
+                      ? "success"
+                      : "review"
+                    }`}
+                >
+                  {ticket.status}
+                </span>
+              </div>
 
               <div
                 className="ticket-menu"
@@ -337,32 +350,59 @@ export const TicketsPage: React.FC = () => {
               </div>
             </div>
 
-            <span
-              className={`status ${ticket.status === "Pending"
-                  ? "pending"
-                  : ticket.status === "Resolved"
-                    ? "success"
-                    : "review"
-                }`}
-            >
-              {ticket.status}
-            </span>
-
             <h2>
               Parking Bay {ticket.bayNumber}
             </h2>
 
-            <p>
-              {ticket.reason}
-            </p>
 
-            {ticket.description && (
-              <p>
-                <span className="status review">
-                  Description:
-                </span>{" "}
-                {ticket.description}
-              </p>
+            <div className="ticket-reason">
+              <small>Reason</small>
+              <strong>{ticket.reason}</strong>
+            </div>
+
+            {/* the user might add an immage and or a description */}
+            {ticket.description || ticket.imageURL ? (
+              <details className="ticket-details">
+                <summary>
+                  <span>Additional information</span>
+                  <i
+                    className="fa-solid fa-chevron-down ticket-details-chevron"
+                    aria-hidden="true"
+                  ></i>
+                </summary>
+
+                <div className="ticket-details-body">
+                  {ticket.description && (
+                    <div className="ticket-detail-block">
+                      <small>Description</small>
+                      <p>{ticket.description}</p>
+                    </div>
+                  )}
+
+                  {ticket.imageURL && (
+                    <div className="ticket-detail-block">
+                      <small>Image</small>
+                      <div className="ticket-image">
+                        <img
+                          src={ticket.imageURL}
+                          alt={`Evidence for ticket ${ticket.ticketID}`}
+                          loading="lazy"
+                          onError={(event) => {
+                            event.currentTarget.style.display = "none";
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </details>
+            ) : (
+              <div className="ticket-details is-empty">
+                <div className="ticket-details-empty">
+                  <span>Additional information</span>
+                  <small>None provided</small>
+                </div>
+              </div>
             )}
 
             <div className="project-meta">
@@ -397,19 +437,6 @@ export const TicketsPage: React.FC = () => {
               </strong>
             </div>
 
-            <div className="progress-track">
-              <span
-                style={{
-                  width:
-                    ticket.status === "Resolved"
-                      ? "100%"
-                      : ticket.status === "Pending"
-                        ? "0%"
-                        : "50%",
-                }}
-              ></span>
-            </div>
-
           </article>
         ))}
 
@@ -421,6 +448,7 @@ export const TicketsPage: React.FC = () => {
         onClose={handleClose}
         fullWidth
         maxWidth="sm"
+        className="ticket-dialog-root"
         aria-labelledby="create-ticket-title"
       >
         <DialogTitle id="create-ticket-title">
@@ -480,15 +508,21 @@ export const TicketsPage: React.FC = () => {
               />
 
               <FormControlLabel
-                value="Incorrect bay"
+                value="Lights are on"
                 control={<Radio />}
-                label="Incorrect bay"
+                label="Lights are on"
               />
 
               <FormControlLabel
                 value="Vehicle outside bay"
                 control={<Radio />}
                 label="Vehicle outside bay"
+              />
+
+              <FormControlLabel
+                value="Parked skew"
+                control={<Radio />}
+                label="Parked skew"
               />
 
               <FormControlLabel
@@ -523,6 +557,7 @@ export const TicketsPage: React.FC = () => {
             variant="outlined"
             tabIndex={-1}
             startIcon={<CloudUploadIcon />}
+            className="dialog-upload"
             sx={{ mt: 2 }}
           >
             Upload image (optional)
@@ -536,6 +571,7 @@ export const TicketsPage: React.FC = () => {
 
           {selectedImage && (
             <p
+              className="selected-file"
               role="status"
               aria-live="polite"
             >
@@ -549,7 +585,7 @@ export const TicketsPage: React.FC = () => {
         <DialogActions>
 
           <Button
-            className="login-button"
+            className="dialog-btn cancel"
             type="button"
             onClick={handleClose}
           >
@@ -557,7 +593,7 @@ export const TicketsPage: React.FC = () => {
           </Button>
 
           <Button
-            className="login-button"
+            className="dialog-btn submit"
             type="button"
             variant="contained"
             onClick={handleSubmit}
@@ -576,10 +612,9 @@ export const TicketsPage: React.FC = () => {
 
 export default TicketsPage;
 
-
-
 {/*References
-           realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
-            Material UI.2026.Dialog. (Version 2.0) [Source code] . Available at: < https://mui.com/material-ui/react-dialog/#scrolling-long-content> [Accessed 12 Aug. 2026]. 
+  realCAiN. 2024. Updated* Dashboard for sales, ect / Admin Dashboard. (Version 2.0) [Source code] Available at: < https://codepen.io/realCaiN/pen/yLdEzwv > [Accessed 16 Aug. 2026]. 
+  Material UI.2026.Dialog. (Version 2.0) [Source code] . Available at: < https://mui.com/material-ui/react-dialog/#scrolling-long-content> [Accessed 12 Aug. 2026]. 
   rudderz243.2026. rudderz243/insy7314-library.  (Version 2.0) [Source code]. Available at: <https://github.com/rudderz243/insy7314-library> [Accessed 17 Aug. 2026].
-           */}
+ */
+}

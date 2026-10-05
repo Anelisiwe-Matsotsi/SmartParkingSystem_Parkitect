@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import * as Location from 'expo-location' // Accessing device location via Expo Location (Expo Documentation, 2026)
 import { useFocusEffect } from '@react-navigation/native'; // React Navigation focus lifecycle hook (React Navigation, 2026)
 import { useCallback } from 'react';
-import { useLanguage } from '../../context/languageContext';
 // importing our custom auth setup
 import { auth } from '../../config/firebaseConfig';
 import { signOut } from 'firebase/auth'; // Firebase authentication sign out function (Firebase, 2026)
@@ -38,26 +37,18 @@ const OPTION_SIZE = 52;
 export default function SettingsScreen() {
   const [value, setValue] = useState(4);
   const sheet = useRef<any>(null);
-  const languageSheet = useRef<any>(null);
   const router = useRouter(); // Initialize navigation controller (Expo Documentation, 2026)
-  const { language, setLanguage, t } = useLanguage();
   const[locationDisplay, setLocationDisplay] = useState('');
 
   const [profileName, setProfileName] = useState('');
   const [profileUserNumber, setProfileUserNumber] = useState('');
 
-  const { theme } = useAccessibility();
+  const { theme, triggerHaptic } = useAccessibility();
 
   const [form, setForm] = useState({
     emailNotifications: true,
     pushNotifications: false,
   });
-
-  // Updates application language state and closes selection modal (React Docs, 2026)
-  const handleLanguageChange = async (newLanguage: 'en' | 'af' | 'xh') => {
-  await setLanguage(newLanguage);
-  languageSheet.current?.close();
-};
 
 // Fetches current user profile from backend database using RESTful fetch API (Fahim, 2026)
   const loadUserProfile = async () => {
@@ -121,11 +112,11 @@ export default function SettingsScreen() {
           const locationLabel = place ? `${place.city ?? place.subregion ?? ''}, ${place.region ?? ''}`.trim() : null;
 
           if(locationLabel) {
-            const existingPreference = await fetch (`${API_BASE_URL}/api/Preferences/user/${currentUser.uid}`);
+            const existingPreference = await fetch (`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`);
             const existing = existingPreference.ok ? await existingPreference.json() : {};
 
             // Save user location preference via HTTP PUT request (Fahim, 2026)
-            await fetch(`${API_BASE_URL}/api/Preferences/user/${currentUser.uid}`, {
+            await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`, {
               method: 'PUT',
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({...existing, location: locationLabel, userID: currentUser.uid}),
@@ -160,16 +151,17 @@ export default function SettingsScreen() {
 
                 const response = await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`);
                 if (!response.ok) {
-                    throw new Error('Failed to fetch settings Screen');
+                  console.log('Failed to fetch settings');
+                  return; //returns default settings values
                 }
 
                 const settings = await response.json();
                 setForm({
-                    emailNotifications: settings.emailNotification,
-                    pushNotifications: settings.pushNotification,
+                    emailNotifications: settings.emailNotifications,
+                    pushNotifications: settings.pushNotifications,
                 });
             } catch (error) {
-                Alert.alert('Error', 'Error fetching your app settings preferences. Please try again.');
+              console.log('Error fetching settings:', error);
             }
         };
         fetchSettings();
@@ -185,26 +177,28 @@ export default function SettingsScreen() {
         setForm(merged);
 
         try {
-            const existingPreferences = await fetch(`${API_BASE_URL}/api/Preferences/user/${currentUser.uid}`);
+            const existingPreferences = await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`);
             const existing = existingPreferences.ok ? await existingPreferences.json() : {};
 
             // Send merged preferences payload to server endpoint (Fahim, 2026)
             await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...existing, ...merged, userID: currentUser.uid }),
+                body: JSON.stringify({ ...existing, ...merged }),
             });
         } catch (error) {
-            Alert.alert('Errór', 'Failed to save your preferences.Please try again');
+            Alert.alert('Error', 'Failed to save your preferences.Please try again');
         }
     };
 
   const handleOpenSheet = () => {
+    triggerHaptic();
     sheet.current?.open();
   };
 
   // Submits user experience feedback rating to API endpoint (Fahim, 2026)
     const handleCloseSheet = async () => {
+        triggerHaptic();
         const currentUser = auth.currentUser;
         if (currentUser) {
             try {
@@ -229,6 +223,7 @@ export default function SettingsScreen() {
 
   // Handles user sign out via Firebase auth session termination and screen redirection (Firebase, 2026)
   const handleLogout = async () => {
+  triggerHaptic();
   try {
     await signOut(auth);
 
@@ -249,21 +244,19 @@ export default function SettingsScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.headerAction}
-          onPress={() => router.push('/(tabs)')}
+          onPress={() => { triggerHaptic(); router.push('/(tabs)'); }}
         >
-          <FeatherIcon color="#0F172A" name="arrow-left" size={22} />
+          <FeatherIcon color={theme.heading} name="arrow-left" size={22} />
         </TouchableOpacity>
 
-        <ThemedText numberOfLines={1} style={styles.headerTitle}>
+        <ThemedText numberOfLines={1} style={[styles.headerTitle, { color: theme.heading }]}>
           Settings
         </ThemedText>
 
-        <TouchableOpacity style={styles.headerAction}>
-          <FeatherIcon color="#0F172A" name="more-vertical" size={22} />
-        </TouchableOpacity>
+        <View style={styles.headerAction} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView removeClippedSubviews={false} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ThemedText style={styles.headerSubtitle}>
           Manage your personal details and security preferences below.
         </ThemedText>
@@ -271,16 +264,16 @@ export default function SettingsScreen() {
         {/* ACCOUNT SECTION */}
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>
-            {t('account')}
+            Account
           </ThemedText>
-          <View style={styles.sectionBody}>
+          <View style={[styles.sectionBody, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <TouchableOpacity
-              onPress={() => router.push('/settings/profie')}
+              onPress={() => { triggerHaptic(); router.push('/settings/profie'); }}
               style={styles.profile}
               activeOpacity={0.7}
             >
               <View style={styles.profileBody}>
-                <ThemedText style={styles.profileName}>
+                <ThemedText style={[styles.profileName, { color: theme.heading }]}>
                     {profileName || 'Loading...'}
                   </ThemedText>
 
@@ -296,82 +289,55 @@ export default function SettingsScreen() {
         {/* PREFERENCES SECTION */}
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>
-            {t('preferences')}
+            Preferences
           </ThemedText>
-          <View style={styles.sectionBody}>
-            <View style={[styles.rowWrapper, styles.rowFirst]}>
+          <View style={[styles.sectionBody, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <View style={[styles.rowWrapper, { backgroundColor: theme.surface, borderColor: theme.border }, styles.rowFirst]}>
               <TouchableOpacity
-                style={styles.row}
-                activeOpacity={0.7}
-                onPress={() => languageSheet.current?.open()}
-              >
-    <ThemedText style={styles.rowLabel}>
-      {t('language')}
-    </ThemedText>
-
-    <View style={styles.rowSpacer} />
-
-    <ThemedText style={styles.rowValue}>
-      {language === 'en'
-        ? 'English'
-        : language === 'af'
-        ? 'Afrikaans'
-        : 'isiXhosa'}
-    </ThemedText>
-
-    <FeatherIcon
-      color="#94A3B8"
-      name="chevron-right"
-      size={18}
-    />
-  </TouchableOpacity>
-</View>
-
-                        <View style={styles.rowWrapper}>
-              <TouchableOpacity
-                onPress={() => router.push('/permissions')}
+                onPress={() => { triggerHaptic(); router.push({ pathname: '/permissions', params: { from: 'settings' } } as any); }}
                 style={styles.row}
                 activeOpacity={0.7}
               >
-                <ThemedText style={styles.rowLabel}>Permissions</ThemedText>
+                <ThemedText style={[styles.rowLabel, { color: theme.heading }]}>Permissions</ThemedText>
                 <View style={styles.rowSpacer} />
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.rowWrapper}>
+            <View style={[styles.rowWrapper, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <TouchableOpacity style={styles.row} activeOpacity={0.7}>
-                <ThemedText style={styles.rowLabel}>Location</ThemedText>
+                <ThemedText style={[styles.rowLabel, { color: theme.heading }]}>Location</ThemedText>
                 <View style={styles.rowSpacer} />
                 <ThemedText style={styles.rowValue}>{locationDisplay || 'Port Elizabeth, SA'}</ThemedText>
-                <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.rowWrapper}>
+            <View style={[styles.rowWrapper, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <View style={styles.row}>
-                <ThemedText style={styles.rowLabel}>Email Notifications</ThemedText>
+                <ThemedText style={[styles.rowLabel, { color: theme.heading }]}>Email Notifications</ThemedText>
                               <View style={styles.rowSpacer} />
              {/* Notifications depends on savePreference method that user can change*/}
                 <Switch
-                  onValueChange={(emailNotifications) =>
-                    savePreferences({emailNotifications })
-                  }
+                  onValueChange={(emailNotifications) => {
+                    triggerHaptic();
+                    savePreferences({ emailNotifications });
+                  }}
                   trackColor={{ false: '#E2E8F0', true: '#0D5265' }}
                   value={form.emailNotifications}
                 />
               </View>
             </View>
 
-            <View style={[styles.rowWrapper, styles.rowLast]}>
+            <View style={[styles.rowWrapper, { backgroundColor: theme.surface, borderColor: theme.border }, styles.rowLast]}>
               <View style={styles.row}>
-                <ThemedText style={styles.rowLabel}>Push Notifications</ThemedText>
+                <ThemedText style={[styles.rowLabel, { color: theme.heading }]}>Push Notifications</ThemedText>
                               <View style={styles.rowSpacer} />
            {/* Notifications depends on savePreference method that user can change*/}
                 <Switch
-                  onValueChange={(pushNotifications) =>
-                    savePreferences({pushNotifications })
-                  }
+                  onValueChange={(pushNotifications) => {
+                    triggerHaptic();
+                    savePreferences({ pushNotifications });
+                  }}
                   trackColor={{ false: '#E2E8F0', true: '#0D5265' }}
                   value={form.pushNotifications}
                 />
@@ -383,50 +349,51 @@ export default function SettingsScreen() {
         {/* RESOURCES SECTION */}
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>Resources</ThemedText>
-          <View style={styles.sectionBody}>
-            <View style={[styles.rowWrapper, styles.rowFirst]}>
+          <View style={[styles.sectionBody, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <View style={[styles.rowWrapper, { backgroundColor: theme.surface, borderColor: theme.border }, styles.rowFirst]}>
               <TouchableOpacity
-                onPress={() => router.push('/settings/accessability')}
+                onPress={() => { triggerHaptic(); router.push('/settings/accessability'); }}
                 style={styles.row}
                 activeOpacity={0.7}
               >
-                <ThemedText style={styles.rowLabel}>Accessibility</ThemedText>
+                <ThemedText style={[styles.rowLabel, { color: theme.heading }]}>Accessibility</ThemedText>
                 <View style={styles.rowSpacer} />
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.rowWrapper}>
+            <View style={[styles.rowWrapper, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <TouchableOpacity
                 onPress={() => {
+                  triggerHaptic();
                   console.log('REPORT BUG PRESSED');
                   router.push('/settings/reportBug' as any);
                 }}
                 style={styles.row}
                 activeOpacity={0.7}
               >
-                <ThemedText style={styles.rowLabel}>Report Bug</ThemedText>
+                <ThemedText style={[styles.rowLabel, { color: theme.heading }]}>Report Bug</ThemedText>
                 <View style={styles.rowSpacer} />
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
 
             {/* RATE APP TRIGGER */}
-            <View style={styles.rowWrapper}>
+            <View style={[styles.rowWrapper, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <TouchableOpacity
                 onPress={handleOpenSheet}
                 style={styles.row}
                 activeOpacity={0.7}
               >
-                <ThemedText style={styles.rowLabel}>Rate Parkitech</ThemedText>
+                <ThemedText style={[styles.rowLabel, { color: theme.heading }]}>Rate Parkitech</ThemedText>
                 <View style={styles.rowSpacer} />
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
 
-            <View style={[styles.rowWrapper, styles.rowLast]}>
-              <TouchableOpacity onPress={() => router.push('/settings/rules')}style={styles.row} activeOpacity={0.7}>
-                <ThemedText style={styles.rowLabel}>Campus Parking Rules</ThemedText>
+            <View style={[styles.rowWrapper, { backgroundColor: theme.surface, borderColor: theme.border }, styles.rowLast]}>
+              <TouchableOpacity onPress={() => { triggerHaptic(); router.push('/settings/rules'); }} style={styles.row} activeOpacity={0.7}>
+                <ThemedText style={[styles.rowLabel, { color: theme.heading }]}>Campus Parking Rules</ThemedText>
                 <View style={styles.rowSpacer} />
                 <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
@@ -436,7 +403,7 @@ export default function SettingsScreen() {
 
         {/* LOGOUT */}
         <TouchableOpacity
-  style={styles.logoutBtn}
+  style={[styles.logoutBtn, { backgroundColor: theme.surface, borderColor: theme.border }]}
   activeOpacity={0.8}
   onPress={handleLogout}
 >
@@ -450,12 +417,12 @@ export default function SettingsScreen() {
         height={380}
         openDuration={250}
         customStyles={{
-          container: styles.sheetContainer,
+          container: StyleSheet.flatten([styles.sheetContainer, { backgroundColor: theme.surface }]),
           wrapper: { backgroundColor: 'rgba(15, 23, 42, 0.4)' },
         }}
       >
         <View style={styles.sheetHeader}>
-          <ThemedText style={styles.sheetHeaderTitle}>Rate Your Experience</ThemedText>
+          <ThemedText style={[styles.sheetHeaderTitle, { color: theme.heading }]}>Rate Your Experience</ThemedText>
           <ThemedText style={styles.sheetHeaderSubtitle}>
             How is your experience using Parkitech?
           </ThemedText>
@@ -474,9 +441,10 @@ export default function SettingsScreen() {
                   key={item.name}
                   style={[
                     styles.option,
+                    { backgroundColor: theme.background },
                     isActive && styles.optionActive,
                   ]}
-                  onPress={() => setValue(index)}
+                  onPress={() => { triggerHaptic(); setValue(index); }}
                   activeOpacity={0.8}
                 >
                   <ThemedText style={styles.optionText}>{item.icon}</ThemedText>
@@ -494,80 +462,6 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
       </RBSheet>
-      <RBSheet
-  ref={languageSheet}
-  height={250}
-  openDuration={250}
-  customStyles={{
-    container: styles.sheetContainer,
-    wrapper: {
-      backgroundColor: 'rgba(15, 23, 42, 0.4)',
-    },
-  }}
->
-  <View style={styles.sheetHeader}>
-    <ThemedText style={styles.sheetHeaderTitle}>
-      {t('selectLanguage')}
-    </ThemedText>
-
-    <ThemedText style={styles.sheetHeaderSubtitle}>
-      {t('chooseLanguage')}
-    </ThemedText>
-  </View>
-
-  <View style={{ padding: 24 }}>
-    <TouchableOpacity
-      style={styles.languageOption}
-      onPress={() => handleLanguageChange('en')}
-    >
-      <ThemedText style={styles.languageOptionText}>
-        English
-      </ThemedText>
-
-      {language === 'en' && (
-        <FeatherIcon
-          name="check"
-          size={20}
-          color="#0D5265"
-        />
-      )}
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      style={styles.languageOption}
-      onPress={() => handleLanguageChange('af')}
-    >
-      <ThemedText style={styles.languageOptionText}>
-        Afrikaans
-      </ThemedText>
-
-      {language === 'af' && (
-        <FeatherIcon
-          name="check"
-          size={20}
-          color="#0D5265"
-        />
-      )}
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      style={styles.languageOption}
-      onPress={() => handleLanguageChange('xh')}
-    >
-      <ThemedText style={styles.languageOptionText}>
-        isiXhosa
-      </ThemedText>
-
-      {language === 'xh' && (
-        <FeatherIcon
-          name="check"
-          size={20}
-          color="#0D5265"
-        />
-      )}
-    </TouchableOpacity>
-  </View>
-</RBSheet>
     </SafeAreaView>
   );
 }
@@ -774,20 +668,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  languageOption: {
-  height: 50,
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  paddingHorizontal: 16,
-  borderBottomWidth: 1,
-  borderBottomColor: '#F1F5F9',
-},
-
-languageOptionText: {
-  fontSize: 16,
-  color: '#0F172A',
-},
 });
 /*
 *

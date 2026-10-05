@@ -47,29 +47,29 @@ namespace backend2.Controllers
         }
 
 
-// Turns "A01", "A-1", "a1" into "A1" to match ParkingBay.bayNumber
-private static string NormalizeBay(string? raw)
-{
-    var m = System.Text.RegularExpressions.Regex.Match(raw ?? "", @"^\s*([A-Za-z])\s*-?\s*0*(\d+)\s*$");
-    return m.Success ? $"{char.ToUpper(m.Groups[1].Value[0])}{m.Groups[2].Value}" : (raw ?? "").Trim();
-}
+        // Turns "A01", "A-1", "a1" into "A1" to match ParkingBay.bayNumber
+        private static string NormalizeBay(string? raw)
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(raw ?? "", @"^\s*([A-Za-z])\s*-?\s*0*(\d+)\s*$");
+            return m.Success ? $"{char.ToUpper(m.Groups[1].Value[0])}{m.Groups[2].Value}" : (raw ?? "").Trim();
+        }
 
-//find uuid of whoever is parked at reported bay
-private async Task<string?> FindOccupantUidAsync(string? bayNumber)
-{
-    var normalized = NormalizeBay(bayNumber);
-    var bay = await _context.ParkingBays.FirstOrDefaultAsync(b => b.bayNumber == normalized);
-    if (bay == null) return null;
+        //find uuid of whoever is parked at reported bay
+        private async Task<string?> FindOccupantUidAsync(string? bayNumber)
+        {
+            var normalized = NormalizeBay(bayNumber);
+            var bay = await _context.ParkingBays.FirstOrDefaultAsync(b => b.bayNumber == normalized);
+            if (bay == null) return null;
 
-    var session = await _context.ParkingSessions
-        .Where(s => s.bayID == bay.bayID && s.endDate == null)
-        .OrderByDescending(s => s.startDate)
-        .FirstOrDefaultAsync();
-    if (session == null) return null;
+            var session = await _context.ParkingSessions
+                .Where(s => s.bayID == bay.bayID && s.endDate == null)
+                .OrderByDescending(s => s.startDate)
+                .FirstOrDefaultAsync();
+            if (session == null) return null;
 
-    var user = await _context.Users.FindAsync(session.userID);
-    return user?.FirebaseUid;
-}
+            var user = await _context.Users.FindAsync(session.userID);
+            return user?.FirebaseUid;
+        }
 
         // POST: api/Tickets
         [HttpPost]
@@ -83,7 +83,7 @@ private async Task<string?> FindOccupantUidAsync(string? bayNumber)
             if (driverUid == null)
                 return Conflict("There is no one parked it that bay at the moment");
 
-                
+
 
             ticket.userID = driverUid;
             ticket.createdAt = DateTime.UtcNow;
@@ -103,7 +103,9 @@ private async Task<string?> FindOccupantUidAsync(string? bayNumber)
             if (file == null || file.Length == 0)
                 return BadRequest("No image provided");
 
-            string connectionString = _configuration.GetConnectionString("AzureBlobStorage");
+            //getting connection & making sure it doesnt return null for docker image workflow
+            string connectionString = _configuration.GetConnectionString("AzureBlobStorage") ??
+                throw new InvalidOperationException("AzureBlobStorage connection string is not there");
             string containerName = "complaint-image";
 
             BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
@@ -124,90 +126,101 @@ private async Task<string?> FindOccupantUidAsync(string? bayNumber)
 
         //PUT: api/Tickets/5 Update
         [HttpPut("{id}")]
-public async Task<IActionResult> Update(int id, [FromBody] Ticket ticket)
-{
-    if (id != ticket.ticketID) return BadRequest();
-
-    var existing = await _context.Tickets.FindAsync(id);
-
-    if (existing == null) return NotFound();
-
-    //gets the status of the ticket for the ticket response workflow
-    var previousStatus = existing.status;
-
-    existing.status = ticket.status;
-    existing.response = ticket.response;
-    existing.updatedAt = DateTime.UtcNow;
-
-    await _context.SaveChangesAsync();
-
-    //(Expo Docs, 2026)
-    //Notify user when a new ticket is issued
-    if (existing.status == "Notified" && previousStatus == "Pending")
-    {
-        //Get the user's notification preferences
-        var settings = await _context.Settings
-            .FirstOrDefaultAsync(s => s.userID == existing.userID);
-
-        //Use default values if the user has no saved settings
-        bool emailNotifications = settings?.emailNotifications ?? false;
-        bool pushNotifications = settings?.pushNotifications ?? true;
-
-        //Send push notification only if enabled
-        if (pushNotifications)
+        public async Task<IActionResult> Update(int id, [FromBody] Ticket ticket)
         {
-            await _pushService.NotifyUserAsync(
-                existing.userID,
-                "Parking ticket issued",
-                $"Ticket #{existing.ticketID} - {existing.reason}",
-                new { ticketId = existing.ticketID }
-            );
-        }
+            if (id != ticket.ticketID) return BadRequest();
 
-        //Send email only if enabled
-        if (emailNotifications)
-        {
-            //Get the user's email address
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.FirebaseUid == existing.userID);
+            var existing = await _context.Tickets.FindAsync(id);
 
-            if (user != null)
+            if (existing == null) return NotFound();
+
+            //gets the status of the ticket for the ticket response workflow
+            var previousStatus = existing.status;
+
+            existing.status = ticket.status;
+            existing.response = ticket.response;
+            existing.updatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            //(Expo Docs, 2026)
+            //Notify user when a new ticket is issued
+            if (existing.status == "Notified" && previousStatus == "Pending")
             {
-                await _emailService.SendTicketEmailAsync(
-                    user.Email,
-                    $"Parking Ticket Issued - #{existing.ticketID}",
-                    $"A parking ticket has been issued against your vehicle.\n\n" +
-                    $"Bay: {existing.bayNumber}\n" +
-                    $"Reason: {existing.reason}\n\n" +
-                    $"Please check the notifications sent in the Parkitech Mobile App for more details."
-                );
+                //get the matching firebaseUid and userID
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == existing.userID);
+
+                //get the user's notification preferences from the mobile apps Preferences table
+                var settings = user != null ? await _context.Preferences.FirstOrDefaultAsync(s => s.userID == user.UserId) : null;
+
+                // //Get the user's notification preferences
+                // var settings = await _context.Settings
+                //     .FirstOrDefaultAsync(s => s.userID == existing.userID);
+
+                //Use default values if the user has no saved settings
+                bool emailNotifications = settings?.emailNotifications ?? false;
+                bool pushNotifications = settings?.pushNotifications ?? true;
+
+                //Send push notification only if enabled
+                if (pushNotifications)
+                {
+                    await _pushService.NotifyUserAsync(
+                        existing.userID,
+                        "Parking ticket issued",
+                        $"Ticket #{existing.ticketID} - {existing.reason}",
+                        new { ticketId = existing.ticketID }
+                    );
+                }
+
+                //Send email only if enabled
+                if (emailNotifications && user != null)
+                {
+                    // //Get the user's email address
+                    // var user = await _context.Users
+                    //     .FirstOrDefaultAsync(u => u.FirebaseUid == existing.userID);
+
+                    // if (user != null)
+                    // {
+                    await _emailService.SendTicketEmailAsync(
+                        user.Email,
+                        $"Parking Ticket Issued - #{existing.ticketID}",
+                        $"A parking ticket has been issued against your vehicle.\n\n" +
+                        $"Bay: {existing.bayNumber}\n" +
+                        $"Reason: {existing.reason}\n\n" +
+                        $"Please check the notifications sent in the Parkitech Mobile App for more details."
+                    );
+                }
             }
+
+            //If the user does not solve the ticket properly, notify them again
+            else if (existing.status == "Notified" && previousStatus == "Awaiting review")
+            {
+                //get the matching firebaseUid and userID
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == existing.userID);
+
+                //calling the Preferences table 
+                var settings = user != null ? await _context.Preferences.FirstOrDefaultAsync(s => s.userID == user.UserId) : null;
+
+                // //Get the user's notification preferences
+                // var settings = await _context.Settings
+                //     .FirstOrDefaultAsync(s => s.userID == existing.userID);
+
+                bool pushNotifications = settings?.pushNotifications ?? true;
+
+                //Send reminder only if push notifications are enabled
+                if (pushNotifications)
+                {
+                    await _pushService.NotifyUserAsync(
+                        existing.userID,
+                        "Ticket needs to be reviewed again",
+                        "Security says violation has not been resolved. Please fix it properly.",
+                        new { ticketId = existing.ticketID }
+                    );
+                }
+            }
+
+            return NoContent();
         }
-    }
-
-    //If the user does not solve the ticket properly, notify them again
-    else if (existing.status == "Notified" && previousStatus == "Awaiting review")
-    {
-        //Get the user's notification preferences
-        var settings = await _context.Settings
-            .FirstOrDefaultAsync(s => s.userID == existing.userID);
-
-        bool pushNotifications = settings?.pushNotifications ?? true;
-
-        //Send reminder only if push notifications are enabled
-        if (pushNotifications)
-        {
-            await _pushService.NotifyUserAsync(
-                existing.userID,
-                "Ticket needs to be reviewed again",
-                "Security says violation has not been resolved. Please fix it properly.",
-                new { ticketId = existing.ticketID }
-            );
-        }
-    }
-
-    return NoContent();
-}
 
         // DELETE: api/Tickets/5
         [HttpDelete("{id}")]
@@ -225,7 +238,7 @@ public async Task<IActionResult> Update(int id, [FromBody] Ticket ticket)
         }
 
 
-        
+
     }
 }
 /** 
