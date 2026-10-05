@@ -18,6 +18,9 @@ jobs:
   code-quality:
     name: Code Quality & Formatting
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: iot_Parkitects/backend2
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -40,51 +43,43 @@ jobs:
     name: Docker Build & Package
     runs-on: ubuntu-latest
     needs: code-quality
+    defaults:
+      run:
+        working-directory: iot_Parkitects
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
-
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '10.0.x'
-        cache: true
-        cache-dependency-path: '**/*.csproj'
 
     - name: Build Application Containers
       run: docker compose build
 
-  # JOB 3: Launches local dependency topologies and handles cross-integration validations
+  # JOB 3: Launches the API container and validates the endpoint
   integration-testing:
     name: System Integration Verification
     runs-on: ubuntu-latest
     needs: compile-and-build
+    defaults:
+      run:
+        working-directory: iot_Parkitects
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '10.0.x'
-        cache: true
-        cache-dependency-path: '**/*.csproj'
-
-    - name: Build and Launch Application Mesh
+    - name: Build and Launch Application
       run: docker compose up --build -d
 
     - name: Wait for API Readiness
       run: |
         echo "Waiting for backend2 API to wake up at http://localhost:8080..."
-        timeout 60s sh -c 'until curl -sSf http://localhost:8080/api/Tickets > /dev/null; do sleep 2; done'
+        timeout 90s sh -c 'until curl -sSf http://localhost:8080/api/Tickets > /dev/null; do sleep 2; done'
         echo "backend2 API is up and running!"
 
     - name: Integration Step 1 - Verify Tickets Endpoint
       run: |
-        echo "Querying the tickets index from the database..."
+        echo "Querying the tickets index..."
         curl -X GET http://localhost:8080/api/Tickets --fail --verbose
 
-    - name: Tear Down Mesh and Logs
+    - name: Tear Down and Logs
       if: always()
       run: |
         docker compose logs backend2 > backend2-container-debug.log
