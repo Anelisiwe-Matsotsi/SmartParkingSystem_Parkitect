@@ -2,7 +2,7 @@ name: Advanced CI/CD Integration Pipeline
 
 on:
   push:
-    branches: [ "main", "master", "Docker-Workflow" ]
+    branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
 
