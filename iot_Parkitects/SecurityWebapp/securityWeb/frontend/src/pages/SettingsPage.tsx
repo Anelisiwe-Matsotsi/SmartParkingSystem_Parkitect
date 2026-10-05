@@ -302,7 +302,7 @@ export const SettingsPage: React.FC = () => {
       );
 
 
-      //()
+      //(Code-Maven, 2026)
       const csv = "\uFEFF" + [header.map(escape).join(","), ...lines].join("\r\n");
       const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
       const link = document.createElement("a");
@@ -598,6 +598,7 @@ export default SettingsPage;
 {/*References
   Akbulut, U. 2022. JavaScript: Understanding CustomEvent and dispatchEvent. (Version 2.0) [Source Code] Available at:<https://medium.com/cstech/javascript-understanding-customevent-and-dispatchevent-a33d10075818> [Accessed 1 October 2026].
   CoddyKit. 2026. Building a Persistent Settings Screen. (Version 2.0) [Source code] Available at:<https://www.coddykit.com/courses/learn_react_native/building-a-persistent-settings-screen-10685241> [Accessed 4 October 2026].
+  Code-Maven. 2026.Create and download data in CSV format using plain JavaScript.(Version 2.0) [Source code] Available at:<https://code-maven.com/create-and-download-csv-with-javascript> [Accessed 4 October 2026].
   Firebase. 2026. Manage Users in Firebase. (Version 2.0) [Source Code] Available at:<https://firebase.google.com/docs/auth/web/manage-users> [Accessed 27 September 2026].
   Leiberman, L. 2021. Dark Mode 2.0 : With Local Storage. (Version 2.0) [Source Code] Available at:<https://dr-lucasleibs.medium.com/dark-mode-2-0-with-local-storage-6f992683204d> [Accessed 27 September 2026].
   Mustafamulla. 2024. How to Implement Dark Mode in React with Tailwind CSS. (Version 2.0) [Source Code] Available at:<https://medium.com/@mustafamulla765/how-to-implement-dark-mode-in-react-with-tailwind-css-94df7522ed82> [Accessed 25 September 2026].
