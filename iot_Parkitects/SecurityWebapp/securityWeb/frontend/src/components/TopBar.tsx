@@ -1,9 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../config/firebase";
+import { getNotifications, getWebSettings, saveWebSettings } from "../services/api";
+import type { AppNotification, WebSettings } from "../services/api";
+import {applyAppearance, cacheAppearance, readCachedAppearance, resetAppearance} from "../utils/appearance";
 
-const getUserSettingsKey = (uid: string, setting: string) => `parkitects_${uid}_${setting}`;
+//shows how long ago a notification was created (//Stack Overflow, 2020)
+const timeAgo = (value: string) => {
+  const minutes = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 60000));
+
+  if (minutes < 1) return "now";
+  if (minutes < 60) return `${minutes}m`;
+  if (minutes < 1440) return `${Math.round(minutes / 60)}h`;
+  return `${Math.round(minutes / 1440)}d`;
+};
 
 export const TopBar: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -14,6 +25,13 @@ export const TopBar: React.FC = () => {
 
   const navigate = useNavigate();
 
+  //real notifications from the backend, as well as the time the user last marked them as read
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [lastReadTime, setLastReadTime] = useState(0);
+
+  //the last settings loaded 
+  const savedSettings = useRef<WebSettings | null>(null);
+
   //gets the logged in users details
   useEffect(() => {
     let active = true;
@@ -23,11 +41,8 @@ export const TopBar: React.FC = () => {
         setUserName("");
         setUserEmail("");
         setDarkMode(false);
-
-        document.documentElement.setAttribute("data-theme", "light");
-        document.documentElement.setAttribute("data-compact", "false");
-        document.documentElement.setAttribute("data-larger-text", "false");
-        document.documentElement.setAttribute("data-reduced-motion", "false");
+        savedSettings.current = null;
+        resetAppearance();
 
         return;
       }
@@ -38,60 +53,78 @@ export const TopBar: React.FC = () => {
       setUserEmail(currentUser.email || "");
 
       // Apply this user's cached theme while settings load.
-      const cachedTheme = localStorage.getItem(
-        getUserSettingsKey(uid, "theme")
-      );
-
-      const cachedDarkMode = cachedTheme === "dark";
-
-      setDarkMode(cachedDarkMode);
-      document.documentElement.setAttribute(
-        "data-theme",
-        cachedDarkMode ? "dark" : "light"
-      );
+      const cached = readCachedAppearance(uid);
+      setDarkMode(cached.darkMode);
+      applyAppearance(cached);
 
       try {
         // Fetch the saved settings for this Firebase UID.
-        const response = await fetch(`/api/Settings/web/${uid}`);
-
-        if (!response.ok) {
-          throw new Error("Could not load the user's theme settings.");
-        }
-
-        const settings = await response.json();
+        const settings = await getWebSettings(uid);
 
         // Ignore responses for an account that has changed or signed out.
         if (!active || auth.currentUser?.uid !== uid) return;
 
-        const isDark = settings.darkMode ?? cachedDarkMode;
+        savedSettings.current = settings;
 
-        setDarkMode(isDark);
-
-        localStorage.setItem(
-          getUserSettingsKey(uid, "theme"),
-          isDark ? "dark" : "light"
-        );
-
-        document.documentElement.setAttribute(
-          "data-theme",
-          isDark ? "dark" : "light"
-        );
+        // Applies dark mode, compact tables, larger text and reduced motion on every page
+        applyAppearance(settings);
+        cacheAppearance(uid, settings);
+        setDarkMode(settings.darkMode);
 
         window.dispatchEvent(
           new CustomEvent("themeChange", {
             detail: {
-              darkMode: isDark,
+              darkMode: settings.darkMode,
               uid,
             },
           })
         );
       } catch (error) {
-        console.error("Error loading the user's theme:", error);
+        console.error("Error loading the user's settings:", error);
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   },[]);
+
+  //loads the notifications from the backend and refreshes them every 30 seconds
+  useEffect(() => {
+    let active = true;
+    let timer: number | undefined;
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      window.clearInterval(timer);
+
+      if (!currentUser) {
+        setNotifications([]);
+        return;
+      }
+
+      setLastReadTime(Number(localStorage.getItem(`parkitects_${currentUser.uid}_notificationsRead`)) || 0);
+
+      const load = async () => {
+        try {
+          const items = await getNotifications();
+          if (active) setNotifications(items.slice(0, 20));
+        } catch (error) {
+          console.error("Error loading notifications:", error);
+        }
+      };
+
+      load();
+      timer = window.setInterval(load, 30000);
+    });
+
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      unsubscribe();
+    };
+  }, []);
+
 
   //(Akbulut, 2022)
   useEffect(() => {
@@ -117,15 +150,19 @@ export const TopBar: React.FC = () => {
 
   //this applies the dark theme across the entire website using the toggle at the top
   useEffect(() => {
-    const theme = darkMode ? "dark" : "light";
-    const uid = auth.currentUser?.uid;
-    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
 
-    if(uid){
-    //saves the theme so it stays the same throught all the pages
-    localStorage.setItem(getUserSettingsKey(uid,"theme"), theme);
-    }
   },[darkMode]);
+
+  //keeps track of what the settings page saved
+  useEffect(() => {
+    const onSaved = (e: Event) => {
+      savedSettings.current = (e as CustomEvent).detail as WebSettings;
+    };
+
+    window.addEventListener("webSettingsSaved", onSaved);
+    return () => window.removeEventListener("webSettingsSaved", onSaved);
+  }, []);
 
 useEffect(() => {
     const handleThemeChange = (event: Event) => {
@@ -149,7 +186,7 @@ useEffect(() => {
   }, []);
 
   //changes between dark mode and light mode when the toggle is clicked
-  const toggleDarkMode = () => {
+  const toggleDarkMode = async () => {
     const uid = auth.currentUser?.uid;
 
       if (!uid) {
@@ -157,23 +194,40 @@ useEffect(() => {
       return;
     }
 
+    const newValue = !darkMode;
 
-setDarkMode((current) => {
-      const newValue = !current;
-      const theme = newValue ? "dark" : "light";
+    setDarkMode(newValue);
+    document.documentElement.setAttribute("data-theme", newValue ? "dark" : "light");
+    cacheAppearance(uid, { ...readCachedAppearance(uid), darkMode: newValue });
 
-      localStorage.setItem(
-        getUserSettingsKey(uid, "theme"),
-        theme
-      );
-
-      document.documentElement.setAttribute("data-theme", theme);
 
       window.dispatchEvent(new CustomEvent("themeChange", {
-        detail: { darkMode: newValue },
-      }));
-      return newValue;
-    });
+        detail: { darkMode: newValue, uid },
+    })
+      );
+          //saves the choice so it is still there after logging out and back in
+    if (!savedSettings.current) return;
+
+    try {
+      savedSettings.current = await saveWebSettings(uid, {
+        ...savedSettings.current,
+        darkMode: newValue,
+      });
+    } catch (error) {
+      console.error("Could not save the theme:", error);
+    }
+  };
+
+  const isUnread = (item: AppNotification) => new Date(item.time).getTime() > lastReadTime;
+  const unreadCount = notifications.filter(isUnread).length;
+
+  //remembers that everything up to now has been read
+  const markAllRead = () => {
+    const uid = auth.currentUser?.uid;
+    const now = Date.now();
+
+    setLastReadTime(now);
+    if (uid) localStorage.setItem(`parkitects_${uid}_notificationsRead`, String(now));
   };
 
   const toggleNotifications = () => {
@@ -266,7 +320,7 @@ setDarkMode((current) => {
               aria-hidden="true"
             ></i>
 
-            <span className="notification-dot"></span>
+             {unreadCount > 0 && <span className="notification-dot"></span>}
           </button>
 
 
@@ -278,11 +332,11 @@ setDarkMode((current) => {
 
                 <div>
                   <strong>Notifications</strong>
-                  <small>3 unread updates</small>
+                  <small>{unreadCount === 0 ? "No unread updates" : `${unreadCount} unread update${unreadCount === 1 ? "" : "s"}`}</small>
                 </div>
 
                 <button type="button"
-                onClick={()=> navigate("/dashboard")}>
+                onClick={markAllRead} disabled= {unreadCount === 0}>
                   Mark all read
                 </button>
 
@@ -291,66 +345,36 @@ setDarkMode((current) => {
 
               <div className="notice-list">
 
-                <button
-                  className="notice is-unread"
-                  type="button"
-                >
-                  <span className="notice-mark violet">
-                    <i
-                      className="fa-solid fa-square-parking"
-                      aria-hidden="true"
-                    ></i>
-                  </span>
+                
+                {notifications.length === 0 && (
+                  <p className="notice-empty">No notifications yet.</p>
+                )}
 
-                  <span>
-                    <strong>Parking update</strong>
-                    <small>
-                      Section A is almost full · 8m
-                    </small>
-                  </span>
-                </button>
+                {notifications.map((item) => (
+                  <button
+                    key={item.notificationID}
+                    className={`notice ${isUnread(item) ? "is-unread" : ""}`}
+                    type="button"
+                  >
+                    <span className="notice-mark violet">
+                      <i
+                        className="fa-solid fa-bell"
+                        aria-hidden="true"
+                      ></i>
+                    </span>
 
-
-                <button
-                  className="notice is-unread"
-                  type="button"
-                >
-                  <span className="notice-mark green">
-                    <i
-                      className="fa-solid fa-circle-check"
-                      aria-hidden="true"
-                    ></i>
-                  </span>
-
-                  <span>
-                    <strong>Parking availability</strong>
-                    <small>
-                      12 spaces became available · 1h
-                    </small>
-                  </span>
-                </button>
-
-
-                <button
-                  className="notice is-unread"
-                  type="button"
-                >
-                  <span className="notice-mark orange">
-                    <i
-                      className="fa-solid fa-ticket"
-                      aria-hidden="true"
-                    ></i>
-                  </span>
-
-                  <span>
-                    <strong>New parking ticket</strong>
-                    <small>
-                      A new violation was reported · 3h
-                    </small>
-                  </span>
-                </button>
+                    <span>
+                      <strong>{item.title}</strong>
+                      <small>
+                        {item.description} · {timeAgo(item.time)}
+                      </small>
+                    </span>
+                  </button>
+                ))}
 
               </div>
+
+
 
 
               <button

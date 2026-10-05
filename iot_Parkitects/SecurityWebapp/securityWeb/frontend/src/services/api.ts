@@ -108,3 +108,129 @@ export async function getOccupiedBays(): Promise<{ bayID: number; bayNumber: str
   if (!response.ok) throw new Error("Failed to fetch occupied bays");
   return response.json();
 }
+
+export type WebSettings = {
+  darkMode: boolean;
+  compactTables: boolean;
+  largerText: boolean;
+  reducedMotion: boolean;
+  ticketUpdates: boolean;
+  parkingAlerts: boolean;
+  systemAlerts: boolean;
+  alertSound: boolean;
+};
+
+export const defaultWebSettings: WebSettings = {
+  darkMode: false,
+  compactTables: false,
+  largerText: false,
+  reducedMotion: false,
+  ticketUpdates: true,
+  parkingAlerts: true,
+  systemAlerts: true,
+  alertSound: true,
+};
+
+// GET the saved web settings for a firebase uid
+export async function getWebSettings(uid: string): Promise<WebSettings> {
+  const response = await fetch(`${API_URL}/Settings/web/${encodeURIComponent(uid)}`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to load settings (${response.status}).`);
+  }
+
+  const data = await response.json();
+  return { ...defaultWebSettings, ...data };
+}
+
+export async function saveWebSettings(uid: string, settings: WebSettings): Promise<WebSettings> {
+  const response = await fetch(`${API_URL}/Settings/web/${encodeURIComponent(uid)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...settings, userID: uid }),
+  });
+
+  if (!response.ok) {
+    const detail = (await response.text()).trim();
+    throw new Error(detail || `Settings save failed (${response.status}).`);
+  }
+
+  const data = await response.json();
+  return { ...defaultWebSettings, ...data };
+}
+
+export async function syncUserProfile(uid: string, name: string, email: string): Promise<void> {
+  const response = await fetch(`${API_URL}/User/profile/${encodeURIComponent(uid)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email }),
+  });
+
+  if (!response.ok && response.status !== 404) {
+    throw new Error(`Profile sync failed (${response.status}).`);
+  }
+}
+
+export type SystemStatus = {
+  online: boolean;
+  totalBays: number;
+  baysWithSensors: number;
+};
+
+// Reads the live parking map so the System tab shows real sensor status
+export async function getSystemStatus(): Promise<SystemStatus> {
+  try {
+    const response = await fetch(`${API_URL}/Parking/map`);
+    if (!response.ok) return { online: false, totalBays: 0, baysWithSensors: 0 };
+
+    const map = await response.json();
+    const sections: { bays?: { hasPhysicalSensor?: boolean }[] }[] = map.sections ?? [];
+    const bays = sections.flatMap((section) => section.bays ?? []);
+
+    return {
+      online: true,
+      totalBays: bays.length,
+      baysWithSensors: bays.filter((bay) => bay.hasPhysicalSensor).length,
+    };
+  } catch {
+    return { online: false, totalBays: 0, baysWithSensors: 0 };
+  }
+}
+
+export type ParkingHistoryRow = {
+  bay?: string;
+  user?: string;
+  userType?: string;
+  timeIn?: string;
+  timeOut?: string;
+  duration?: string;
+  status?: string;
+};
+
+export async function getParkingHistory(): Promise<ParkingHistoryRow[]> {
+  const response = await fetch(`${API_URL}/Analytics/history`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch parking history");
+  }
+
+  return response.json();
+}
+
+export type AppNotification = {
+  notificationID: number;
+  notificationType: string;
+  title: string;
+  description: string;
+  time: string;
+};
+
+export async function getNotifications(): Promise<AppNotification[]> {
+  const response = await fetch(`${API_URL}/Notification`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch notifications");
+  }
+
+  return response.json();
+}
