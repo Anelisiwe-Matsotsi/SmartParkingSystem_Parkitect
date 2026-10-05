@@ -235,7 +235,7 @@ export async function getNotifications(): Promise<AppNotification[]> {
   return response.json();
 }
 
-}
+
 //(TypeScript, 2026)
   //Parking map
   export interface BayMap {
