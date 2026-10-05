@@ -85,7 +85,7 @@ namespace backend2.Controllers
                 TicketsIssued = tickets.Count,
                 TicketsResolved = tickets.Count(t => t.status == "Resolved"),
                 AvgResolutionTimeHours = resolvedTickets.Any()
-                    ? resolvedTickets.Average(t => (t.updatedAt.Value - t.createdAt).TotalHours)
+                    ? resolvedTickets.Average(t => (t.updatedAt!.Value - t.createdAt).TotalHours)
                     : 0,
                 WeeklyChart = weeklyChart,
                 ViolationBreakdown = new Dictionary<string, int>

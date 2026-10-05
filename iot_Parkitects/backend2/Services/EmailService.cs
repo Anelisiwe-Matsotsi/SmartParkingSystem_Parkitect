@@ -17,7 +17,7 @@ namespace backend2.Services
         public EmailService(IConfiguration configuration)
         {
             var connectionString = configuration["AzureCommunicationServices:ConnectionString"];
-            _senderAddress = configuration["AzureCommunicationServices:SenderAddress"];
+            _senderAddress = configuration["AzureCommunicationServices:SenderAddress"] ?? throw new InvalidOperationException("Email sender is not configured.");
             _emailClient = new EmailClient(connectionString);
         }
 
