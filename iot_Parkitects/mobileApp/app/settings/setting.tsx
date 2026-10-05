@@ -184,7 +184,7 @@ export default function SettingsScreen() {
             await fetch(`${API_BASE_URL}/api/Settings/user/${currentUser.uid}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...existing, ...merged, userID: currentUser.uid }),
+                body: JSON.stringify({ ...existing, ...merged }),
             });
         } catch (error) {
             Alert.alert('Error', 'Failed to save your preferences.Please try again');
@@ -309,7 +309,6 @@ export default function SettingsScreen() {
                 <ThemedText style={[styles.rowLabel, { color: theme.heading }]}>Location</ThemedText>
                 <View style={styles.rowSpacer} />
                 <ThemedText style={styles.rowValue}>{locationDisplay || 'Port Elizabeth, SA'}</ThemedText>
-                <FeatherIcon color="#94A3B8" name="chevron-right" size={18} />
               </TouchableOpacity>
             </View>
 
