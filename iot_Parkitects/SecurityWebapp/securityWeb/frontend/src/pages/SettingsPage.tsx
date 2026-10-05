@@ -5,7 +5,7 @@ import { onAuthStateChanged, updateProfile } from "firebase/auth"; //(Firebase, 
 import { defaultWebSettings, getParkingHistory, getSystemStatus, getWebSettings, saveWebSettings, syncUserProfile } from "../services/api";
 import type { SystemStatus, WebSettings } from "../services/api"; 
 import { applyAppearance, cacheAppearance, readCachedAppearance, resetAppearance } from "../utils/appearance";
-
+import { useLocation } from "react-router-dom";
 
 //(Stack Overflow, 2023)
 type Status = { type: "success" | "error" | "info"; message: string } | null;
@@ -14,6 +14,7 @@ const SECTIONS = ["General", "Notifications", "System"];
 const errorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Something went wrong.";
 
+const liveDarkMode =() => document.documentElement.getAttribute("data-theme") === "dark";
 
 //Reusable on/off so every toggle behaves the same way
 const Toggle: React.FC<{
@@ -46,14 +47,20 @@ const Toggle: React.FC<{
 export const SettingsPage: React.FC = () => {
 
   
-  const [activeSection, setActiveSection] = useState("General");
+  const location = useLocation();
+  const requestedSection = (location.state as {section?: string} | null)?.section;
+  const [activeSection, setActiveSection] = useState( requestedSection && SECTIONS.includes(requestedSection)? requestedSection : "General");
 
   //Stores the loggd in user's details
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [profileLoaded, setProfileLoaded] = useState(false);
 
-    const [settings, setSettings] = useState<WebSettings>(defaultWebSettings);
+  const [settings, setSettings] = useState<WebSettings>(() =>
+  ({...defaultWebSettings,
+    ...readCachedAppearance(auth.currentUser?.uid ?? ""),
+    darkMode: liveDarkMode(),
+  }));
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   const [saving, setSaving] = useState(false);
@@ -68,6 +75,12 @@ export const SettingsPage: React.FC = () => {
   const updateSetting = <K extends keyof WebSettings>(key: K, value: WebSettings[K]) =>
     setSettings((current) => (current[key] === value ? current : { ...current, [key]: value }));
 
+
+  useEffect(() => {
+  if (requestedSection && SECTIONS.includes(requestedSection)) {
+    setActiveSection(requestedSection);
+  }
+}, [requestedSection]);
 
   //(CoddyKit, 2026)
     useEffect(() => {
@@ -148,13 +161,17 @@ export const SettingsPage: React.FC = () => {
 
         if (!active || auth.currentUser?.uid !== uid) return;
 
-        setSettings(saved);
-        cacheAppearance(uid, saved);
+        console.log("[Settings] server darkMode:", saved?.darkMode, "live:", liveDarkMode());
+
+        const merged: WebSettings ={...defaultWebSettings, ...saved, darkMode:liveDarkMode()};
+
+        setSettings(merged);
+        cacheAppearance(uid, merged);
       } catch (error) {
         console.error("Error loading settings:", error);
         if (!active || auth.currentUser?.uid !== uid) return;
 
-        setSettings((current) => ({ ...current, ...readCachedAppearance(uid) }));
+        setSettings((current) => ({ ...current, ...readCachedAppearance(uid),darkMode: liveDarkMode() }));
         setStatus({
           type: "error",
           message: "Could not load your saved settings from the server. Showing this browser's settings instead.",
