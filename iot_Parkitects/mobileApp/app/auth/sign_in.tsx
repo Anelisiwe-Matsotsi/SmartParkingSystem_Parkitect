@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { registerForPushNotificationsAsync } from '../../utils/pushNotifications';
 import FeatherIcon from '@expo/vector-icons/Feather';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {
   StyleSheet,
   View,
@@ -16,6 +17,7 @@ import {
   Alert // pulling in alerts to show login errors (React Native, 2026)
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Colors } from '@/constants/theme';
 import { ThemedText as Text } from '@/components/themed-text';
 import { useAccessibility } from '@/context/accessibilityContext';
@@ -107,6 +109,7 @@ export default function SignIn() {
   const handleGoogleSignIn = async () => {
     triggerHaptic();
     try {
+      // Prompts the user to sign in with Google
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
 
@@ -115,10 +118,14 @@ export default function SignIn() {
         throw new Error('No ID Token found');
       }
 
+      // Creates a Firebase credential with the Google ID token
       const googleCredential = GoogleAuthProvider.credential(idToken);
+
+      // Signs in the user with the credential
       const userCredential = await signInWithCredential(auth, googleCredential);
       const firebaseUid = userCredential.user.uid;
 
+      // Because Google doesnt give us a "User Number" or "Role", we sync default/empty values
       const apiUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/User/sync`;
       const backendResponse = await fetch(apiUrl, {
         method: 'POST',
@@ -130,7 +137,7 @@ export default function SignIn() {
           userNumber: `G-${Date.now()}`,
           name: userCredential.user.displayName || 'Google User',
           email: userCredential.user.email,
-          userRole: 'Student',
+          userRole: 'Student', // default
         }),
       });
 
@@ -139,10 +146,12 @@ export default function SignIn() {
       }
 
       try {
-        await registerForPushNotificationsAsync(firebaseUid);
+        await registerForPushNotificationsAsync(firebaseUid); //push notification token given after user logs in
       } catch (e) {
         console.warn('Push registration failed', e);
       }
+
+      // Navigates to the main app layout
       router.replace('/permissions' as any);
     } catch (error: any) {
       console.error(error);
@@ -152,120 +161,132 @@ export default function SignIn() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Image
-              alt="App Logo"
-              resizeMode="contain"
-              style={styles.headerImg}
-              source={require('@/assets/images/parki-splash.png')}
-            />
-          </View>
-          <Text style={[styles.title, { color: theme.heading }]}>
-            Sign in to <RNText style={{ color: '#118091' }}>Parkitech</RNText>
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.muted }]}>
-            Find your parking
-          </Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.input}>
-            <Text style={[styles.inputLabel, { color: theme.heading }]}>User Number</Text>
-            <TextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              clearButtonMode="while-editing"
-              keyboardType="email-address"
-              onChangeText={userNumber => setForm({ ...form, userNumber })}
-              placeholder="ST___________/LR___________"
-              placeholderTextColor={theme.muted}
-              style={[styles.inputControl, { backgroundColor: theme.surface, color: theme.text }]}
-              value={form.userNumber}
-            />
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      <KeyboardAwareScrollView>
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <Image
+                alt="App Logo"
+                resizeMode="contain"
+                style={styles.headerImg}
+                source={require('@/assets/images/parki-splash.png')}
+              />
+            </View>
+            <Text style={[styles.title, { color: theme.heading }]}>
+              Sign in to <RNText style={{ color: '#118091' }}>Parkitech</RNText>
+            </Text>
+            <Text style={[styles.subtitle, { color: theme.muted }]}>
+              Find your parking
+            </Text>
           </View>
 
-          <View style={styles.input}>
-            <Text style={[styles.inputLabel, { color: theme.heading }]}>Password</Text>
-            <View style={[styles.passwordContainer, { backgroundColor: theme.surface }]}>
+          <View style={styles.form}>
+            <View style={styles.input}>
+              <Text style={[styles.inputLabel, { color: theme.heading }]}>User Number</Text>
               <TextInput
+                autoCapitalize="none"
                 autoCorrect={false}
                 clearButtonMode="while-editing"
-                onChangeText={password => setForm({ ...form, password })}
-                placeholder=""
+                keyboardType="email-address"
+                onChangeText={userNumber => setForm({ ...form, userNumber })}
+                placeholder="ST___________/LR___________"
                 placeholderTextColor={theme.muted}
-                style={[styles.passwordInput, { color: theme.text }]}
-                secureTextEntry={!showPassword}
-                value={form.password}
+                style={[styles.inputControl, { backgroundColor: theme.surface, color: theme.text }]}
+                value={form.userNumber}
               />
-              <TouchableOpacity
-                onPressIn={() => setShowPassword(true)}
-                onPressOut={() => setShowPassword(false)}
-                style={styles.eyeButton}
-              >
-                <FeatherIcon
-                  name={showPassword ? 'eye' : 'eye-off'}
-                  size={22}
-                  color="#6b7280"
+            </View>
+
+            <View style={styles.input}>
+              <Text style={[styles.inputLabel, { color: theme.heading }]}>Password</Text>
+              <View style={[styles.passwordContainer, { backgroundColor: theme.surface }]}>
+                <TextInput
+                  autoCorrect={false}
+                  clearButtonMode="while-editing"
+                  onChangeText={password => setForm({ ...form, password })}
+                  placeholder=""
+                  placeholderTextColor={theme.muted}
+                  style={[styles.passwordInput, { color: theme.text }]}
+                  secureTextEntry={!showPassword}
+                  value={form.password}
                 />
+                <TouchableOpacity
+                  onPressIn={() => setShowPassword(true)}
+                  onPressOut={() => setShowPassword(false)}
+                  style={styles.eyeButton}
+                >
+                  <FeatherIcon
+                    name={showPassword ? 'eye' : 'eye-off'}
+                    size={22}
+                    color="#6b7280"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.formAction}>
+              <TouchableOpacity
+                // routing through our new login function (Firebase, 2026a)
+                onPress={handleLogin}
+                disabled={isLoading}
+              >
+                <View style={[styles.btn, isLoading && { opacity: 0.7 }]}>
+                  <Text style={styles.btnText}>
+                    {isLoading ? 'Signing in...' : 'Sign in'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => router.push('/auth/forgot_password')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.formLink, { color: theme.tint }]}>Forgot password?</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                // handle link
+                router.push('/auth/sign_up');
+              }}>
+              <Text style={[styles.formFooter, { color: theme.text }]}>
+                Don't have an account?
+                <RNText style={{ textDecorationLine: 'underline', color: theme.tint }}> Sign up</RNText>
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.formSpacer}>
+              <Text style={[styles.formSpacerText, { backgroundColor: theme.background, color: theme.text }]}>Or Sign in with</Text>
+
+              <View style={styles.formSpacerDivider} />
+            </View>
+
+            <View style={styles.btnGroup}>
+              <TouchableOpacity
+                onPress={handleGoogleSignIn}
+                disabled={isLoading}
+                style={{ flex: 1, paddingHorizontal: 6 }}>
+                <View style={styles.btnGoogle}>
+                  <MaterialCommunityIcons
+                    color="#fff"
+                    name="google"
+                    size={18}
+                    style={{ marginRight: 12 }} />
+
+                  <Text style={styles.btnGoogleText}>Google</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
-
-          <View style={styles.formAction}>
-            <TouchableOpacity
-              // routing through our login function (Firebase, 2026a)
-              onPress={handleLogin}
-              disabled={isLoading}
-            >
-              <View style={[styles.btn, isLoading && { opacity: 0.7 }]}>
-                <Text style={styles.btnText}>
-                  {isLoading ? 'Signing in...' : 'Sign in'}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.formAction}>
-            <TouchableOpacity onPress={handleGoogleSignIn} disabled={isLoading}>
-              <View style={[styles.btn, styles.googleBtn, isLoading && { opacity: 0.7 }]}>
-                <Text style={[styles.btnText, { color: '#0c4b64' }]}>
-                  Sign in with Google
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            onPress={() => router.push('/auth/forgot_password')}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.formLink, { color: theme.tint }]}>Forgot password?</Text>
-          </TouchableOpacity>
         </View>
-      </View>
-
-      <TouchableOpacity
-        onPress={() => {
-          // handle link
-          router.push('/auth/sign_up');
-        }}>
-        <Text style={[styles.formFooter, { color: theme.text }]}>
-          Don't have an account?{' '}
-          <RNText style={{ textDecorationLine: 'underline', color: theme.tint }}>Sign up</RNText>
-        </Text>
-      </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
     padding: 24,
     backgroundColor: Colors.light.background,
   },
@@ -294,15 +315,13 @@ const styles = StyleSheet.create({
   logoContainer: {
     width: '60%',
     height: 200,
-    marginLeft: 10,
-    borderRadius: 30,
+    marginLeft:10,
+    borderRadius:30,
     overflow: 'hidden',
   },
   /** Form */
   form: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
+    paddingHorizontal: 0,
   },
   formAction: {
     marginTop: 4,
@@ -315,13 +334,34 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   formFooter: {
-    marginBottom: 24,
-    paddingVertical: 24,
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#222',
+    marginTop: 16,
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#454545',
     textAlign: 'center',
-    letterSpacing: 0.15,
+  },
+  formSpacer: {
+    marginTop: 40,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  formSpacerText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#454545',
+    lineHeight: 20,
+    paddingHorizontal: 12,
+    backgroundColor: '#fff',
+    zIndex: 9,
+  },
+  formSpacerDivider: {
+    borderBottomWidth: 2,
+    borderColor: '#eff1f5',
+    position: 'absolute',
+    top: 10,
+    left: 0,
+    right: 0,
   },
   input: {
     marginBottom: 16,
@@ -355,11 +395,32 @@ const styles = StyleSheet.create({
     backgroundColor: '#0c4b64',
     borderColor: '#a8ddd4',
   },
-  googleBtn: {
-    backgroundColor: '#fff',
-    borderColor: '#0c4b64',
-  },
   btnText: {
+    fontSize: 18,
+    lineHeight: 26,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  btnGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 18,
+    marginBottom: 24,
+    marginHorizontal: -6,
+  },
+  btnGoogle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    backgroundColor: '#0c6064',
+    borderColor: '#a8ddd4',
+  },
+  btnGoogleText: {
     fontSize: 18,
     lineHeight: 26,
     fontWeight: '600',
@@ -389,7 +450,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
-
 /**
  * References
  * Expo, 2026. Environment variables in Expo. [online] Available at: <https://docs.expo.dev/guides/environment-variables/> [Accessed 30 August 2026].

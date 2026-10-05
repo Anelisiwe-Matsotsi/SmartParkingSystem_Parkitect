@@ -1,5 +1,5 @@
 //(Withfra.me, 2022)
-import React, { useState, useCallback} from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
   SafeAreaView,
@@ -20,6 +20,8 @@ import StatsCard from '@/components/ticket/StatsCard';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { auth } from '../../config/firebaseConfig';
 import DropDownPicker from 'react-native-dropdown-picker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 
 
 const cancellationReasons = [
@@ -35,13 +37,13 @@ const cancellationReasons = [
   },
   {
     id: 3,
-    reason: 'Is not fully in bay',
+    reason: 'Vehicle outside bay',
     description: 'Vehicle is to far out of the parking bay',
   },
   {
     id: 4,
-    reason: 'This car is ugly',
-    description: 'A violation to my eyes',
+    reason: 'Restricted parking',
+    description: 'Lecturer parking only',
   },
   {
     id: 5,
@@ -58,8 +60,10 @@ export default function Example() {
   const { theme, colorMode, triggerHaptic, triggerScreenReader } = useAccessibility();
 
   const router = useRouter();
-//
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+  const insets = useSafeAreaInsets();
+
+  //
+  const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState<string | null>(null);
@@ -77,37 +81,37 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
   });
 
-// Only bays that currently have a registered driver
-const loadOccupiedBays = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/Parking/occupied`);
-    if (!response.ok) throw new Error('Failed to load bays');
-    const bays: { bayID: number; bayNumber: string }[] = await response.json();
+  // Only bays that currently have a registered driver
+  const loadOccupiedBays = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/Parking/occupied`);
+      if (!response.ok) throw new Error('Failed to load bays');
+      const bays: { bayID: number; bayNumber: string }[] = await response.json();
 
-    const list: BayItem[] = bays.map(b => ({
-      label: `Bay ${b.bayNumber}`,
-      value: b.bayNumber,
-      section: `${b.bayNumber.charAt(0)}-Block`,
-      number: b.bayNumber,
-    }));
+      const list: BayItem[] = bays.map(b => ({
+        label: `Bay ${b.bayNumber}`,
+        value: b.bayNumber,
+        section: `${b.bayNumber.charAt(0)}-Block`,
+        number: b.bayNumber,
+      }));
 
-    setItems(list);
-    // If the selected bay is no longer occupied, clear the selection
-    setValue(prev => (prev && list.some(i => i.value === prev) ? prev : null));
-  } catch (error) {
-    console.error('Failed to load occupied bays', error);
-    setItems([]);
-  }
-};
+      setItems(list);
+      // If the selected bay is no longer occupied, clear the selection
+      setValue(prev => (prev && list.some(i => i.value === prev) ? prev : null));
+    } catch (error) {
+      console.error('Failed to load occupied bays', error);
+      setItems([]);
+    }
+  };
 
-// Reload every time so that the list is up to date
-useFocusEffect(
-  useCallback(() => {
-    loadOccupiedBays();
-  }, [])
-);
+  // Reload every time so that the list is up to date
+  useFocusEffect(
+    useCallback(() => {
+      loadOccupiedBays();
+    }, [])
+  );
 
-// Jayasekara, 2025 - handler keeping the form synced on value change
+  // Jayasekara, 2025 - handler keeping the form synced on value change
   const handleBayChange = (val: any) => {
     const selectedValue = typeof val === 'function' ? val(value) : val;
     setValue(selectedValue);
@@ -137,7 +141,7 @@ useFocusEffect(
       quality: 0.7,
     });
 
-  // User cancelelled action
+    // User cancelelled action
     if (!result.canceled) {
       setForm({ ...form, imageUri: result.assets[0].uri });
     }
@@ -189,11 +193,11 @@ useFocusEffect(
     }
 
     if (!value) {
-  triggerHaptic();
-  triggerScreenReader('Please select an occupied parking bay');
-  Alert.alert('Selection Required', 'Please select an occupied parking bay.');
-  return;
-}
+      triggerHaptic();
+      triggerScreenReader('Please select an occupied parking bay');
+      Alert.alert('Selection Required', 'Please select an occupied parking bay.');
+      return;
+    }
 
     setLoading(true);
 
@@ -290,8 +294,8 @@ useFocusEffect(
         </View>
 
         {/* Jayasekara, 2025 - Dropdown to select parking bay */}
-       <View style={[styles.input, { zIndex: 1000 }]}>
-          <Text style={styles.sectionSubtitle}>
+        <View style={styles.input}>
+          <Text style={[styles.sectionSubtitle, { marginBottom: 8 }]}>
             Please select the parking bay at fault
           </Text>
           <DropDownPicker
@@ -303,15 +307,20 @@ useFocusEffect(
             setItems={setItems}
             placeholder="Select a parking bay"
             listMode="MODAL"
+            modalProps={{ animationType: 'slide', statusBarTranslucent: true }}
+            modalContentContainerStyle={{
+              paddingTop: insets.top + 16,
+              backgroundColor: theme.background,
+            }}
             theme={colorMode === 'dark' ? 'DARK' : 'LIGHT'}
             style={styles.dropdown}
             dropDownContainerStyle={styles.dropdownContainer}
           />
           {items.length === 0 && (
-  <Text style={[styles.sectionSubtitle, { marginTop: 8 }]}>
-    No occupied bays right now.
-  </Text>
-)}
+            <Text style={[styles.sectionSubtitle, { marginTop: 8 }]}>
+              No occupied bays right now.
+            </Text>
+          )}
         </View>
         <Text style={styles.sectionTitle}>Description (Optional)</Text>
         <View style={[styles.formInput, { backgroundColor: theme.surface }]}>

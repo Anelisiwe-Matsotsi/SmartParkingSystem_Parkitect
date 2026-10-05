@@ -37,8 +37,8 @@ parkingDisabled: '#CBD5E1',
 
 //Navigation
     tint: '#0B5D6B',
-    icon: '#615da1',
-    tabIconDefault: '#615da1',
+    icon: '#797881',
+    tabIconDefault: '#9e9ea1',
     tabIconSelected: '#0B5D6B',
   },
   dark: {
