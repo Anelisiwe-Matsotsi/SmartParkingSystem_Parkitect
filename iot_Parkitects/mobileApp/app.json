@@ -68,6 +68,14 @@
           "locationWhenInUsePermission": "Parkitech uses your location to help you find your car."
         }
       ],
+         [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow Parkitech to use your camera to take photo evidence of parking violations.",
+          "photosPermission": "Allow Parkitech to access your photos to attach evidence to a ticket."
+        }
+      
+      ],
       "@react-native-google-signin/google-signin"
     ],
     "experiments": {
