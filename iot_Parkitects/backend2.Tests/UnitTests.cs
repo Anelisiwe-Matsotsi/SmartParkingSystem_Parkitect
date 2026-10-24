@@ -17,7 +17,7 @@ namespace backend2.Tests
             _client = factory.CreateClient();
         }
 
-        [Fact] 
+        [Fact]
         //test to get all tickets that will appear on web app
         public async Task getTicketsTest()
         {
@@ -45,34 +45,34 @@ namespace backend2.Tests
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
-    //     [Fact]
-    //     //tests the creation of a ticket in the mobile app
-    //     public async Task createTicketTest()
-    //     {
-    //         //(Til, Costello and Nelson, 2026)
-    //         // Arrange — a bay number that should never realistically have an active session
-    //         var newTicket = new Ticket
-    //         {
-    //             bayID = "A1",
-    //             bayNumber = "A1",
-    //             sectionID = "A-Block",
-    //             reason = "Restricted parking"
-    //         };
+        //     [Fact]
+        //     //tests the creation of a ticket in the mobile app
+        //     public async Task createTicketTest()
+        //     {
+        //         //(Til, Costello and Nelson, 2026)
+        //         // Arrange — a bay number that should never realistically have an active session
+        //         var newTicket = new Ticket
+        //         {
+        //             bayID = "A1",
+        //             bayNumber = "A1",
+        //             sectionID = "A-Block",
+        //             reason = "Restricted parking"
+        //         };
 
-    //         // Act - should create a new ticket in Tickets enpoint
-    //         var response = await _client.PostAsJsonAsync("/api/Tickets", newTicket);
+        //         // Act - should create a new ticket in Tickets enpoint
+        //         var response = await _client.PostAsJsonAsync("/api/Tickets", newTicket);
 
-    //         //(Casal, 2023)
-    //         // Assert - actually creates ticket to get success 201 created
-    //         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    //         var created = await response.Content.ReadFromJsonAsync<Ticket>();
-    //         Assert.NotNull(created);
+        //         //(Casal, 2023)
+        //         // Assert - actually creates ticket to get success 201 created
+        //         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        //         var created = await response.Content.ReadFromJsonAsync<Ticket>();
+        //         Assert.NotNull(created);
 
-    //         //(Microsoft learn, 2026)
-    //         //deletes the test ticket from the DB
-    //         var deleteResponse = await _client.DeleteAsync($"/api/Tickets/{created!.ticketID}");
-    //         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);        }
-}
+        //         //(Microsoft learn, 2026)
+        //         //deletes the test ticket from the DB
+        //         var deleteResponse = await _client.DeleteAsync($"/api/Tickets/{created!.ticketID}");
+        //         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);        }
+    }
 }
 
 /*
